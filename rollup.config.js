@@ -5,16 +5,21 @@ export default {
     input: "src/index.js",
     output: [
         {
-            file: "dist/bundle.cjs.js",
+            file: "dist/bundle.cjs",
             format: "cjs"
         },
+        /*
         {
             file: "dist/bundle.esm.js",
             format: "esm"
         },
+
+        package.json:
+        "module": "dist/bundle.esm.js",
+        */
         {
             file: "dist/bundle.umd.js",
-            name: "MyHelloWorldLib",
+            name: "MatchingEngine",
             format: "umd"
         }
     ],

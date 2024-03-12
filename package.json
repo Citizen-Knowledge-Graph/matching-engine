@@ -5,8 +5,7 @@
   "author": "@foerderfunke",
   "license": "MIT",
   "type": "module",
-  "main": "dist/bundle.cjs.js",
-  "module": "dist/bundle.esm.js",
+  "main": "dist/bundle.cjs",
   "browser": "dist/bundle.umd.js",
   "types": "dist/index.d.ts",
   "scripts": {
