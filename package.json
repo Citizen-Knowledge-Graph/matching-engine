@@ -1,0 +1,22 @@
+{
+  "name": "@foerderfunke/matching-engine",
+  "version": "0.2.0",
+  "description": "Checks eligibilities by validating a user profile against requirement profiles",
+  "author": "@foerderfunke",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/bundle.cjs.js",
+  "module": "dist/bundle.esm.js",
+  "browser": "dist/bundle.umd.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "start": "node dev.js",
+    "build": "rollup -c && tsc"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "latest",
+    "@rollup/plugin-node-resolve": "latest",
+    "rollup": "latest",
+    "typescript": "latest"
+  }
+}
