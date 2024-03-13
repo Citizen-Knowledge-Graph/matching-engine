@@ -1,6 +1,7 @@
-import path from "path";
-import { fileURLToPath } from "url";
-import fs from "fs";
+import path from "path"
+import { fileURLToPath } from "url"
+import fs from "fs"
+import { validateAll } from "../src/index.js"
 
 const DB_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "db")
 const SHACL_DIR = `${DB_DIR}/shacl`
@@ -31,7 +32,6 @@ fs.readdir(SHACL_DIR, async (err, files) => {
 
     Promise.all(promises)
         .then(() => {
-            console.log(requirementProfiles)
-            console.log(userProfile)
+            validateAll(userProfile, requirementProfiles).then(report => console.log(report))
         }).catch(err => console.error(err))
 })

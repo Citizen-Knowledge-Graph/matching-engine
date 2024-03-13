@@ -1,5 +1,13 @@
 import { foo } from "./utils.js"
 
-export function func() {
-    console.log("Hello ", foo())
+/**
+ * @param {string} userProfile
+ * @param {string[]} requirementProfiles
+ * @returns {Promise<string>}
+ */
+export async function validateAll(userProfile, requirementProfiles) {
+    console.log(userProfile)
+    console.log(requirementProfiles)
+
+    return "report"
 }
