@@ -1,5 +1,7 @@
 import { QueryEngine } from "@comunica/query-sparql-rdfjs"
-import { rdfStringToStore } from "./utils.js"
+import {rdfStringToDataset, rdfStringToStore} from "./utils.js"
+import Validator from "shacl-engine/Validator.js"
+import rdfDataModel from "@rdfjs/data-model";
 
 /**
  * @param {string} userProfile
@@ -11,6 +13,23 @@ export async function validateAll(userProfile, requirementProfiles) {
     console.log(requirementProfiles)
 
     return "report"
+}
+
+/**
+ * @param {string} userProfile
+ * @param {string} requirementProfile
+ * @returns {Promise<string>}
+ */
+export async function validateOne(userProfile, requirementProfile) {
+    rdfStringToDataset(userProfile).then(userProfileDataset => {
+        rdfStringToDataset(requirementProfile).then(requirementProfileDataset => {
+            const validator = new Validator(requirementProfileDataset, { factory: rdfDataModel })
+            validator.validate(userProfileDataset).then(report => {
+                console.log(report)
+            })
+        })
+    })
+    return "" // TODO
 }
 
 /**

@@ -1,5 +1,6 @@
 import { Store, Parser as N3Parser } from "n3"
 import SparqlParser from "sparqljs"
+import rdf from "rdf-ext"
 
 /**
  * @param {string} rdfStr
@@ -20,6 +21,16 @@ export function rdfStringToStore(rdfStr) {
                 resolve(store)
             }
         })
+    })
+}
+
+/**
+ * @param {string} rdfStr
+ * @returns {Promise<Dataset>}
+ */
+export function rdfStringToDataset(rdfStr) {
+    return rdfStringToStore(rdfStr).then(store => {
+        return rdf.dataset(store.getQuads())
     })
 }
 

@@ -1,7 +1,7 @@
 import path from "path"
 import { fileURLToPath } from "url"
 import fs from "fs"
-import { runSPARQLQueryOnRdfString, validateAll } from "../src/index.js"
+import { runSPARQLQueryOnRdfString, validateAll, validateOne } from "../src/index.js"
 
 const DB_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "db")
 const SHACL_DIR = `${DB_DIR}/shacl`
@@ -24,6 +24,7 @@ function devSPARQLQueryOnRdfString() {
         runSPARQLQueryOnRdfString(query, data).then(result => console.log(result))
     })
 }
+
 function devValidateAll() {
     fs.readdir(SHACL_DIR, async (err, files) => {
         if (err) { console.error(err); return }
@@ -55,5 +56,15 @@ function devValidateAll() {
     })
 }
 
+function devValidateOne() {
+    const requirementProfile = `${SHACL_DIR}/Kinderzuschlag.ttl`
+    fs.readFile(USER_PROFILE, "utf8", (err, userData) => {
+        fs.readFile(requirementProfile, "utf8", (err, reqData) => {
+            validateOne(userData, reqData).then(report => console.log(report))
+        })
+    })
+}
+
+// devSPARQLQueryOnRdfString()
 // devValidateAll()
-devSPARQLQueryOnRdfString()
+devValidateOne()
