@@ -3,22 +3,7 @@
 @prefix fim: <https://schema.fim.fitko.net/fields/baukasten/> .
 @prefix ff: <https://foerderfunke.org/default#> .
 
-ff:hasF00000240Value a ff:FimDataFieldProperty;
-                      ff:hasFimId fim:F00000240;
-                      ff:hasFimVersion "1.5";
-                      rdfs:label "Höhe der Miete".
-
-ff:hasF00003175Value a ff:FimDataFieldProperty;
-                      ff:hasFimId fim:F00003175;
-                      ff:hasFimVersion "1.0";
-                      rdfs:label "Wohnfläche in m²".
-
-ff:hasF03010085Value a ff:FimDataFieldProperty;
-                      ff:hasFimId fim:F03010085;
-                      ff:hasFimVersion "1.0";
-                      rdfs:label "Wohnort".
-
-ff:mainPerson a ff:Citizen;
-               ff:hasF00000240Value 1200;
-               ff:hasF00003175Value 80;
-               ff:hasF03010085Value "Berlin".
+ff:mainPerson a ff:Citizen ;
+              ff:paysRentCold 1200 ;
+              ff:hasLivingArea 80 ;
+              ff:hasResidence "Berlin" .

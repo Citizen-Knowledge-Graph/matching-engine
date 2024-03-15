@@ -1,0 +1,19 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix fim: <https://schema.fim.fitko.net/fields/baukasten/> .
+@prefix ff: <https://foerderfunke.org/default#> .
+
+ff:paysRentCold a ff:FimDataFieldProperty ;
+                ff:hasFimId fim:F00000240 ;
+                ff:hasFimVersion "1.5" ;
+                rdfs:label "Höhe der Miete" .
+
+ff:hasLivingArea a ff:FimDataFieldProperty ;
+                 ff:hasFimId fim:F00003175 ;
+                 ff:hasFimVersion "1.0" ;
+                 rdfs:label "Wohnfläche in m²" .
+
+ff:hasResidence a ff:FimDataFieldProperty ;
+                ff:hasFimId fim:F03010085 ;
+                ff:hasFimVersion "1.0" ;
+                rdfs:label "Wohnort" .
