@@ -13,11 +13,11 @@
     "build": "rollup -c && tsc"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "latest",
+    "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-json": "^6.1.0",
-    "@rollup/plugin-node-resolve": "latest",
-    "rollup": "latest",
-    "typescript": "latest"
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "rollup": "^2.79.1",
+    "typescript": "^5.4.2"
   },
   "dependencies": {
     "@comunica/query-sparql-rdfjs": "^2.10.2",
