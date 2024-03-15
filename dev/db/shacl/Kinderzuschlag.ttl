@@ -1,0 +1,24 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix ff: <https://foerderfunke.org/default#> .
+@prefix fim: <https://schema.fim.fitko.net/fields/baukasten/> .
+@prefix schema: <http://schema.org/> .
+
+ff:metadata ff:author ff:benjaminaaron ;
+            ff:created "2024-03-14"^^xsd:date ;
+            ff:title "Kinderzuschlag" .
+
+ff:ChildAgeConstraint a sh:NodeShape ;
+                      sh:targetObjectsOf schema:children ;
+                      sh:sparql [
+                                    sh:select """
+                                    PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+
+                                    SELECT $this WHERE {
+                                        $this foaf:birthday ?birthDate .
+                                        BIND(YEAR(NOW()) - YEAR(?bday) - IF(MONTH(NOW()) < MONTH(?bday) || (MONTH(NOW()) = MONTH(?bday) && DAY(NOW()) < DAY(?bday)), 1, 0) AS ?age) .
+                                    }
+                                    FILTER (?age => 25)
+                                    """ ;
+                                    sh:message "Child must be under 25 years old." ;
+                                ] .
