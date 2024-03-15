@@ -14,8 +14,14 @@
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "latest",
+    "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "latest",
     "rollup": "latest",
     "typescript": "latest"
+  },
+  "dependencies": {
+    "@comunica/query-sparql-rdfjs": "^2.10.2",
+    "n3": "^1.17.2",
+    "sparqljs": "^3.7.1"
   }
 }
