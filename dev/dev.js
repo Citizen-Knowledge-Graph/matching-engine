@@ -8,13 +8,21 @@ const SHACL_DIR = `${DB_DIR}/shacl`
 const USER_PROFILE = `${DB_DIR}/dummy-user-profile.ttl`
 
 function devSPARQLQueryOnRdfString() {
-    const query = "SELECT * WHERE { ?s ?p ?o }"
-    const rdfStr = `
-        @prefix ex: <http://example.org/> .
-        ex:subject ex:predicate ex:object .
-        ex:sub2 ex:pred2 ex:obj2 .
+    const query = `
+        PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+        SELECT * WHERE { 
+            ?s foaf:birthday ?bday .
+            BIND(YEAR(NOW()) - YEAR(?bday) - IF(MONTH(NOW()) < MONTH(?bday) || (MONTH(NOW()) = MONTH(?bday) && DAY(NOW()) < DAY(?bday)), 1, 0) AS ?age) .
+        }
     `
-    runSPARQLQueryOnRdfString(query, rdfStr).then(result => console.log(result))
+    /*const rdfStr = `
+        @prefix ex: <http://example.org/> .
+        ex:sub1 ex:pred1 ex:obj1 .
+        ex:sub2 ex:pred2 ex:obj2 .
+    `*/
+    fs.readFile(USER_PROFILE, "utf8", (err, data) => {
+        runSPARQLQueryOnRdfString(query, data).then(result => console.log(result))
+    })
 }
 function devValidateAll() {
     fs.readdir(SHACL_DIR, async (err, files) => {
