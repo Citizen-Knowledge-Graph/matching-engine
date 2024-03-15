@@ -17,3 +17,20 @@ ff:hasResidence a ff:FimDataFieldProperty ;
                 ff:hasFimId fim:F03010085 ;
                 ff:hasFimVersion "1.0" ;
                 rdfs:label "Wohnort" .
+
+ff:hasNumberOfChildren a ff:FimDataFieldProperty ;
+                       ff:hasFimId fim:F05011522 ;
+                       ff:hasFimVersion "1.0" ;
+                       rdfs:label "Anzahl Kinder" ;
+                       rdfs:comment "Angabe der Anzahl der im Haushalt lebenden Kinder." .
+
+ff:hasIncomeBrutto a ff:FimDataFieldProperty ;
+                   ff:hasFimId fim:F00000575 ;
+                   ff:hasFimVersion "1.1" ;
+                   rdfs:label "Höhe des Einkommens (Brutto)" .
+
+ff:hasMaritalStatus a ff:FimDataFieldProperty ;
+                    ff:hasFimId fim:F00000575 ;
+                    ff:hasFimVersion "1.3" ;
+                    rdfs:label "Familienstand" ;
+                    ff:usesCodeList "urn:de:dsmeld:schluesseltabelle:familienstand_2" . # https://www.xrepository.de/details/urn:de:dsmeld:schluesseltabelle:familienstand

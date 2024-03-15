@@ -2,8 +2,29 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix fim: <https://schema.fim.fitko.net/fields/baukasten/> .
 @prefix ff: <https://foerderfunke.org/default#> .
+@prefix schema: <http://schema.org/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
 
-ff:mainPerson a ff:Citizen ;
+ff:mainPerson a ff:Citizen, schema:Person ;
+              foaf:name "Max Mustermann" ;
+              foaf:birthday "1992-05-17"^^xsd:date ;
               ff:paysRentCold 1200 ;
               ff:hasLivingArea 80 ;
-              ff:hasResidence "Berlin" .
+              ff:hasResidence "Berlin" ;
+              ff:hasNumberOfChildren 1 ;
+              ff:receivesTransferPayment ff:transferPayment1 ;
+              ff:parentingSetup ff:alleinerziehend ;
+              ff:hasIncomeBrutto 3000 .
+
+ff:mainPerson schema:children ff:otherPerson1 .
+
+ff:otherPerson1 a schema:Person ;
+                foaf:name "Maria Mustermann" ;
+                foaf:birthday "2021-10-01"^^xsd:date ;
+                ff:hasMaritalStatus "LD" . # ledig
+
+ff:transferPayment1 a ff:TransferPayment ;
+                    ff:hasFimId 576982 ;
+                    ff:hasLeiKaId 99041008000000 ;
+                    rdfs:label "Kindergeld" ;
+                    ff:eligibleBecause ff:otherPerson1 .
