@@ -5,7 +5,7 @@ import { runSPARQLQueryOnRdfString, validateAll } from "../src/index.js"
 
 const DB_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "db")
 const SHACL_DIR = `${DB_DIR}/shacl`
-const USER_PROFILE = `${DB_DIR}/user-profile.ttl`
+const USER_PROFILE = `${DB_DIR}/dummy-user-profile.ttl`
 
 function devSPARQLQueryOnRdfString() {
     const query = "SELECT * WHERE { ?s ?p ?o }"
