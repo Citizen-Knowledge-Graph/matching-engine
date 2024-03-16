@@ -24,7 +24,7 @@ export async function validateOne(userProfile, requirementProfile) {
     rdfStringToDataset(userProfile).then(userProfileDataset => {
         rdfStringToDataset(requirementProfile).then(requirementProfileDataset => {
             const validator = new Validator(requirementProfileDataset, { factory: rdfDataModel })
-            validator.validate(userProfileDataset).then(report => {
+            validator.validate({ dataset: userProfileDataset }).then(report => {
                 console.log(report)
             })
         })
