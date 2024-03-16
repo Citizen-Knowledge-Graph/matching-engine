@@ -1,7 +1,8 @@
 import { QueryEngine } from "@comunica/query-sparql-rdfjs"
-import {rdfStringToDataset, rdfStringToStore} from "./utils.js"
+import { rdfStringToDataset, rdfStringToStore } from "./utils.js"
 import Validator from "shacl-engine/Validator.js"
 import rdf from "rdf-ext"
+import { Writer as N3Writer } from "n3"
 
 /**
  * @param {string} userProfile
@@ -23,9 +24,14 @@ export async function validateAll(userProfile, requirementProfiles) {
 export async function validateOne(userProfile, requirementProfile) {
     rdfStringToDataset(userProfile).then(userProfileDataset => {
         rdfStringToDataset(requirementProfile).then(requirementProfileDataset => {
-            const validator = new Validator(requirementProfileDataset, { factory: rdf })
+            const validator = new Validator(requirementProfileDataset, { factory: rdf, debug: true })
             validator.validate({ dataset: userProfileDataset }).then(report => {
-                console.log(report)
+
+                const writer = new N3Writer({ prefixes: { sh: "http://www.w3.org/ns/shacl#", ff: "https://foerderfunke.org/default#" } });
+                report.dataset.forEach(quad => writer.addQuad(quad))
+                writer.end((error, result) => console.log(result));
+
+                // for (let result of report.results) {}
             })
         })
     })

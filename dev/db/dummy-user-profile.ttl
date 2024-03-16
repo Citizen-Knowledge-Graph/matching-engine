@@ -17,11 +17,16 @@ ff:mainPerson a ff:Citizen, schema:Person ;
               ff:hasIncomeBrutto 3000 .
 
 ff:mainPerson schema:children ff:otherPerson1 .
+# ff:mainPerson schema:children ff:otherPerson2 .
 
 ff:otherPerson1 a schema:Person ;
                 foaf:name "Maria Mustermann" ;
                 foaf:birthday "2021-10-01"^^xsd:date ;
+                foaf:age 24 ;
                 ff:hasMaritalStatus "LD" . # ledig
+
+# ff:otherPerson2 a schema:Person ;
+#                 foaf:age 26 .
 
 ff:transferPayment1 a ff:TransferPayment ;
                     ff:hasFimId 576982 ;

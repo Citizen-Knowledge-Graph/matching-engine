@@ -3,22 +3,25 @@
 @prefix ff: <https://foerderfunke.org/default#> .
 @prefix fim: <https://schema.fim.fitko.net/fields/baukasten/> .
 @prefix schema: <http://schema.org/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
 
 ff:metadata ff:author ff:benjaminaaron ;
             ff:created "2024-03-14"^^xsd:date ;
             ff:title "Kinderzuschlag" .
 
-ff:ChildAgeConstraint a sh:NodeShape ;
-                      sh:targetObjectsOf schema:children ;
-                      sh:sparql [
-                                    sh:select """
-                                    PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+ff:MainPersonHasChildShape a sh:NodeShape ;
+                           sh:targetClass ff:Citizen ;
+                           sh:property [
+                                           sh:path schema:children ;
+                                           sh:node ff:ChildRequirementsShape ;
+                                           sh:minCount 1 ;
+                                           sh:message "The child doesn't exist or doesn't fulfill one or more criteria" ;
+                                       ] .
 
-                                    SELECT $this WHERE {
-                                        $this foaf:birthday ?birthDate .
-                                        BIND(YEAR(NOW()) - YEAR(?bday) - IF(MONTH(NOW()) < MONTH(?bday) || (MONTH(NOW()) = MONTH(?bday) && DAY(NOW()) < DAY(?bday)), 1, 0) AS ?age) .
-                                    }
-                                    FILTER (?age => 25)
-                                    """ ;
-                                    sh:message "Child must be under 25 years old." ;
-                                ] .
+ff:ChildRequirementsShape a sh:NodeShape ;
+                          sh:targetObjectsOf schema:children ;
+                          sh:property [
+                                          sh:path foaf:age ;
+                                          sh:maxExclusive 25 ;
+                                          sh:message "The child must be under 25 years old" ;
+                                      ] .
