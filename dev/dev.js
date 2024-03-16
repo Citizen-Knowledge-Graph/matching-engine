@@ -65,6 +65,30 @@ function devValidateOne() {
     })
 }
 
+function devValidateOneStrings() {
+    const userProfile = `
+        @prefix ex: <http://example.org/> .
+        
+        ex:numb1 a ex:Number .
+        ex:numb1 ex:is 5 .
+    `
+    const requirementProfile = `
+        @prefix ex: <http://example.org/> .
+        @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+        @prefix sh: <http://www.w3.org/ns/shacl#> .
+        
+        ex:NumbShape a sh:NodeShape ;
+            sh:targetClass ex:Number ;
+            sh:property [
+                sh:path ex:is ;
+                sh:minInclusive 10 ;
+                sh:message "ex:Number must be at least 10" ;
+            ] .
+    `
+    validateOne(userProfile, requirementProfile).then(report => console.log(report))
+}
+
 // devSPARQLQueryOnRdfString()
 // devValidateAll()
 devValidateOne()
+// devValidateOneStrings()
