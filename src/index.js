@@ -59,3 +59,10 @@ export async function runSparqlSelectQueryOnRdfString(query, rdfStr) {
     });
     return results
 }
+
+export async function runSparqlConstructQueryOnRdfString(query, rdfStr) {
+    let store = await rdfStringToStore(rdfStr)
+    const queryEngine = new QueryEngine()
+    let quadsStream = await queryEngine.queryQuads(query, { sources: [ store ] })
+    return await quadsStream.toArray()
+}

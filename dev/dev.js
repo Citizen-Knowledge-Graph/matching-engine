@@ -3,6 +3,7 @@ import { fileURLToPath } from "url"
 import fs from "fs"
 import {
     runSparqlSelectQueryOnRdfString,
+    runSparqlConstructQueryOnRdfString,
     validateAll,
     validateOne
 } from "../src/index.js"
@@ -26,6 +27,21 @@ function devRunSparqlSelectQueryOnRdfString() {
     `*/
     fs.readFile(USER_PROFILE, "utf8", (err, data) => {
         runSparqlSelectQueryOnRdfString(query, data).then(result => console.log(result))
+    })
+}
+
+function devRunSparqlConstructQueryOnRdfString() {
+    const query = `
+        PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+        CONSTRUCT {
+            ?person foaf:age ?age .
+        } WHERE { 
+            ?person foaf:birthday ?bday .
+            BIND(YEAR(NOW()) - YEAR(?bday) - IF(MONTH(NOW()) < MONTH(?bday) || (MONTH(NOW()) = MONTH(?bday) && DAY(NOW()) < DAY(?bday)), 1, 0) AS ?age) .
+        }
+    `
+    fs.readFile(USER_PROFILE, "utf8", (err, data) => {
+        runSparqlConstructQueryOnRdfString(query, data).then(result => console.log(result))
     })
 }
 
@@ -93,6 +109,7 @@ function devValidateOneStrings() {
 }
 
 // devRunSparqlSelectQueryOnRdfString()
+// devRunSparqlConstructQueryOnRdfString()
 // devValidateAll()
 devValidateOne()
 // devValidateOneStrings()
