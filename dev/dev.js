@@ -5,7 +5,7 @@ import { runSPARQLQueryOnRdfString, validateAll, validateOne } from "../src/inde
 
 const DB_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "db")
 const SHACL_DIR = `${DB_DIR}/shacl`
-const USER_PROFILE = `${DB_DIR}/dummy-user-profile.ttl`
+const USER_PROFILE = `${DB_DIR}/dev-user-profile.ttl`
 
 function devSPARQLQueryOnRdfString() {
     const query = `
