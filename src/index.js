@@ -43,20 +43,19 @@ export async function validateOne(userProfile, requirementProfile) {
  * @param {string} rdfStr
  * @returns {Promise<Object[]>}
  */
-export async function runSPARQLQueryOnRdfString(query, rdfStr) {
+export async function runSparqlSelectQueryOnRdfString(query, rdfStr) {
     let store = await rdfStringToStore(rdfStr)
-    const queryEngine = new QueryEngine();
-    await queryEngine.invalidateHttpCache();
+    const queryEngine = new QueryEngine()
     let bindingsStream = await queryEngine.queryBindings(query, { sources: [ store ] })
     let bindings = await bindingsStream.toArray()
-    let resultTable = []
+    let results = []
     bindings.forEach(binding => {
         const variables = Array.from(binding.keys()).map(({ value }) => value)
         let row = {}
         variables.forEach(variable => {
             row[variable] = binding.get(variable).value
         })
-        resultTable.push(row)
+        results.push(row)
     });
-    return resultTable
+    return results
 }

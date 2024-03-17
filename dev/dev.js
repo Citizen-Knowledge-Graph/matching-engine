@@ -1,13 +1,17 @@
 import path from "path"
 import { fileURLToPath } from "url"
 import fs from "fs"
-import { runSPARQLQueryOnRdfString, validateAll, validateOne } from "../src/index.js"
+import {
+    runSparqlSelectQueryOnRdfString,
+    validateAll,
+    validateOne
+} from "../src/index.js"
 
 const DB_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "db")
 const SHACL_DIR = `${DB_DIR}/shacl`
 const USER_PROFILE = `${DB_DIR}/dev-user-profile.ttl`
 
-function devSPARQLQueryOnRdfString() {
+function devRunSparqlSelectQueryOnRdfString() {
     const query = `
         PREFIX foaf: <http://xmlns.com/foaf/0.1/>
         SELECT * WHERE { 
@@ -21,7 +25,7 @@ function devSPARQLQueryOnRdfString() {
         ex:sub2 ex:pred2 ex:obj2 .
     `*/
     fs.readFile(USER_PROFILE, "utf8", (err, data) => {
-        runSPARQLQueryOnRdfString(query, data).then(result => console.log(result))
+        runSparqlSelectQueryOnRdfString(query, data).then(result => console.log(result))
     })
 }
 
@@ -88,7 +92,7 @@ function devValidateOneStrings() {
     validateOne(userProfile, requirementProfile).then(report => console.log(report))
 }
 
-// devSPARQLQueryOnRdfString()
+// devRunSparqlSelectQueryOnRdfString()
 // devValidateAll()
 devValidateOne()
 // devValidateOneStrings()
