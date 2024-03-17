@@ -22,7 +22,7 @@ ff:mainPerson schema:children ff:otherPerson1 .
 ff:otherPerson1 a schema:Person ;
                 foaf:name "Maria Mustermann" ;
                 foaf:birthday "2021-10-01"^^xsd:date ;
-                foaf:age 24 ;
+                # foaf:age 24 ;
                 ff:hasMaritalStatus "LD" . # ledig
 
 # ff:otherPerson2 a schema:Person ;

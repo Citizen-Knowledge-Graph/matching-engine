@@ -23,5 +23,7 @@ ff:ChildRequirementsShape a sh:NodeShape ;
                           sh:property [
                                           sh:path foaf:age ;
                                           sh:maxExclusive 25 ;
+                                          sh:minCount 1 ;
+                                          sh:maxCount 1 ;
                                           sh:message "The child must be under 25 years old" ;
                                       ] .

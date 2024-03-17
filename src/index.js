@@ -3,6 +3,13 @@ import { rdfStringToDataset, rdfStringToStore } from "./utils.js"
 import Validator from "shacl-engine/Validator.js"
 import rdf from "rdf-ext"
 import { Writer as N3Writer } from "n3"
+import path from "path"
+import { fileURLToPath } from "url"
+import fs from "fs"
+
+const DB_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "db")
+const DATAFIELDS = `${DB_DIR}/datafields.ttl`
+const MATERIALIZATION = `${DB_DIR}/materialization.ttl`
 
 /**
  * @param {string} userProfile
@@ -22,19 +29,50 @@ export async function validateAll(userProfile, requirementProfiles) {
  * @returns {Promise<string>}
  */
 export async function validateOne(userProfile, requirementProfile) {
-    rdfStringToDataset(userProfile).then(userProfileDataset => {
-        rdfStringToDataset(requirementProfile).then(requirementProfileDataset => {
-            const validator = new Validator(requirementProfileDataset, { factory: rdf, debug: true })
-            validator.validate({ dataset: userProfileDataset }).then(report => {
+    let userProfileStore = await rdfStringToStore(userProfile)
+    let userProfileDataset = rdf.dataset(userProfileStore.getQuads())
+    let requirementProfileDataset = await rdfStringToDataset(requirementProfile)
 
-                const writer = new N3Writer({ prefixes: { sh: "http://www.w3.org/ns/shacl#", ff: "https://foerderfunke.org/default#" } });
-                report.dataset.forEach(quad => writer.addQuad(quad))
-                writer.end((error, result) => console.log(result));
+    const validator = new Validator(requirementProfileDataset, { factory: rdf, debug: false })
+    validator.validate({ dataset: userProfileDataset }).then(report => {
+        let missings = []
+        for (let result of report.results) {
+            const comp = result.constraintComponent.value.split("#")[1]
+            if (comp === "MinCountConstraintComponent") {
+                let missingPredicate = result.path[0].predicates[0].id // can these two arrays be bigger than 1? TODO
+                let fromSubject = result.focusNode.value
+                missings.push({ subject: fromSubject, predicate: missingPredicate })
+            }
+        }
 
-                // for (let result of report.results) {}
+        const writer = new N3Writer({ prefixes: { sh: "http://www.w3.org/ns/shacl#", ff: "https://foerderfunke.org/default#" } });
+        report.dataset.forEach(quad => writer.addQuad(quad))
+        writer.end((error, result) => console.log(result));
+
+        if (!missings.length) return
+
+        fs.readFile(MATERIALIZATION, "utf8", (err, data) => {
+            rdfStringToStore(data).then(materializationStore => {
+
+                let missing = missings[0] // loop TODO
+
+                let query = `
+                    PREFIX ff: <https://foerderfunke.org/default#>
+                    SELECT * WHERE {
+                        ?rule ff:input ?input .
+                        ?rule ff:output <${missing.predicate}> .
+                        ?rule ff:sparqlConstructQuery ?query .
+                    }
+                `
+                runSparqlSelectQueryOnStore(query, materializationStore).then(results => {
+                    console.log("materialization query results", results)
+
+                    // ...
+                })
             })
         })
     })
+
     return "" // TODO
 }
 
@@ -45,6 +83,10 @@ export async function validateOne(userProfile, requirementProfile) {
  */
 export async function runSparqlSelectQueryOnRdfString(query, rdfStr) {
     let store = await rdfStringToStore(rdfStr)
+    return runSparqlSelectQueryOnStore(query, store)
+}
+
+export async function runSparqlSelectQueryOnStore(query, store) {
     const queryEngine = new QueryEngine()
     let bindingsStream = await queryEngine.queryBindings(query, { sources: [ store ] })
     let bindings = await bindingsStream.toArray()
