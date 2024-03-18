@@ -4,10 +4,13 @@
 @prefix fim: <https://schema.fim.fitko.net/fields/baukasten/> .
 @prefix schema: <http://schema.org/> .
 @prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
 ff:metadata ff:author ff:benjaminaaron ;
             ff:created "2024-03-14"^^xsd:date ;
             ff:title "Kinderzuschlag" .
+
+# trigger reminder (valid only for 6 months) TODO
 
 ff:MainPersonHasChildShape a sh:NodeShape ;
                            sh:targetClass ff:Citizen ;
@@ -27,3 +30,84 @@ ff:ChildRequirementsShape a sh:NodeShape ;
                                           sh:maxCount 1 ;
                                           sh:message "The child must be under 25 years old" ;
                                       ] .
+
+ff:RegelbedarfeSgb2 a ff:TableOfConstants ;
+                    rdfs:comment "Werte gültig seit 2024-01-01" ;
+                    rdfs:seeAlso <https://www.arbeitsagentur.de/datei/kiz2-merkblattkinderzuschlag_ba034485.pdf> ;
+                    ff:hasRow ff:Alleinerziehend ;
+                    ff:hasRow ff:Elternpaare ;
+                    ff:hasRow ff:KinderU6 ;
+                    ff:hasRow ff:Kinder6_U14 ;
+                    ff:hasRow ff:Jugendliche14_U18 ;
+                    ff:hasRow ff:VolljaehrigeKinder18_U25 .
+
+ff:Alleinerziehend ff:hatRegelbedarf 563 .
+ff:Elternpaare ff:hatRegelbedarf 1012 ;
+               rdfs:comment "Zusammensetzung: 2 * 506" .
+ff:KinderU6 ff:hatRegelbedarf 357 ;
+            xsd:minInclusive 0 ;
+            xsd:maxExclusive 6 .
+ff:Kinder6_U14 ff:hatRegelbedarf 390 ;
+               xsd:minInclusive 6 ;
+               xsd:maxExclusive 14 .
+ff:Jugendliche14_U18 ff:hatRegelbedarf 471 ;
+                     xsd:minInclusive 14 ;
+                     xsd:maxExclusive 18 .
+ff:VolljaehrigeKinder18_U25 ff:hatRegelbedarf 451 ;
+                            xsd:minInclusive 18 ;
+                            xsd:maxExclusive 25 .
+
+ff:CalculateGesamtbedarfFamilie a ff:SparqlFormula ;
+    rdfs:label "Berechne den Gesamtbedarf einer Familie" ;
+    ff:output ff:hasGesamtbedarf ;
+    ff:suggestPermanentMaterialization false ;
+    ff:sparqlConstructQuery """
+        PREFIX ff: <https://foerderfunke.org/default#>
+        PREFIX schema: <http://schema.org/>
+        PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+
+        CONSTRUCT {
+            ff:mainPerson ff:hasGesamtbedarf ?gesamtbedarf .
+        } WHERE {
+            SELECT (SUM(?bedarf) AS ?gesamtbedarf) WHERE {
+                {
+                    ff:mainPerson ff:parentingSetup ?parentingSetup .
+                    ?parentingSetup ff:hatRegelbedarf ?bedarf .
+                } UNION {
+                    ff:mainPerson schema:children ?child .
+                    ?child foaf:age ?age .
+                    ?ageGroup xsd:minInclusive ?min ;
+                              xsd:maxExclusive ?max .
+                    FILTER(?age >= ?min && ?age < ?max) .
+                    ?ageGroup ff:hatRegelbedarf ?bedarf .
+                } UNION {
+                    ff:mainPerson ff:paysRentCold ?bedarf .
+                }
+            }
+        }
+    """ .
+
+ff:CalculateGesamtverfuegungFamilie a ff:SparqlFormula ;
+    rdfs:label "Berechne die Gesamtverfügung einer Familie" ;
+    ff:output ff:hasGesamtverfuegung ;
+    ff:suggestPermanentMaterialization false ;
+    ff:sparqlConstructQuery """
+        PREFIX ff: <https://foerderfunke.org/default#>
+        PREFIX schema: <http://schema.org/>
+        PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+
+        CONSTRUCT {
+            ff:mainPerson ff:hasGesamtverfuegung ?gesamtverfuegung .
+        } WHERE {
+            SELECT (SUM(?income) AS ?gesamtverfuegung) WHERE {
+                {
+                    ff:mainPerson schema:children ?child .
+                    ?child ff:receiveKindergeld ?income .
+                } UNION {
+                    ff:mainPerson ff:hasIncomeNetto ?income .
+                } UNION {
+                    ff:mainPerson ff:receivesWohngeld ?income .
+                }
+            }
+        }
+    """ .

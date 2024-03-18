@@ -34,3 +34,8 @@ ff:hasMaritalStatus a ff:FimDataFieldProperty ;
                     ff:hasFimVersion "1.3" ;
                     rdfs:label "Familienstand" ;
                     ff:usesCodeList "urn:de:dsmeld:schluesseltabelle:familienstand_2" . # https://www.xrepository.de/details/urn:de:dsmeld:schluesseltabelle:familienstand
+
+ff:receivesKindergeld a ff:FimLeistung ;
+                      ff:hasFimId 576982 ;
+                      ff:hasLeiKaId 99041008000000 ;
+                      rdfs:label "Kindergeld" .
