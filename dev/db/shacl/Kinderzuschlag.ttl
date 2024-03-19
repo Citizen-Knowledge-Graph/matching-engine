@@ -7,31 +7,31 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
 ff:metadata ff:author ff:benjaminaaron ;
-            ff:created "2024-03-14"^^xsd:date ;
-            ff:title "Kinderzuschlag" .
+    ff:created "2024-03-14"^^xsd:date ;
+    ff:title "Kinderzuschlag" .
 
 # trigger reminder (valid only for 6 months) TODO
 
 # CONDITIONS
 
 ff:MainPersonHasChildShape a sh:NodeShape ;
-                           sh:targetClass ff:Citizen ;
-                           sh:property [
-                                           sh:path schema:children ;
-                                           sh:node ff:ChildRequirementsShape ;
-                                           sh:minCount 1 ;
-                                           sh:message "The child doesn't exist or doesn't fulfill one or more criteria" ;
-                                       ] .
+    sh:targetClass ff:Citizen ;
+    sh:property [
+        sh:path schema:children ;
+        sh:node ff:ChildRequirementsShape ;
+        sh:minCount 1 ;
+        sh:message "The child doesn't exist or doesn't fulfill one or more criteria" ;
+    ] .
 
 ff:ChildRequirementsShape a sh:NodeShape ;
-                          sh:targetObjectsOf schema:children ;
-                          sh:property [
-                                          sh:path foaf:age ;
-                                          sh:maxExclusive 25 ;
-                                          sh:minCount 1 ;
-                                          sh:maxCount 1 ;
-                                          sh:message "The child must be under 25 years old" ;
-                                      ] .
+    sh:targetObjectsOf schema:children ;
+    sh:property [
+        sh:path foaf:age ;
+        sh:maxExclusive 25 ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "The child must be under 25 years old" ;
+    ] .
 
 ff:GesamtverfuegungGeringerAlsGesamtbedarfShape a sh:NodeShape ;
     sh:targetClass ff:Citizen ;
@@ -66,30 +66,30 @@ ff:GesamtverfuegungPlusKinderzuschlagDecktGesamtbedarfShape a sh:NodeShape ;
 # CONSTANTS
 
 ff:RegelbedarfeSgb2 a ff:TableOfConstants ;
-                    rdfs:comment "Werte gültig seit 2024-01-01" ;
-                    rdfs:seeAlso <https://www.arbeitsagentur.de/datei/kiz2-merkblattkinderzuschlag_ba034485.pdf> ;
-                    ff:hasRow ff:Alleinerziehend ;
-                    ff:hasRow ff:Elternpaare ;
-                    ff:hasRow ff:KinderU6 ;
-                    ff:hasRow ff:Kinder6_U14 ;
-                    ff:hasRow ff:Jugendliche14_U18 ;
-                    ff:hasRow ff:VolljaehrigeKinder18_U25 .
+    rdfs:comment "Werte gültig seit 2024-01-01" ;
+    rdfs:seeAlso <https://www.arbeitsagentur.de/datei/kiz2-merkblattkinderzuschlag_ba034485.pdf> ;
+    ff:hasRow ff:Alleinerziehend ;
+    ff:hasRow ff:Elternpaare ;
+    ff:hasRow ff:KinderU6 ;
+    ff:hasRow ff:Kinder6_U14 ;
+    ff:hasRow ff:Jugendliche14_U18 ;
+    ff:hasRow ff:VolljaehrigeKinder18_U25 .
 
 ff:Alleinerziehend ff:hatRegelbedarf 563 .
 ff:Elternpaare ff:hatRegelbedarf 1012 ;
-               rdfs:comment "Zusammensetzung: 2 * 506" .
+    rdfs:comment "Zusammensetzung: 2 * 506" .
 ff:KinderU6 ff:hatRegelbedarf 357 ;
-            xsd:minInclusive 0 ;
-            xsd:maxExclusive 6 .
+    xsd:minInclusive 0 ;
+    xsd:maxExclusive 6 .
 ff:Kinder6_U14 ff:hatRegelbedarf 390 ;
-               xsd:minInclusive 6 ;
-               xsd:maxExclusive 14 .
+    xsd:minInclusive 6 ;
+    xsd:maxExclusive 14 .
 ff:Jugendliche14_U18 ff:hatRegelbedarf 471 ;
-                     xsd:minInclusive 14 ;
-                     xsd:maxExclusive 18 .
+    xsd:minInclusive 14 ;
+    xsd:maxExclusive 18 .
 ff:VolljaehrigeKinder18_U25 ff:hatRegelbedarf 451 ;
-                            xsd:minInclusive 18 ;
-                            xsd:maxExclusive 25 .
+    xsd:minInclusive 18 ;
+    xsd:maxExclusive 25 .
 
 # MATERIALIZATION
 
@@ -113,7 +113,7 @@ ff:CalculateGesamtbedarfFamilie a ff:SparqlFormula ;
                     ff:mainPerson schema:children ?child .
                     ?child foaf:age ?age .
                     ?ageGroup xsd:minInclusive ?min ;
-                              xsd:maxExclusive ?max .
+                        xsd:maxExclusive ?max .
                     FILTER(?age >= ?min && ?age < ?max) .
                     ?ageGroup ff:hatRegelbedarf ?bedarf .
                 } UNION {
@@ -149,10 +149,10 @@ ff:CalculateGesamtverfuegungFamilie a ff:SparqlFormula ;
     """ .
 
 ff:CalculateGesamtverfuegungPlusKinderzuschlagFamilie a ff:SparqlFormula ;
-        rdfs:label "Berechne die Gesamtverfügung plus Kinderzuschläge einer Familie" ;
-        ff:output ff:hasGesamtverfuegungPlusKinderzuschlag ;
-        ff:suggestPermanentMaterialization false ;
-        ff:sparqlConstructQuery """
+    rdfs:label "Berechne die Gesamtverfügung plus Kinderzuschläge einer Familie" ;
+    ff:output ff:hasGesamtverfuegungPlusKinderzuschlag ;
+    ff:suggestPermanentMaterialization false ;
+    ff:sparqlConstructQuery """
         PREFIX ff: <https://foerderfunke.org/default#>
         PREFIX schema: <http://schema.org/>
 
