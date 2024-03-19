@@ -126,7 +126,8 @@ ff:CalculateGesamtbedarfFamilie a ff:SparqlFormula ;
 
 ff:CalculateGesamtverfuegungFamilie a ff:SparqlFormula ;
     rdfs:label "Berechne die Gesamtverfügung einer Familie" ;
-    ff:input schema:children , ff:receiveKindergeld , ff:hasIncomeNetto , ff:receivesWohngeld ;
+    ff:input schema:children , ff:receiveKindergeld , ff:hasIncomeNetto ;
+    ff:inputOptional ff:receivesWohngeld ;
     ff:output ff:hasGesamtverfuegung ;
     ff:suggestPermanentMaterialization false ;
     ff:sparqlConstructQuery """
