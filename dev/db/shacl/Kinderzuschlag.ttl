@@ -12,6 +12,8 @@ ff:metadata ff:author ff:benjaminaaron ;
 
 # trigger reminder (valid only for 6 months) TODO
 
+# CONDITIONS
+
 ff:MainPersonHasChildShape a sh:NodeShape ;
                            sh:targetClass ff:Citizen ;
                            sh:property [
@@ -30,6 +32,38 @@ ff:ChildRequirementsShape a sh:NodeShape ;
                                           sh:maxCount 1 ;
                                           sh:message "The child must be under 25 years old" ;
                                       ] .
+
+ff:GesamtverfuegungGeringerAlsGesamtbedarfShape a sh:NodeShape ;
+    sh:targetClass ff:Citizen ;
+    sh:sparql [
+        a sh:SPARQLConstraint ;
+        sh:message "Die Familie kann mit ihrer Gesamtverfügung ohne Kinderzuschlag ihren Gesamtbedarf decken --> ein Anspruch auf Kinderzuschlag besteht daher nicht" ;
+        sh:select """
+            PREFIX ff: <https://foerderfunke.org/default#>
+            SELECT $this WHERE {
+                $this ff:hasGesamtbedarf ?gesamtbedarf .
+                $this ff:hasGesamtverfuegung ?gesamtverfuegung .
+                FILTER(?gesamtbedarf < ?gesamtverfuegung) .
+            }
+        """ ;
+    ] .
+
+ff:GesamtverfuegungPlusKinderzuschlagDecktGesamtbedarfShape a sh:NodeShape ;
+    sh:targetClass ff:Citizen ;
+    sh:sparql [
+        a sh:SPARQLConstraint ;
+        sh:message "Die Familie kann mit ihrer Gesamtverfügung plus Kinderzuschlag ihren Gesamtbedarf nicht decken --> es besteht eine Hilfebedürftigkeit nach dem SGB 2, ein Anspruch auf Kinderzuschlag besteht daher nicht" ;
+        sh:select """
+            PREFIX ff: <https://foerderfunke.org/default#>
+            SELECT $this WHERE {
+                $this ff:hasGesamtbedarf ?gesamtbedarf .
+                $this ff:hasGesamtverfuegungPlusKinderzuschlag ?gesamtverfuegungPlus .
+                FILTER(?gesamtbedarf > ?gesamtverfuegungPlus) .
+            }
+        """ ;
+   ] .
+
+# CONSTANTS
 
 ff:RegelbedarfeSgb2 a ff:TableOfConstants ;
                     rdfs:comment "Werte gültig seit 2024-01-01" ;
@@ -56,6 +90,8 @@ ff:Jugendliche14_U18 ff:hatRegelbedarf 471 ;
 ff:VolljaehrigeKinder18_U25 ff:hatRegelbedarf 451 ;
                             xsd:minInclusive 18 ;
                             xsd:maxExclusive 25 .
+
+# MATERIALIZATION
 
 ff:CalculateGesamtbedarfFamilie a ff:SparqlFormula ;
     rdfs:label "Berechne den Gesamtbedarf einer Familie" ;
@@ -107,6 +143,28 @@ ff:CalculateGesamtverfuegungFamilie a ff:SparqlFormula ;
                     ff:mainPerson ff:hasIncomeNetto ?income .
                 } UNION {
                     ff:mainPerson ff:receivesWohngeld ?income .
+                }
+            }
+        }
+    """ .
+
+ff:CalculateGesamtverfuegungPlusKinderzuschlagFamilie a ff:SparqlFormula ;
+        rdfs:label "Berechne die Gesamtverfügung plus Kinderzuschläge einer Familie" ;
+        ff:output ff:hasGesamtverfuegungPlusKinderzuschlag ;
+        ff:suggestPermanentMaterialization false ;
+        ff:sparqlConstructQuery """
+        PREFIX ff: <https://foerderfunke.org/default#>
+        PREFIX schema: <http://schema.org/>
+
+        CONSTRUCT {
+            ff:mainPerson ff:hasGesamtverfuegungPlusKinderzuschlag ?total .
+        } WHERE {
+            SELECT (?gesamtverfuegung + ?kinderzuschlagSum AS ?total) WHERE {
+                ff:mainPerson ff:hasGesamtverfuegung ?gesamtverfuegung .
+                {
+                    SELECT (COUNT(?child) * 292 AS ?kinderzuschlagSum) WHERE {
+                        ff:mainPerson schema:children ?child .
+                    }
                 }
             }
         }

@@ -13,14 +13,14 @@ const SHACL_DIR = `${DB_DIR}/shacl`
 const USER_PROFILE = `${DB_DIR}/dev-user-profile.ttl`
 
 function devRunSparqlSelectQueryOnRdfString() {
-    const query = `
+    let query = `
         PREFIX foaf: <http://xmlns.com/foaf/0.1/>
         SELECT * WHERE { 
             ?s foaf:birthday ?bday .
             BIND(YEAR(NOW()) - YEAR(?bday) - IF(MONTH(NOW()) < MONTH(?bday) || (MONTH(NOW()) = MONTH(?bday) && DAY(NOW()) < DAY(?bday)), 1, 0) AS ?age) .
         }
     `
-    /*const rdfStr = `
+    /*let rdfStr = `
         @prefix ex: <http://example.org/> .
         ex:sub1 ex:pred1 ex:obj1 .
         ex:sub2 ex:pred2 ex:obj2 .
@@ -31,7 +31,7 @@ function devRunSparqlSelectQueryOnRdfString() {
 }
 
 function devRunSparqlConstructQueryOnRdfString() {
-    const query = `
+    let query = `
         PREFIX foaf: <http://xmlns.com/foaf/0.1/>
         CONSTRUCT {
             ?person foaf:age ?age .
