@@ -82,6 +82,7 @@ export async function validateOne(userProfile, requirementProfile) {
         let query = nodesMap[rule].query
         let constructed = await runSparqlConstructQueryOnStore(query, store)
         store.addQuads(constructed)
+        // interim-store those that have suggestPermanentMaterialization set to true and ask user at the end TODO
     }
 
     // printDatasetAsTurtle(rdf.dataset(store.getQuads()))

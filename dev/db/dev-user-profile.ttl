@@ -25,11 +25,11 @@ ff:mainPerson a ff:Citizen, schema:Person ;
 ff:child1 a schema:Person ;
     foaf:name "Maria Mustermann" ;
     foaf:birthday "2013-01-23"^^xsd:date ;
-    #foaf:age 2 ;
-    ff:hasMaritalStatus "LD" ; # ledig
+    # foaf:age 11 ;
+    ff:hasMaritalStatus "LD" ; # ledig TODO
     ff:receiveKindergeld 250 .
 
 ff:child2 a schema:Person ;
     foaf:birthday "2008-02-15"^^xsd:date ;
-    #foaf:age 14 ;
+    # foaf:age 16 ;
     ff:receiveKindergeld 250 .
