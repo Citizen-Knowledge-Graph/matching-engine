@@ -1,11 +1,11 @@
 import { QueryEngine } from "@comunica/query-sparql-rdfjs"
-import { rdfStringToDataset, rdfStringToStore } from "./utils.js"
-import Validator from "shacl-engine/Validator.js"
-import rdf from "rdf-ext"
-import { Writer as N3Writer } from "n3"
+import { addRdfStringToStore, printDatasetAsTurtle, rdfStringToStore, runValidationOnStore } from "./utils.js"
+import { Store } from "n3"
 import path from "path"
 import { fileURLToPath } from "url"
-import fs from "fs"
+import { promises as fsPromise } from "fs"
+import toposort from "toposort"
+
 
 const DB_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "db")
 const DATAFIELDS = `${DB_DIR}/datafields.ttl`
@@ -19,8 +19,7 @@ const MATERIALIZATION = `${DB_DIR}/materialization.ttl`
 export async function validateAll(userProfile, requirementProfiles) {
     console.log(userProfile)
     console.log(requirementProfiles)
-
-    return "report"
+    return "TODO"
 }
 
 /**
@@ -29,51 +28,68 @@ export async function validateAll(userProfile, requirementProfiles) {
  * @returns {Promise<string>}
  */
 export async function validateOne(userProfile, requirementProfile) {
-    let userProfileStore = await rdfStringToStore(userProfile)
-    let userProfileDataset = rdf.dataset(userProfileStore.getQuads())
-    let requirementProfileDataset = await rdfStringToDataset(requirementProfile)
+    let store = new Store()
+    await addRdfStringToStore(userProfile, store)
+    await addRdfStringToStore(requirementProfile, store)
+    await fsPromise.readFile(MATERIALIZATION, "utf8").then(rdfStr => addRdfStringToStore(rdfStr, store))
 
-    const validator = new Validator(requirementProfileDataset, { factory: rdf, debug: false })
-    validator.validate({ dataset: userProfileDataset }).then(report => {
-        let missings = []
-        for (let result of report.results) {
-            const comp = result.constraintComponent.value.split("#")[1]
-            if (comp === "MinCountConstraintComponent") {
-                let missingPredicate = result.path[0].predicates[0].id // can these two arrays be bigger than 1? TODO
-                let fromSubject = result.focusNode.value
-                missings.push({ subject: fromSubject, predicate: missingPredicate })
-            }
+    let report = await runValidationOnStore(store)
+    printDatasetAsTurtle(report.dataset)
+
+    let missingList = []
+    for (let result of report.results) {
+        const comp = result.constraintComponent.value.split("#")[1]
+        if (comp === "MinCountConstraintComponent") {
+            let missingPredicate = result.path[0].predicates[0].id // can these two arrays be bigger than 1? TODO
+            let fromSubject = result.focusNode.value
+            missingList.push({ subject: fromSubject, predicate: missingPredicate })
         }
+    }
 
-        const writer = new N3Writer({ prefixes: { sh: "http://www.w3.org/ns/shacl#", ff: "https://foerderfunke.org/default#" } });
-        report.dataset.forEach(quad => writer.addQuad(quad))
-        writer.end((error, result) => console.log(result));
+    let nodesMap = {}
+    nodesMap["root"] = { rule: "root" }
 
-        if (!missings.length) return
+    for (let missing of missingList) {
+        let query = `
+            PREFIX ff: <https://foerderfunke.org/default#>
+            SELECT * WHERE {
+                ?rule ff:output ?output .
+                FILTER(?output = <${missing.predicate}>) .
+                ?rule ff:sparqlConstructQuery ?query .
+                OPTIONAL { ?rule ff:input ?input . }
+            }
+        `
+        let node = (await runSparqlSelectQueryOnStore(query, store))[0]
+        nodesMap[node.rule] = node
+    }
 
-        fs.readFile(MATERIALIZATION, "utf8", (err, data) => {
-            rdfStringToStore(data).then(materializationStore => {
+    let nodes = Object.values(nodesMap)
+    let edges = []
 
-                let missing = missings[0] // loop TODO
+    for (let node of nodes) {
+        let requiresInputFromThis = nodes.find(n => node !== n && n.output === node.input)
+        if (requiresInputFromThis) {
+            edges.push([requiresInputFromThis.rule, node.rule])
+        } else if (node.rule !== "root") {
+            edges.push(["root", node.rule])
+        }
+    }
 
-                let query = `
-                    PREFIX ff: <https://foerderfunke.org/default#>
-                    SELECT * WHERE {
-                        ?rule ff:input ?input .
-                        ?rule ff:output <${missing.predicate}> .
-                        ?rule ff:sparqlConstructQuery ?query .
-                    }
-                `
-                runSparqlSelectQueryOnStore(query, materializationStore).then(results => {
-                    console.log("materialization query results", results)
+    const sorted = toposort(edges) // topological sort to get legal execution order
+    console.log(sorted)
 
-                    // ...
-                })
-            })
-        })
-    })
+    for (let rule of sorted.slice(1)) {
+        let query = nodesMap[rule].query
+        let constructed = await runSparqlConstructQueryOnStore(query, store)
+        store.addQuads(constructed)
+    }
 
-    return "" // TODO
+    // printDatasetAsTurtle(rdf.dataset(store.getQuads()))
+
+    report = await runValidationOnStore(store)
+    printDatasetAsTurtle(report.dataset)
+
+    return ""
 }
 
 /**
@@ -98,12 +114,16 @@ export async function runSparqlSelectQueryOnStore(query, store) {
             row[variable] = binding.get(variable).value
         })
         results.push(row)
-    });
+    })
     return results
 }
 
 export async function runSparqlConstructQueryOnRdfString(query, rdfStr) {
     let store = await rdfStringToStore(rdfStr)
+    return runSparqlConstructQueryOnStore(query, store)
+}
+
+export async function runSparqlConstructQueryOnStore(query, store) {
     const queryEngine = new QueryEngine()
     let quadsStream = await queryEngine.queryQuads(query, { sources: [ store ] })
     return await quadsStream.toArray()

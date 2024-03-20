@@ -8,26 +8,28 @@
 ff:mainPerson a ff:Citizen, schema:Person ;
     foaf:name "Max Mustermann" ;
     foaf:birthday "1992-05-17"^^xsd:date ;
-    ff:paysRentCold 1200 ;
+    ff:paysRentCold 900 ;
     ff:hasLivingArea 80 ;
     ff:hasResidence "Berlin" ;
-    ff:parentingSetup ff:Alleinerziehend ;
-    ff:receivesWohngeld 400 ;
-    ff:hasIncomeBrutto 3000 ;
-    ff:hasIncomeNetto 2500 ;
+    ff:parentingSetup ff:Elternpaar ;
+    ff:receivesWohngeld 450 ;
+    ff:hasIncomeBrutto 2700 ;
+    ff:hasIncomeNetto 1600 ;
     schema:children ff:child1 ;
     schema:children ff:child2 .
+    # following the example calculation on page 8 here: https://www.arbeitsagentur.de/datei/kiz2-merkblattkinderzuschlag_ba034485.pdf
     # ff:hasGesamtbedarf 2773 ;
     # ff:hasGesamtverfuegung 2550 ;
     # ff:hasGesamtverfuegungPlusKinderzuschlag 3134 .
 
 ff:child1 a schema:Person ;
     foaf:name "Maria Mustermann" ;
-    foaf:birthday "2021-10-01"^^xsd:date ;
-    foaf:age 2 ;
+    foaf:birthday "2013-01-23"^^xsd:date ;
+    #foaf:age 2 ;
     ff:hasMaritalStatus "LD" ; # ledig
     ff:receiveKindergeld 250 .
 
 ff:child2 a schema:Person ;
-    foaf:age 14 ;
+    foaf:birthday "2008-02-15"^^xsd:date ;
+    #foaf:age 14 ;
     ff:receiveKindergeld 250 .

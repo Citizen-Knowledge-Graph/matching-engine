@@ -21,6 +21,21 @@ ff:MainPersonHasChildShape a sh:NodeShape ;
         sh:node ff:ChildRequirementsShape ;
         sh:minCount 1 ;
         sh:message "The child doesn't exist or doesn't fulfill one or more criteria" ;
+    ] ;
+    sh:property [
+        sh:path ff:hasGesamtbedarf ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ff:hasGesamtverfuegung ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+        sh:property [
+        sh:path ff:hasGesamtverfuegungPlusKinderzuschlag ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
     ] .
 
 ff:ChildRequirementsShape a sh:NodeShape ;
@@ -69,25 +84,25 @@ ff:RegelbedarfeSgb2 a ff:TableOfConstants ;
     rdfs:comment "Werte gültig seit 2024-01-01" ;
     rdfs:seeAlso <https://www.arbeitsagentur.de/datei/kiz2-merkblattkinderzuschlag_ba034485.pdf> ;
     ff:hasRow ff:Alleinerziehend ;
-    ff:hasRow ff:Elternpaare ;
-    ff:hasRow ff:KinderU6 ;
-    ff:hasRow ff:Kinder6_U14 ;
+    ff:hasRow ff:Elternpaar ;
+    ff:hasRow ff:KindU6 ;
+    ff:hasRow ff:Kind6_U14 ;
     ff:hasRow ff:Jugendliche14_U18 ;
-    ff:hasRow ff:VolljaehrigeKinder18_U25 .
+    ff:hasRow ff:VolljaehrigesKind18_U25 .
 
 ff:Alleinerziehend ff:hatRegelbedarfParent 563 .
-ff:Elternpaare ff:hatRegelbedarfParent 1012 ;
+ff:Elternpaar ff:hatRegelbedarfParent 1012 ;
     rdfs:comment "Zusammensetzung: 2 * 506" .
-ff:KinderU6 ff:hatRegelbedarfChild 357 ;
+ff:KindU6 ff:hatRegelbedarfChild 357 ;
     xsd:minInclusive 0 ;
     xsd:maxExclusive 6 .
-ff:Kinder6_U14 ff:hatRegelbedarfChild 390 ;
+ff:Kind6_U14 ff:hatRegelbedarfChild 390 ;
     xsd:minInclusive 6 ;
     xsd:maxExclusive 14 .
 ff:Jugendliche14_U18 ff:hatRegelbedarfChild 471 ;
     xsd:minInclusive 14 ;
     xsd:maxExclusive 18 .
-ff:VolljaehrigeKinder18_U25 ff:hatRegelbedarfChild 451 ;
+ff:VolljaehrigesKind18_U25 ff:hatRegelbedarfChild 451 ;
     xsd:minInclusive 18 ;
     xsd:maxExclusive 25 .
 
@@ -95,7 +110,7 @@ ff:VolljaehrigeKinder18_U25 ff:hatRegelbedarfChild 451 ;
 
 ff:CalculateGesamtbedarfFamilie a ff:SparqlFormula ;
     rdfs:label "Berechne den Gesamtbedarf einer Familie" ;
-    ff:input ff:parentingSetup , ff:hatRegelbedarfParent , ff:hatRegelbedarfChild , schema:children , foaf:age, ff:paysRentCold ;
+    ff:input foaf:age ;
     ff:output ff:hasGesamtbedarf ;
     ff:suggestPermanentMaterialization false ;
     ff:sparqlConstructQuery """
@@ -126,8 +141,6 @@ ff:CalculateGesamtbedarfFamilie a ff:SparqlFormula ;
 
 ff:CalculateGesamtverfuegungFamilie a ff:SparqlFormula ;
     rdfs:label "Berechne die Gesamtverfügung einer Familie" ;
-    ff:input schema:children , ff:receiveKindergeld , ff:hasIncomeNetto ;
-    ff:inputOptional ff:receivesWohngeld ;
     ff:output ff:hasGesamtverfuegung ;
     ff:suggestPermanentMaterialization false ;
     ff:sparqlConstructQuery """
@@ -153,7 +166,7 @@ ff:CalculateGesamtverfuegungFamilie a ff:SparqlFormula ;
 
 ff:CalculateGesamtverfuegungPlusKinderzuschlagFamilie a ff:SparqlFormula ;
     rdfs:label "Berechne die Gesamtverfügung plus Kinderzuschläge einer Familie" ;
-    ff:input ff:hasGesamtverfuegung , schema:children ;
+    ff:input ff:hasGesamtverfuegung ;
     ff:output ff:hasGesamtverfuegungPlusKinderzuschlag ;
     ff:suggestPermanentMaterialization false ;
     ff:sparqlConstructQuery """

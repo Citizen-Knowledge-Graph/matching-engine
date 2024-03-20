@@ -24,6 +24,7 @@
     "n3": "^1.17.2",
     "rdf-ext": "^2.5.1",
     "shacl-engine": "github:rdf-ext/shacl-engine#sparql",
-    "sparqljs": "^3.7.1"
+    "sparqljs": "^3.7.1",
+    "toposort": "^2.0.2"
   }
 }
