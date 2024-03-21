@@ -30,6 +30,14 @@ export async function validateAll(userProfile, requirementProfiles) {
 export async function validateOne(userProfile, requirementProfile) {
     let store = new Store()
     await addRdfStringToStore(userProfile, store)
+    let query = `
+        PREFIX ff: <https://foerderfunke.org/default#>
+        ASK { ff:mainPerson a ff:Citizen . }
+    `
+    // otherwise, a completely empty user profile would be valid
+    if (!await runSparqlAskQueryOnStore(query, store))
+        return "User profile does not contain the base triple of <<ff:mainPerson a ff:Citizen>>"
+
     await addRdfStringToStore(requirementProfile, store)
     await fsPromise.readFile(MATERIALIZATION, "utf8").then(rdfStr => addRdfStringToStore(rdfStr, store))
 
@@ -60,7 +68,7 @@ export async function validateOne(userProfile, requirementProfile) {
             }
         `
         let node = (await runSparqlSelectQueryOnStore(query, store))[0]
-        nodesMap[node.rule] = node
+        if (node) nodesMap[node.rule] = node
     }
 
     let nodes = Object.values(nodesMap)
@@ -101,6 +109,11 @@ export async function validateOne(userProfile, requirementProfile) {
 export async function runSparqlSelectQueryOnRdfString(query, rdfStr) {
     let store = await rdfStringToStore(rdfStr)
     return runSparqlSelectQueryOnStore(query, store)
+}
+
+export async function runSparqlAskQueryOnStore(query, store) {
+    const queryEngine = new QueryEngine()
+    return await queryEngine.queryBoolean(query, { sources: [store] })
 }
 
 export async function runSparqlSelectQueryOnStore(query, store) {
