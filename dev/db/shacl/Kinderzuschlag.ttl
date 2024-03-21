@@ -10,11 +10,12 @@ ff:metadata ff:author ff:benjaminaaron ;
     ff:created "2024-03-14"^^xsd:date ;
     ff:title "Kinderzuschlag" .
 
+# create "this-bridge" TODO
 # trigger reminder (valid only for 6 months) TODO
 
 # CONDITIONS
 
-ff:MainPersonHasChildShape a sh:NodeShape ;
+ff:MainPersonShape a sh:NodeShape ;
     sh:targetClass ff:Citizen ;
     sh:property [
         sh:path schema:children ;
@@ -38,7 +39,7 @@ ff:MainPersonHasChildShape a sh:NodeShape ;
         sh:maxCount 1 ;
     ] .
 
-ff:ChildRequirementsShape a sh:NodeShape ;
+ff:ChildShape a sh:NodeShape ;
     sh:targetObjectsOf schema:children ;
     sh:property [
         sh:path foaf:age ;
@@ -46,6 +47,33 @@ ff:ChildRequirementsShape a sh:NodeShape ;
         sh:minCount 1 ;
         sh:maxCount 1 ;
         sh:message "The child must be under 25 years old" ;
+    ] ;
+    sh:property [
+        sh:path ff:hasMaritalStatus ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:not [
+            sh:in ( "VH" "LP" ) ;
+        ] ;
+        sh:message "The child can't be married or in a civil union" ;
+    ] .
+
+ff:IncomeCheckShape a sh:NodeShape ;
+    sh:targetClass ff:Citizen ;
+    sh:sparql [
+        a sh:SPARQLConstraint ;
+        sh:message "Für Alleinerziehende muss das Bruttoeinkommen mindestens 600 sein, für Elternpaare mindestens 900." ;
+        sh:select """
+            PREFIX ff: <https://foerderfunke.org/default#>
+            SELECT $this WHERE {
+                $this ff:parentingSetup ?parentingSetup .
+                $this ff:hasIncomeBrutto ?income .
+                FILTER (
+                    (?parentingSetup = ff:Alleinerziehend && ?income < 600) ||
+                    (?parentingSetup = ff:Elternpaar && ?income < 900)
+                )
+            }
+        """ ;
     ] .
 
 ff:GesamtverfuegungGeringerAlsGesamtbedarfShape a sh:NodeShape ;
