@@ -90,22 +90,22 @@ export async function validateOne(userProfile, requirementProfile) {
     let nodes = Object.values(nodesMap)
     let edges = []
 
-    let blocker = []
-    let optional = []
+    let blockers = []
+    let optionals = []
     for (let missing of missingList) {
         if (nodes.find(n => n.output === missing.predicate)) continue
         if (missing.optional) {
-            optional.push(missing)
+            optionals.push(missing)
         } else {
-            blocker.push(missing)
+            blockers.push(missing)
         }
     }
 
-    if (optional.length > 0)
-        console.log("Optional data points missing:", optional)
+    if (optionals.length > 0)
+        console.log("Optional data points missing:", optionals)
 
-    if (blocker.length > 0)
-        return "Missing data points: " + JSON.stringify(blocker)
+    if (blockers.length > 0)
+        return "Missing data points: " + JSON.stringify(blockers)
 
     // handle user flow of asking for missing required and optional data points TODO
 
@@ -126,6 +126,24 @@ export async function validateOne(userProfile, requirementProfile) {
         let constructed = await runSparqlConstructQueryOnStore(query, store)
         store.addQuads(constructed)
         // interim-store those that have suggestPermanentMaterialization set to true and ask user at the end TODO
+    }
+
+    for (let optional of optionals) {
+        query = `
+            PREFIX ff: <https://foerderfunke.org/default#>
+            PREFIX sh: <http://www.w3.org/ns/shacl#>
+            DELETE { 
+                ?shape sh:property ?propertyShape .
+                ?propertyShape ?pred ?obj .
+            } WHERE {
+                ?shape a sh:NodeShape .
+                FILTER(?shape = ff:MainPersonShape) .
+                ?shape sh:property ?propertyShape .
+                ?propertyShape sh:path <${optional.predicate}> .
+                ?propertyShape ?pred ?obj .
+            }
+        ` // can this query be simplified?
+        await runSparqlDeleteQueryOnStore(query, store)
     }
 
     // printDatasetAsTurtle(rdf.dataset(store.getQuads()))
@@ -176,4 +194,9 @@ export async function runSparqlConstructQueryOnStore(query, store) {
     const queryEngine = new QueryEngine()
     let quadsStream = await queryEngine.queryQuads(query, { sources: [ store ] })
     return await quadsStream.toArray()
+}
+
+export async function runSparqlDeleteQueryOnStore(query, store) {
+    const queryEngine = new QueryEngine()
+    return await queryEngine.queryVoid(query, { sources: [ store ] })
 }
