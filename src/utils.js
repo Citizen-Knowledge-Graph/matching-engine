@@ -2,6 +2,7 @@ import { Store, Parser as N3Parser, Writer as N3Writer } from "n3"
 import SparqlParser from "sparqljs"
 import Validator from "shacl-engine/Validator.js"
 import rdf from "rdf-ext"
+import { QueryEngine } from "@comunica/query-sparql-rdfjs"
 
 /**
  * @param {string} rdfStr
@@ -61,4 +62,51 @@ export async function runValidationOnStore(store) {
     let dataset = rdf.dataset(store.getQuads())
     let validator = new Validator(dataset, { factory: rdf, debug: false })
     return await validator.validate({ dataset: dataset })
+}
+
+/**
+ * @param {string} query
+ * @param {string} rdfStr
+ * @returns {Promise<Object[]>}
+ */
+export async function runSparqlSelectQueryOnRdfString(query, rdfStr) {
+    let store = await rdfStringToStore(rdfStr)
+    return runSparqlSelectQueryOnStore(query, store)
+}
+
+export async function runSparqlAskQueryOnStore(query, store) {
+    const queryEngine = new QueryEngine()
+    return await queryEngine.queryBoolean(query, { sources: [store] })
+}
+
+export async function runSparqlSelectQueryOnStore(query, store) {
+    const queryEngine = new QueryEngine()
+    let bindingsStream = await queryEngine.queryBindings(query, { sources: [ store ] })
+    let bindings = await bindingsStream.toArray()
+    let results = []
+    bindings.forEach(binding => {
+        const variables = Array.from(binding.keys()).map(({ value }) => value)
+        let row = {}
+        variables.forEach(variable => {
+            row[variable] = binding.get(variable).value
+        })
+        results.push(row)
+    })
+    return results
+}
+
+export async function runSparqlConstructQueryOnRdfString(query, rdfStr) {
+    let store = await rdfStringToStore(rdfStr)
+    return runSparqlConstructQueryOnStore(query, store)
+}
+
+export async function runSparqlConstructQueryOnStore(query, store) {
+    const queryEngine = new QueryEngine()
+    let quadsStream = await queryEngine.queryQuads(query, { sources: [ store ] })
+    return await quadsStream.toArray()
+}
+
+export async function runSparqlDeleteQueryOnStore(query, store) {
+    const queryEngine = new QueryEngine()
+    return await queryEngine.queryVoid(query, { sources: [ store ] })
 }

@@ -1,5 +1,12 @@
-import { QueryEngine } from "@comunica/query-sparql-rdfjs"
-import { addRdfStringToStore, printDatasetAsTurtle, rdfStringToStore, runValidationOnStore } from "./utils.js"
+import {
+    addRdfStringToStore,
+    printDatasetAsTurtle,
+    runSparqlAskQueryOnStore,
+    runSparqlConstructQueryOnStore,
+    runSparqlDeleteQueryOnStore,
+    runSparqlSelectQueryOnStore,
+    runValidationOnStore
+} from "./utils.js"
 import { Store } from "n3"
 import path from "path"
 import { fileURLToPath } from "url"
@@ -152,51 +159,4 @@ export async function validateOne(userProfile, requirementProfile) {
     printDatasetAsTurtle(report.dataset)
 
     return ""
-}
-
-/**
- * @param {string} query
- * @param {string} rdfStr
- * @returns {Promise<Object[]>}
- */
-export async function runSparqlSelectQueryOnRdfString(query, rdfStr) {
-    let store = await rdfStringToStore(rdfStr)
-    return runSparqlSelectQueryOnStore(query, store)
-}
-
-export async function runSparqlAskQueryOnStore(query, store) {
-    const queryEngine = new QueryEngine()
-    return await queryEngine.queryBoolean(query, { sources: [store] })
-}
-
-export async function runSparqlSelectQueryOnStore(query, store) {
-    const queryEngine = new QueryEngine()
-    let bindingsStream = await queryEngine.queryBindings(query, { sources: [ store ] })
-    let bindings = await bindingsStream.toArray()
-    let results = []
-    bindings.forEach(binding => {
-        const variables = Array.from(binding.keys()).map(({ value }) => value)
-        let row = {}
-        variables.forEach(variable => {
-            row[variable] = binding.get(variable).value
-        })
-        results.push(row)
-    })
-    return results
-}
-
-export async function runSparqlConstructQueryOnRdfString(query, rdfStr) {
-    let store = await rdfStringToStore(rdfStr)
-    return runSparqlConstructQueryOnStore(query, store)
-}
-
-export async function runSparqlConstructQueryOnStore(query, store) {
-    const queryEngine = new QueryEngine()
-    let quadsStream = await queryEngine.queryQuads(query, { sources: [ store ] })
-    return await quadsStream.toArray()
-}
-
-export async function runSparqlDeleteQueryOnStore(query, store) {
-    const queryEngine = new QueryEngine()
-    return await queryEngine.queryVoid(query, { sources: [ store ] })
 }

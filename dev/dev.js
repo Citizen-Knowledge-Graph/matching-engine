@@ -2,12 +2,14 @@ import path from "path"
 import { fileURLToPath } from "url"
 import fs, { promises as fsPromise } from "fs"
 import {
-    runSparqlSelectQueryOnRdfString,
-    runSparqlConstructQueryOnRdfString,
     validateAll,
     validateOne,
     validateUserProfile
 } from "../src/index.js"
+import {
+    runSparqlConstructQueryOnRdfString,
+    runSparqlSelectQueryOnRdfString
+} from "../src/utils.js"
 
 const DB_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "db")
 const SHACL_DIR = `${DB_DIR}/shacl`
