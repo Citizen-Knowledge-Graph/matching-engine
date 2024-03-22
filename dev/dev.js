@@ -78,7 +78,7 @@ function devValidateAll() {
 }
 
 function devValidateOne() {
-    const requirementProfile = `${SHACL_DIR}/Kinderzuschlag.ttl`
+    const requirementProfile = `${SHACL_DIR}/kinderzuschlag.ttl`
     fs.readFile(USER_PROFILE, "utf8", (err, userData) => {
         fs.readFile(requirementProfile, "utf8", (err, reqData) => {
             validateOne(userData, reqData).then(report => console.log(report))
