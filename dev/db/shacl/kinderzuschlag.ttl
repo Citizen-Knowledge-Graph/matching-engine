@@ -159,6 +159,9 @@ ff:VolljaehrigesKind18_U25 ff:hatRegelbedarfChild 451 ;
     xsd:minInclusive 18 ;
     xsd:maxExclusive 25 .
 
+ff:KinderzuschlagPerChild a ff:Constant ;
+    ff:hasValue 292 .
+
 # MATERIALIZATION
 
 ff:CalculateGesamtbedarfFamilie a ff:SparqlFormula ;
@@ -232,8 +235,13 @@ ff:CalculateGesamtverfuegungPlusKinderzuschlagFamilie a ff:SparqlFormula ;
             SELECT (?gesamtverfuegung + ?kinderzuschlagSum AS ?total) WHERE {
                 ff:mainPerson ff:hasGesamtverfuegung ?gesamtverfuegung .
                 {
-                    SELECT (COUNT(?child) * 292 AS ?kinderzuschlagSum) WHERE {
-                        ff:mainPerson schema:children ?child .
+                    SELECT (?childrenCount * ?value AS ?kinderzuschlagSum) WHERE {
+                        ff:KinderzuschlagPerChild ff:hasValue ?value .
+                        {
+                            SELECT (COUNT(?child) AS ?childrenCount) WHERE {
+                                ff:mainPerson schema:children ?child .
+                            }
+                        }
                     }
                 }
             }
