@@ -77,13 +77,11 @@ function devValidateAll() {
     })
 }
 
-function devValidateOne() {
-    const requirementProfile = `${SHACL_DIR}/kinderzuschlag.ttl`
-    fs.readFile(USER_PROFILE, "utf8", (err, userData) => {
-        fs.readFile(requirementProfile, "utf8", (err, reqData) => {
-            validateOne(userData, reqData).then(report => console.log(report))
-        })
-    })
+async function devValidateOne() {
+    let userProfile = await fsPromise.readFile(USER_PROFILE, "utf8")
+    let requirementProfile = await fsPromise.readFile(`${SHACL_DIR}/kinderzuschlag.ttl`, "utf8")
+
+    validateOne(userProfile, requirementProfile).then(report => console.log(report))
 }
 
 function devValidateOneStrings() {
