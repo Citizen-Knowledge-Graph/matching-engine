@@ -6,10 +6,21 @@ import { fileURLToPath } from "url"
 import { promises as fsPromise } from "fs"
 import toposort from "toposort"
 
-
 const DB_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "db")
 const DATAFIELDS = `${DB_DIR}/datafields.ttl`
 const MATERIALIZATION = `${DB_DIR}/materialization.ttl`
+
+export async function validateUserProfile(userProfile) {
+    let store = new Store()
+    await addRdfStringToStore(userProfile, store)
+    let datafields = await fsPromise.readFile(DATAFIELDS, "utf8")
+    await addRdfStringToStore(datafields, store)
+
+    let report = await runValidationOnStore(store)
+
+    printDatasetAsTurtle(report.dataset)
+    return report.conforms
+}
 
 /**
  * @param {string} userProfile

@@ -1,11 +1,12 @@
 import path from "path"
 import { fileURLToPath } from "url"
-import fs from "fs"
+import fs, { promises as fsPromise } from "fs"
 import {
     runSparqlSelectQueryOnRdfString,
     runSparqlConstructQueryOnRdfString,
     validateAll,
-    validateOne
+    validateOne,
+    validateUserProfile
 } from "../src/index.js"
 
 const DB_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "db")
@@ -108,8 +109,15 @@ function devValidateOneStrings() {
     validateOne(userProfile, requirementProfile).then(report => console.log(report))
 }
 
+async function devValidateUserProfile() {
+    let userProfile = await fsPromise.readFile(USER_PROFILE, "utf8")
+    let conforms = await validateUserProfile(userProfile)
+    console.log(conforms)
+}
+
 // devRunSparqlSelectQueryOnRdfString()
 // devRunSparqlConstructQueryOnRdfString()
 // devValidateAll()
 devValidateOne()
 // devValidateOneStrings()
+// devValidateUserProfile()
