@@ -59,9 +59,14 @@ export async function validateOne(userProfile, requirementProfile) {
     for (let result of report.results) {
         const comp = result.constraintComponent.value.split("#")[1]
         if (comp === "MinCountConstraintComponent") {
-            let missingPredicate = result.path[0].predicates[0].id // can these two arrays be bigger than 1? TODO
+            let missingPredicate = result.path[0].predicates[0].id // can these two arrays be bigger than 1?
             let fromSubject = result.focusNode.value
-            missingList.push({ subject: fromSubject, predicate: missingPredicate })
+            let message = result.message[0].value // can the arrays be bigger than 1?
+            missingList.push({
+                subject: fromSubject,
+                predicate: missingPredicate,
+                optional: message.toLowerCase().includes("[optional]") // a better way to check for this?
+            })
         }
     }
 
@@ -84,6 +89,25 @@ export async function validateOne(userProfile, requirementProfile) {
 
     let nodes = Object.values(nodesMap)
     let edges = []
+
+    let blocker = []
+    let optional = []
+    for (let missing of missingList) {
+        if (nodes.find(n => n.output === missing.predicate)) continue
+        if (missing.optional) {
+            optional.push(missing)
+        } else {
+            blocker.push(missing)
+        }
+    }
+
+    if (optional.length > 0)
+        console.log("Optional data points missing:", optional)
+
+    if (blocker.length > 0)
+        return "Missing data points: " + JSON.stringify(blocker)
+
+    // handle user flow of asking for missing required and optional data points TODO
 
     for (let node of nodes) {
         let requiresInputFromThis = nodes.find(n => node !== n && n.output === node.input)
