@@ -8,14 +8,34 @@
 
 ff:metadata ff:author ff:benjaminaaron ;
     ff:created "2024-03-14"^^xsd:date ;
-    ff:title "Kinderzuschlag" .
-
-# trigger reminder (valid only for 6 months) TODO
+    ff:title "Kinderzuschlag" ;
+    rdfs:comment "Valid only for 6 months" . # suggest setting up reminder TODO
 
 # CONDITIONS
 
 ff:MainPersonShape a sh:NodeShape ;
     sh:targetClass ff:Citizen ;
+    sh:property [
+        sh:path ff:parentingSetup ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ; # Rely on datafields.ttl to ensure this?
+    ] ;
+    sh:property [
+        sh:path ff:hasIncomeBrutto ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ff:hasIncomeNetto ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ff:receivesWohngeld ;
+        sh:message "[optional]" ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
     sh:property [
         sh:path schema:children ;
         sh:node ff:ChildRequirementsShape ;
@@ -32,7 +52,7 @@ ff:MainPersonShape a sh:NodeShape ;
         sh:minCount 1 ;
         sh:maxCount 1 ;
     ] ;
-        sh:property [
+    sh:property [
         sh:path ff:hasGesamtverfuegungPlusKinderzuschlag ;
         sh:minCount 1 ;
         sh:maxCount 1 ;
@@ -55,6 +75,12 @@ ff:ChildShape a sh:NodeShape ;
             sh:in ( "VH" "LP" ) ;
         ] ;
         sh:message "The child can't be married or in a civil union" ;
+    ] ;
+    sh:property [
+        sh:path ff:receiveKindergeld ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "You must receive Kindergeld for the child" ;
     ] .
 
 ff:IncomeCheckShape a sh:NodeShape ;
