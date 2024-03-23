@@ -44,6 +44,8 @@ export async function rdfStringToDataset(rdfStr) {
  * @returns {SparqlQuery}
  */
 export function parseSparqlQuery(query) {
+    // import util from "util"
+    // console.log(util.inspect(queryObj, false, null, true))
     const queryParser = new SparqlParser.Parser()
     return queryParser.parse(query)
 }
