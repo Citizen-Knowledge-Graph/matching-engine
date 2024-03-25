@@ -1,5 +1,8 @@
 # matching-engine
-Input: user profile and requirement profiles --> Output: a report about eligibilities (yes, no, missing data)
+- **Input**: user profile, requirement profiles, datafield constraints, materialization queries
+- **Output**: a report about eligibilities (yes, no, missing data)
+
+In use in the [foerderfunke-app](https://github.com/Citizen-Knowledge-Graph/foerderfunke-app).
 
 ## Developing this library
 
