@@ -29,22 +29,12 @@ export async function validateUserProfile(userProfile) {
     return report.conforms
 }
 
-/**
- * @param {string} userProfile
- * @param {string[]} requirementProfiles
- * @returns {Promise<string>}
- */
 export async function validateAll(userProfile, requirementProfiles) {
     console.log(userProfile)
     console.log(requirementProfiles)
     return "TODO"
 }
 
-/**
- * @param {string} userProfile
- * @param {string} requirementProfile
- * @returns {Promise<string>}
- */
 export async function validateOne(userProfile, requirementProfile) {
     let store = new Store()
     await addRdfStringToStore(userProfile, store)

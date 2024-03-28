@@ -4,10 +4,6 @@ import Validator from "shacl-engine/Validator.js"
 import rdf from "rdf-ext"
 import { QueryEngine } from "@comunica/query-sparql-rdfjs"
 
-/**
- * @param {string} rdfStr
- * @returns {Promise<Store>}
- */
 export function rdfStringToStore(rdfStr) {
     let store = new Store()
     return addRdfStringToStore(rdfStr, store)
@@ -30,19 +26,11 @@ export function addRdfStringToStore(rdfStr, store) {
     })
 }
 
-/**
- * @param {string} rdfStr
- * @returns {Promise<Dataset>}
- */
 export async function rdfStringToDataset(rdfStr) {
     const store = await rdfStringToStore(rdfStr)
     return rdf.dataset(store.getQuads())
 }
 
-/**
- * @param {string} query
- * @returns {SparqlQuery}
- */
 export function parseSparqlQuery(query) {
     // import util from "util"
     // console.log(util.inspect(queryObj, false, null, true))
@@ -66,11 +54,6 @@ export async function runValidationOnStore(store) {
     return await validator.validate({ dataset: dataset })
 }
 
-/**
- * @param {string} query
- * @param {string} rdfStr
- * @returns {Promise<Object[]>}
- */
 export async function runSparqlSelectQueryOnRdfString(query, rdfStr) {
     let store = await rdfStringToStore(rdfStr)
     return runSparqlSelectQueryOnStore(query, store)
