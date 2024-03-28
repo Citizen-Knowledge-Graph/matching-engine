@@ -44,17 +44,19 @@ export async function validateAll(userProfile, requirementProfiles) {
 }
 
 export async function validateOne(userProfile, requirementProfile) {
+
+    // ----- build up store -----
+    let store = new Store()
     let materializationTriples = await fsPromise.readFile(MATERIALIZATION, "utf8")
     let datafieldsTriples = await fsPromise.readFile(DATAFIELDS, "utf8")
-
-    let store = new Store()
     await addRdfStringToStore(userProfile, store)
     await addRdfStringToStore(requirementProfile, store)
     await addRdfStringToStore(materializationTriples, store)
     await addRdfStringToStore(datafieldsTriples, store)
 
+    // ----- first validation to identify missing data points  -----
     let report = await runValidationOnStore(store)
-    printDatasetAsTurtle(report.dataset)
+    // printDatasetAsTurtle(report.dataset)
 
     let missingList = []
     for (let result of report.results) {
@@ -71,6 +73,8 @@ export async function validateOne(userProfile, requirementProfile) {
         }
     }
 
+    // ----- which of the missing data points can we materialize ourselves without asking the user -----
+    // materialization rules can come from the requirement profile, or from the materialization.ttl that has common materialization rules (a bit like utils functions)
     let materializableDataPointsMap = {}
     materializableDataPointsMap["root"] = { rule: "root" }
 
@@ -91,11 +95,13 @@ export async function validateOne(userProfile, requirementProfile) {
     let materializableDataPoints = Object.values(materializableDataPointsMap)
     let askUserForDataPoints = []
 
+    // ----- for the ones we can't materialize we need user input -----
     for (let missing of missingList) {
         if (materializableDataPoints.find(n => n.output === missing.predicate)) continue
         askUserForDataPoints.push(missing)
     }
 
+    // ----- enrich the ones we'll ask for with labels -----
     for (let dataPoint of askUserForDataPoints) {
         let query = `
             PREFIX ff: <https://foerderfunke.org/default#>
@@ -113,9 +119,11 @@ export async function validateOne(userProfile, requirementProfile) {
     let optionals = askUserForDataPoints.filter(missing => missing.optional)
     let blockers = askUserForDataPoints.filter(missing => !missing.optional)
 
+    // ----- missing data points that are optional, don't stop the workflow -----
     if (optionals.length > 0)
         console.log("Optional data points missing:", optionals)
 
+    // ----- mandatory missing data points stop the workflow, it makes no sense to continue -----
     if (blockers.length > 0) {
         return {
             result: undefined,
@@ -124,10 +132,9 @@ export async function validateOne(userProfile, requirementProfile) {
         }
     }
 
+    // ----- use the input/output declarations of the materialization rules to determine a correct materialization order -----
     // extracting input/output could potentially be done automatically by parsing the SPARQL query and extracting the variables?
-
     let edges = []
-
     for (let node of materializableDataPoints) {
         let requiresInputFromThis = materializableDataPoints.find(n => node !== n && n.output === node.input)
         if (requiresInputFromThis) {
@@ -138,15 +145,16 @@ export async function validateOne(userProfile, requirementProfile) {
     }
 
     const sorted = toposort(edges) // topological sort to get legal execution order
-    console.log(sorted)
+    // console.log(sorted)
 
+    // ----- apply the materialization rules in the correct order -----
     for (let rule of sorted.slice(1)) {
         let query = materializableDataPointsMap[rule].query
         let constructed = await runSparqlConstructQueryOnStore(query, store)
         store.addQuads(constructed)
-        // interim-store those that have suggestPermanentMaterialization set to true and ask user at the end TODO
     }
 
+    // ----- remove the minCount constraint from optional conditions so that they won't cause the validation to fail again -----
     for (let optional of optionals) {
         query = `
             PREFIX ff: <https://foerderfunke.org/default#>
@@ -166,6 +174,8 @@ export async function validateOne(userProfile, requirementProfile) {
 
     // printDatasetAsTurtle(rdf.dataset(store.getQuads()))
 
+    // ----- no more missing mandatory data points: re-run the validation -----
+    // now the existence of the mandatory data points is guaranteed - "only" their values can now cause the validation to fail
     report = await runValidationOnStore(store)
     printDatasetAsTurtle(report.dataset)
 
@@ -173,6 +183,7 @@ export async function validateOne(userProfile, requirementProfile) {
     // use debug SHACL or SPARQL for a summary in the end with reasoning/calculations?
     // rdf-star for timestamping triples?
     // versioning?
+    // ask user about suggestPermanentMaterialization
 
     return {
         result: report.conforms,
