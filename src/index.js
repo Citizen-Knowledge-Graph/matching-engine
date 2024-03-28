@@ -20,6 +20,14 @@ const MATERIALIZATION = `${DB_DIR}/materialization.ttl`
 export async function validateUserProfile(userProfile) {
     let store = new Store()
     await addRdfStringToStore(userProfile, store)
+    let query = `
+        PREFIX ff: <https://foerderfunke.org/default#>
+        ASK { ff:mainPerson a ff:Citizen . }
+    `
+    // otherwise, a completely empty user profile would be valid
+    if (!await runSparqlAskQueryOnStore(query, store))
+        return "User profile does not contain the base triple of <<ff:mainPerson a ff:Citizen>>"
+
     let datafields = await fsPromise.readFile(DATAFIELDS, "utf8")
     await addRdfStringToStore(datafields, store)
 
@@ -36,19 +44,14 @@ export async function validateAll(userProfile, requirementProfiles) {
 }
 
 export async function validateOne(userProfile, requirementProfile) {
+    let materializationTriples = await fsPromise.readFile(MATERIALIZATION, "utf8")
+    let datafieldsTriples = await fsPromise.readFile(DATAFIELDS, "utf8")
+
     let store = new Store()
     await addRdfStringToStore(userProfile, store)
-    let query = `
-        PREFIX ff: <https://foerderfunke.org/default#>
-        ASK { ff:mainPerson a ff:Citizen . }
-    `
-    // otherwise, a completely empty user profile would be valid
-    if (!await runSparqlAskQueryOnStore(query, store))
-        return "User profile does not contain the base triple of <<ff:mainPerson a ff:Citizen>>"
-
     await addRdfStringToStore(requirementProfile, store)
-    await fsPromise.readFile(MATERIALIZATION, "utf8").then(rdfStr => addRdfStringToStore(rdfStr, store))
-    await fsPromise.readFile(DATAFIELDS, "utf8").then(rdfStr => addRdfStringToStore(rdfStr, store))
+    await addRdfStringToStore(materializationTriples, store)
+    await addRdfStringToStore(datafieldsTriples, store)
 
     let report = await runValidationOnStore(store)
     printDatasetAsTurtle(report.dataset)
