@@ -25,6 +25,7 @@ export default {
             format: "umd"
         }
     ],
+    inlineDynamicImports: true,
     plugins: [
         json(),
         resolve(),
