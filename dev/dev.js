@@ -1,15 +1,8 @@
 import path from "path"
 import { fileURLToPath } from "url"
 import fs, { promises as fsPromise } from "fs"
-import {
-    validateAll,
-    validateOne,
-    validateUserProfile
-} from "../src/index.js"
-import {
-    runSparqlConstructQueryOnRdfString,
-    runSparqlSelectQueryOnRdfString
-} from "../src/utils.js"
+import { validateAll, validateOne, validateUserProfile } from "../src/index.js"
+import { runSparqlConstructQueryOnRdfString, runSparqlSelectQueryOnRdfString } from "../src/utils.js"
 
 const DB_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "db")
 const SHACL_DIR = `${DB_DIR}/shacl`
@@ -48,42 +41,25 @@ function devRunSparqlConstructQueryOnRdfString() {
     })
 }
 
-function devValidateAll() {
-    fs.readdir(SHACL_DIR, async (err, files) => {
-        if (err) { console.error(err); return }
+async function devValidateAll() {
+    let shaclFiles = await fsPromise.readdir(SHACL_DIR)
+    let userProfile = await fsPromise.readFile(USER_PROFILE, "utf8")
 
-        let userProfile = ""
-        let requirementProfiles = []
+    let requirementProfiles = {}
+    for (let file of shaclFiles) {
+        requirementProfiles[file] = await fsPromise.readFile(`${SHACL_DIR}/${file}`, "utf8")
+    }
 
-        let promises = files.map(shaclFile => {
-            return new Promise((resolve, reject) => {
-                fs.readFile(`${SHACL_DIR}/${shaclFile}`, "utf8", (err, data) => {
-                    if (err) { reject(err); return }
-                    requirementProfiles.push(data)
-                    resolve()
-                })
-            })
-        })
-        promises.push(new Promise((resolve, reject) => {
-            fs.readFile(USER_PROFILE, "utf8", (err, data) => {
-                if (err) { reject(err); return }
-                userProfile = data
-                resolve()
-            })
-        }))
-
-        Promise.all(promises)
-            .then(() => {
-                validateAll(userProfile, requirementProfiles).then(report => console.log(report))
-            }).catch(err => console.error(err))
-    })
+    let report = await validateAll(userProfile, requirementProfiles)
+    console.log(report)
 }
 
 async function devValidateOne() {
     let userProfile = await fsPromise.readFile(USER_PROFILE, "utf8")
     let requirementProfile = await fsPromise.readFile(`${SHACL_DIR}/kinderzuschlag.ttl`, "utf8")
 
-    validateOne(userProfile, requirementProfile).then(report => console.log(report))
+    let report = await validateOne(userProfile, requirementProfile)
+    console.log(report)
 }
 
 function devValidateOneStrings() {
@@ -117,7 +93,7 @@ async function devValidateUserProfile() {
 
 // devRunSparqlSelectQueryOnRdfString()
 // devRunSparqlConstructQueryOnRdfString()
-// devValidateAll()
-devValidateOne()
+devValidateAll()
+// devValidateOne()
 // devValidateOneStrings()
 // devValidateUserProfile()

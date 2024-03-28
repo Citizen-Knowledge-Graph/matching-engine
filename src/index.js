@@ -38,9 +38,12 @@ export async function validateUserProfile(userProfile) {
 }
 
 export async function validateAll(userProfile, requirementProfiles) {
-    console.log(userProfile)
-    console.log(requirementProfiles)
-    return "TODO"
+    let report = []
+    for (let [filename, profile] of Object.entries(requirementProfiles)) {
+        let validation = await validateOne(userProfile, profile)
+        report.push({ filename: filename, validation: validation })
+    }
+    return report
 }
 
 export async function validateOne(userProfile, requirementProfile) {
