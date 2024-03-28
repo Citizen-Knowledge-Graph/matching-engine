@@ -132,8 +132,7 @@ export async function validateOne(userProfile, requirementProfile) {
             PREFIX ff: <https://foerderfunke.org/default#>
             PREFIX sh: <http://www.w3.org/ns/shacl#>
             DELETE { 
-                ?shape sh:property ?propertyShape .
-                ?propertyShape ?pred ?obj .
+                ?propertyShape sh:minCount ?obj .
             } WHERE {
                 ?shape a sh:NodeShape .
                 FILTER(?shape = ff:MainPersonShape) .
