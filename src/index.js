@@ -48,6 +48,7 @@ export async function validateOne(userProfile, requirementProfile) {
 
     await addRdfStringToStore(requirementProfile, store)
     await fsPromise.readFile(MATERIALIZATION, "utf8").then(rdfStr => addRdfStringToStore(rdfStr, store))
+    await fsPromise.readFile(DATAFIELDS, "utf8").then(rdfStr => addRdfStringToStore(rdfStr, store))
 
     let report = await runValidationOnStore(store)
     printDatasetAsTurtle(report.dataset)
@@ -67,8 +68,8 @@ export async function validateOne(userProfile, requirementProfile) {
         }
     }
 
-    let nodesMap = {}
-    nodesMap["root"] = { rule: "root" }
+    let materializableDataPointsMap = {}
+    materializableDataPointsMap["root"] = { rule: "root" }
 
     for (let missing of missingList) {
         let query = `
@@ -80,36 +81,52 @@ export async function validateOne(userProfile, requirementProfile) {
                 OPTIONAL { ?rule ff:input ?input . }
             }
         `
-        let node = (await runSparqlSelectQueryOnStore(query, store))[0]
-        if (node) nodesMap[node.rule] = node
+        let resultLine = (await runSparqlSelectQueryOnStore(query, store))[0]
+        if (resultLine) materializableDataPointsMap[resultLine.rule] = resultLine
     }
 
-    let nodes = Object.values(nodesMap)
-    let edges = []
+    let materializableDataPoints = Object.values(materializableDataPointsMap)
+    let askUserForDataPoints = []
 
-    let blockers = []
-    let optionals = []
     for (let missing of missingList) {
-        if (nodes.find(n => n.output === missing.predicate)) continue
-        if (missing.optional) {
-            optionals.push(missing)
-        } else {
-            blockers.push(missing)
-        }
+        if (materializableDataPoints.find(n => n.output === missing.predicate)) continue
+        askUserForDataPoints.push(missing)
     }
+
+    for (let dataPoint of askUserForDataPoints) {
+        let query = `
+            PREFIX ff: <https://foerderfunke.org/default#>
+            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            SELECT * WHERE {
+                ?predicate a ff:DataField .
+                FILTER(?predicate = <${dataPoint.predicate}>) .
+                ?predicate rdfs:label ?label .
+            }
+        `
+        let resultLine = (await runSparqlSelectQueryOnStore(query, store))[0]
+        if (resultLine) dataPoint.label = resultLine.label
+    }
+
+    let optionals = askUserForDataPoints.filter(missing => missing.optional)
+    let blockers = askUserForDataPoints.filter(missing => !missing.optional)
 
     if (optionals.length > 0)
         console.log("Optional data points missing:", optionals)
 
-    if (blockers.length > 0)
-        return "Missing data points: " + JSON.stringify(blockers)
-
-    // handle user flow of asking for missing required and optional data points TODO
+    if (blockers.length > 0) {
+        return {
+            result: undefined,
+            blockers: blockers,
+            optionals: optionals
+        }
+    }
 
     // extracting input/output could potentially be done automatically by parsing the SPARQL query and extracting the variables?
 
-    for (let node of nodes) {
-        let requiresInputFromThis = nodes.find(n => node !== n && n.output === node.input)
+    let edges = []
+
+    for (let node of materializableDataPoints) {
+        let requiresInputFromThis = materializableDataPoints.find(n => node !== n && n.output === node.input)
         if (requiresInputFromThis) {
             edges.push([requiresInputFromThis.rule, node.rule])
         } else if (node.rule !== "root") {
@@ -121,7 +138,7 @@ export async function validateOne(userProfile, requirementProfile) {
     console.log(sorted)
 
     for (let rule of sorted.slice(1)) {
-        let query = nodesMap[rule].query
+        let query = materializableDataPointsMap[rule].query
         let constructed = await runSparqlConstructQueryOnStore(query, store)
         store.addQuads(constructed)
         // interim-store those that have suggestPermanentMaterialization set to true and ask user at the end TODO
@@ -154,5 +171,7 @@ export async function validateOne(userProfile, requirementProfile) {
     // rdf-star for timestamping triples?
     // versioning?
 
-    return ""
+    return {
+        result: report.conforms,
+    }
 }
