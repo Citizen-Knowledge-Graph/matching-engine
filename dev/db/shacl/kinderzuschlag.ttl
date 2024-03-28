@@ -9,7 +9,9 @@
 ff:metadata ff:author ff:benjaminaaron ;
     ff:created "2024-03-14"^^xsd:date ;
     ff:title "Kinderzuschlag" ;
-    rdfs:comment "Valid only for 6 months" . # suggest setting up reminder TODO
+    rdfs:comment "Valid only for 6 months" ; # suggest setting up reminder TODO
+    rdfs:seeAlso <https://www.arbeitsagentur.de/familie-und-kinder/kinderzuschlag-verstehen/kinderzuschlag-anspruch-hoehe-dauer> ;
+    ff:onlineEligibilityCheckingTool <https://www.arbeitsagentur.de/familie-und-kinder/kinderzuschlag-verstehen/kiz-lotse> .
 
 # CONDITIONS
 

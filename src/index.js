@@ -116,6 +116,8 @@ export async function validateOne(userProfile, requirementProfile) {
 
     // handle user flow of asking for missing required and optional data points TODO
 
+    // extracting input/output could potentially be done automatically by parsing the SPARQL query and extracting the variables?
+
     for (let node of nodes) {
         let requiresInputFromThis = nodes.find(n => node !== n && n.output === node.input)
         if (requiresInputFromThis) {
@@ -157,6 +159,11 @@ export async function validateOne(userProfile, requirementProfile) {
 
     report = await runValidationOnStore(store)
     printDatasetAsTurtle(report.dataset)
+
+    // render list of conditions
+    // use debug SHACL or SPARQL for a summary in the end with reasoning/calculations?
+    // rdf-star for timestamping triples?
+    // versioning?
 
     return ""
 }
