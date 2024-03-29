@@ -1,20 +1,13 @@
 {
   "name": "@foerderfunke/matching-engine",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "Checks eligibilities by validating a user profile against requirement profiles",
   "author": "@foerderfunke",
   "license": "MIT",
   "type": "module",
   "main": "src/index.js",
   "scripts": {
-    "start": "node dev/dev.js",
-    "build": "rollup -c"
-  },
-  "devDependencies": {
-    "@rollup/plugin-commonjs": "^25.0.7",
-    "@rollup/plugin-json": "^6.1.0",
-    "@rollup/plugin-node-resolve": "^15.2.3",
-    "rollup": "^2.79.1"
+    "start": "node dev/dev.js"
   },
   "dependencies": {
     "@comunica/query-sparql-rdfjs": "^2.10.2",
