@@ -1,12 +1,11 @@
 {
   "name": "@foerderfunke/matching-engine",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Checks eligibilities by validating a user profile against requirement profiles",
   "author": "@foerderfunke",
   "license": "MIT",
   "type": "module",
-  "main": "dist/bundle.cjs",
-  "browser": "dist/bundle.umd.js",
+  "main": "src/index.js",
   "scripts": {
     "start": "node dev/dev.js",
     "build": "rollup -c"
