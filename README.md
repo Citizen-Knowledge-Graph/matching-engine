@@ -7,8 +7,6 @@ In use in the [foerderfunke-app](https://github.com/Citizen-Knowledge-Graph/foer
 ## Developing this library
 
 ```shell
-# to build the distributions
-npm run build
 # to run dev.js
 npm start
 ```
@@ -18,25 +16,6 @@ npm start
 ```shell
 npm install --save @foerderfunke/matching-engine
 ```
-
-### require
-
-```shell
-# package.json
-{
-  "dependencies": {
-    "@foerderfunke/matching-engine": "^0.2.0"
-  }
-}
-
-# dev.js
-const { func } = require("@foerderfunke/matching-engine")
-func()
-
-# node dev.js
-```
-
-### import
 
 ```shell
 # package.json
@@ -48,23 +27,10 @@ func()
 }
 
 # dev.js
-import { func } from "@foerderfunke/matching-engine"
-func()
+import { validateUserProfile } from "@foerderfunke/matching-engine"
+# ...
+let report = await validateUserProfile(userProfileString, datafieldsString)
+console.log(report)
 
 # node dev.js
-```
-
-### in the browser
-
-```shell
-# dev.html
-<!DOCTYPE html>
-<html>
-<body>
-    <script src="node_modules/@foerderfunke/matching-engine/dist/bundle.umd.js"></script>
-    <script>
-        MatchingEngine.func();
-    </script>
-</body>
-</html>
 ```
