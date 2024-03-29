@@ -7,6 +7,8 @@ import { runSparqlConstructQueryOnRdfString, runSparqlSelectQueryOnRdfString } f
 const DB_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "db")
 const SHACL_DIR = `${DB_DIR}/shacl`
 const USER_PROFILE = `${DB_DIR}/dev-user-profile.ttl`
+const DATAFIELDS = `${DB_DIR}/datafields.ttl`
+const MATERIALIZATION = `${DB_DIR}/materialization.ttl`
 
 function devRunSparqlSelectQueryOnRdfString() {
     let query = `
@@ -44,21 +46,24 @@ function devRunSparqlConstructQueryOnRdfString() {
 async function devValidateAll() {
     let shaclFiles = await fsPromise.readdir(SHACL_DIR)
     let userProfile = await fsPromise.readFile(USER_PROFILE, "utf8")
+    let datafieldsStr = await fsPromise.readFile(DATAFIELDS, "utf8")
+    let materializationStr = await fsPromise.readFile(MATERIALIZATION, "utf8")
 
     let requirementProfiles = {}
     for (let file of shaclFiles) {
         requirementProfiles[file] = await fsPromise.readFile(`${SHACL_DIR}/${file}`, "utf8")
     }
 
-    let report = await validateAll(userProfile, requirementProfiles)
+    let report = await validateAll(userProfile, requirementProfiles, datafieldsStr, materializationStr)
     console.log(report)
 }
 
 async function devValidateOne() {
     let userProfile = await fsPromise.readFile(USER_PROFILE, "utf8")
     let requirementProfile = await fsPromise.readFile(`${SHACL_DIR}/kinderzuschlag.ttl`, "utf8")
-
-    let report = await validateOne(userProfile, requirementProfile)
+    let datafieldsStr = await fsPromise.readFile(DATAFIELDS, "utf8")
+    let materializationStr = await fsPromise.readFile(MATERIALIZATION, "utf8")
+    let report = await validateOne(userProfile, requirementProfile, datafieldsStr, materializationStr)
     console.log(report)
 }
 
@@ -87,7 +92,8 @@ function devValidateOneStrings() {
 
 async function devValidateUserProfile() {
     let userProfile = await fsPromise.readFile(USER_PROFILE, "utf8")
-    let conforms = await validateUserProfile(userProfile)
+    let datafieldsStr = await fsPromise.readFile(DATAFIELDS, "utf8")
+    let conforms = await validateUserProfile(userProfile, datafieldsStr)
     console.log(conforms)
 }
 

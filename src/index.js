@@ -8,16 +8,9 @@ import {
     runValidationOnStore
 } from "./utils.js"
 import { Store } from "n3"
-import path from "path"
-import { fileURLToPath } from "url"
-import { promises as fsPromise } from "fs"
 import toposort from "toposort"
 
-const DB_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "db")
-const DATAFIELDS = `${DB_DIR}/datafields.ttl`
-const MATERIALIZATION = `${DB_DIR}/materialization.ttl`
-
-export async function validateUserProfile(userProfile) {
+export async function validateUserProfile(userProfile, datafieldsStr) {
     let store = new Store()
     await addRdfStringToStore(userProfile, store)
     let query = `
@@ -28,8 +21,7 @@ export async function validateUserProfile(userProfile) {
     if (!await runSparqlAskQueryOnStore(query, store))
         return "User profile does not contain the base triple of <<ff:mainPerson a ff:Citizen>>"
 
-    let datafields = await fsPromise.readFile(DATAFIELDS, "utf8")
-    await addRdfStringToStore(datafields, store)
+    await addRdfStringToStore(datafieldsStr, store)
 
     let report = await runValidationOnStore(store)
 
@@ -37,25 +29,23 @@ export async function validateUserProfile(userProfile) {
     return report.conforms
 }
 
-export async function validateAll(userProfile, requirementProfiles) {
+export async function validateAll(userProfile, requirementProfiles, datafieldsStr, materializationStr) {
     let report = []
     for (let [filename, profile] of Object.entries(requirementProfiles)) {
-        let validation = await validateOne(userProfile, profile)
+        let validation = await validateOne(userProfile, profile, datafieldsStr, materializationStr)
         report.push({ filename: filename, validation: validation })
     }
     return report
 }
 
-export async function validateOne(userProfile, requirementProfile) {
+export async function validateOne(userProfile, requirementProfile, datafieldsStr, materializationStr) {
 
     // ----- build up store -----
     let store = new Store()
-    let materializationTriples = await fsPromise.readFile(MATERIALIZATION, "utf8")
-    let datafieldsTriples = await fsPromise.readFile(DATAFIELDS, "utf8")
     await addRdfStringToStore(userProfile, store)
     await addRdfStringToStore(requirementProfile, store)
-    await addRdfStringToStore(materializationTriples, store)
-    await addRdfStringToStore(datafieldsTriples, store)
+    await addRdfStringToStore(materializationStr, store)
+    await addRdfStringToStore(datafieldsStr, store)
 
     // ----- first validation to identify missing data points  -----
     let report = await runValidationOnStore(store)
@@ -159,7 +149,7 @@ export async function validateOne(userProfile, requirementProfile) {
 
     // ----- remove the minCount constraint from optional conditions so that they won't cause the validation to fail again -----
     for (let optional of optionals) {
-        query = `
+        let query = `
             PREFIX ff: <https://foerderfunke.org/default#>
             PREFIX sh: <http://www.w3.org/ns/shacl#>
             DELETE { 
