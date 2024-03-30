@@ -1,6 +1,7 @@
 import {
     addRdfStringToStore,
     printDatasetAsTurtle,
+    printStoreAsTurtle,
     runSparqlAskQueryOnStore,
     runSparqlConstructQueryOnStore,
     runSparqlDeleteQueryOnStore,
@@ -29,16 +30,16 @@ export async function validateUserProfile(userProfile, datafieldsStr) {
     return report.conforms
 }
 
-export async function validateAll(userProfile, requirementProfiles, datafieldsStr, materializationStr) {
+export async function validateAll(userProfile, requirementProfiles, datafieldsStr, materializationStr, debug = false) {
     let report = []
     for (let [filename, profile] of Object.entries(requirementProfiles)) {
-        let validation = await validateOne(userProfile, profile, datafieldsStr, materializationStr)
+        let validation = await validateOne(userProfile, profile, datafieldsStr, materializationStr, debug)
         report.push({ filename: filename, validation: validation })
     }
     return report
 }
 
-export async function validateOne(userProfile, requirementProfile, datafieldsStr, materializationStr) {
+export async function validateOne(userProfile, requirementProfile, datafieldsStr, materializationStr, debug = false) {
 
     // ----- build up store -----
     let store = new Store()
@@ -48,11 +49,14 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
     await addRdfStringToStore(datafieldsStr, store)
 
     // ----- first validation to identify missing data points  -----
-    let report = await runValidationOnStore(store)
-    // printDatasetAsTurtle(report.dataset)
+    let firstReport = await runValidationOnStore(store)
+    if (debug) {
+        console.log("First validation report:")
+        printDatasetAsTurtle(firstReport.dataset)
+    }
 
     let missingList = []
-    for (let result of report.results) {
+    for (let result of firstReport.results) {
         const comp = result.constraintComponent.value.split("#")[1]
         if (comp === "MinCountConstraintComponent") {
             let missingPredicate = result.path[0].predicates[0].id // can these two arrays be bigger than 1?
@@ -113,13 +117,14 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
     let blockers = askUserForDataPoints.filter(missing => !missing.optional)
 
     // ----- missing data points that are optional, don't stop the workflow -----
-    if (optionals.length > 0)
+    if (optionals.length > 0 && debug)
         console.log("Optional data points missing:", optionals)
 
     // ----- mandatory missing data points stop the workflow, it makes no sense to continue -----
     if (blockers.length > 0) {
         return {
-            result: undefined,
+            conforms: false,
+            report: firstReport,
             blockers: blockers,
             optionals: optionals
         }
@@ -138,7 +143,7 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
     }
 
     const sorted = toposort(edges) // topological sort to get legal execution order
-    // console.log(sorted)
+    if (debug) console.log("Topologically sorted materialization rules", sorted)
 
     // ----- apply the materialization rules in the correct order -----
     for (let rule of sorted.slice(1)) {
@@ -165,12 +170,18 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
         await runSparqlDeleteQueryOnStore(query, store)
     }
 
-    // printDatasetAsTurtle(rdf.dataset(store.getQuads()))
+    if (debug) {
+        console.log("Store after applying materialization rules and removing sh:minCount from optionals:")
+        printStoreAsTurtle(store)
+    }
 
     // ----- no more missing mandatory data points: re-run the validation -----
     // now the existence of the mandatory data points is guaranteed - "only" their values can now cause the validation to fail
-    report = await runValidationOnStore(store)
-    printDatasetAsTurtle(report.dataset)
+    let secondReport = await runValidationOnStore(store)
+    if (debug) {
+        console.log("Second validation report:")
+        printDatasetAsTurtle(secondReport.dataset)
+    }
 
     // render list of conditions
     // use debug SHACL or SPARQL for a summary in the end with reasoning/calculations?
@@ -179,6 +190,7 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
     // ask user about suggestPermanentMaterialization
 
     return {
-        result: report.conforms,
+        conforms: secondReport.conforms,
+        report: secondReport
     }
 }

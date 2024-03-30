@@ -39,13 +39,23 @@ export function parseSparqlQuery(query) {
 }
 
 export function printDatasetAsTurtle(dataset) {
-    const writer = new N3Writer({ prefixes: {
+    const writer = getWriter()
+    dataset.forEach(quad => writer.addQuad(quad))
+    writer.end((error, result) => console.log(result))
+}
+
+export function printStoreAsTurtle(store) {
+    const writer = getWriter()
+    store.getQuads().forEach(quad => writer.addQuad(quad))
+    writer.end((error, result) => console.log(result))
+}
+
+function getWriter() {
+    return new N3Writer({ prefixes: {
         sh: "http://www.w3.org/ns/shacl#",
         ff: "https://foerderfunke.org/default#",
         foaf: "http://xmlns.com/foaf/0.1/"
     }})
-    dataset.forEach(quad => writer.addQuad(quad))
-    writer.end((error, result) => console.log(result))
 }
 
 export async function runValidationOnStore(store) {

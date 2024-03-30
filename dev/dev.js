@@ -54,7 +54,7 @@ async function devValidateAll() {
         requirementProfiles[file] = await fsPromise.readFile(`${SHACL_DIR}/${file}`, "utf8")
     }
 
-    let report = await validateAll(userProfile, requirementProfiles, datafieldsStr, materializationStr)
+    let report = await validateAll(userProfile, requirementProfiles, datafieldsStr, materializationStr, true)
     console.log(report)
 }
 
@@ -63,7 +63,7 @@ async function devValidateOne() {
     let requirementProfile = await fsPromise.readFile(`${SHACL_DIR}/kinderzuschlag.ttl`, "utf8")
     let datafieldsStr = await fsPromise.readFile(DATAFIELDS, "utf8")
     let materializationStr = await fsPromise.readFile(MATERIALIZATION, "utf8")
-    let report = await validateOne(userProfile, requirementProfile, datafieldsStr, materializationStr)
+    let report = await validateOne(userProfile, requirementProfile, datafieldsStr, materializationStr, true)
     console.log(report)
 }
 
