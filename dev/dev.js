@@ -4,7 +4,7 @@ import fs, { promises as fsPromise } from "fs"
 import { validateAll, validateOne, validateUserProfile } from "../src/index.js"
 import { runSparqlConstructQueryOnRdfString, runSparqlSelectQueryOnRdfString } from "../src/utils.js"
 
-const DB_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "db")
+const DB_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "requirement-profiles")
 const SHACL_DIR = `${DB_DIR}/shacl`
 const USER_PROFILE = `${DB_DIR}/dev-user-profile.ttl`
 const DATAFIELDS = `${DB_DIR}/datafields.ttl`
