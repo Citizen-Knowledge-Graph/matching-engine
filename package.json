@@ -8,7 +8,8 @@
   "main": "src/index.js",
   "scripts": {
     "start": "npm run update && node dev/dev.js",
-    "update": "chmod +x dev/script.sh && ./dev/script.sh"
+    "update": "chmod +x dev/script.sh && ./dev/script.sh",
+    "server": "node src/server.js"
   },
   "dependencies": {
     "@comunica/query-sparql-rdfjs": "^2.10.2",
