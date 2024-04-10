@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@comunica/query-sparql-rdfjs": "^2.10.2",
+    "express": "^4.19.2",
     "n3": "^1.17.2",
     "rdf-ext": "^2.5.1",
     "shacl-engine": "github:rdf-ext/shacl-engine#sparql",
