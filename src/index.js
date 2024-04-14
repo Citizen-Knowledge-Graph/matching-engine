@@ -80,6 +80,15 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
         printDatasetAsTurtle(firstReport.dataset)
     }
 
+    let violations = collectViolations(firstReport)
+    if (violations.length > 0) {
+        return {
+            result: ValidationResult.INELIGIBLE,
+            missingUserInput: [],
+            violations: violations
+        }
+    }
+
     let missingList = []
     for (let result of firstReport.results) {
         const comp = result.constraintComponent.value.split("#")[1]
@@ -150,7 +159,8 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
         if (debug) console.log("Mandatory data points missing:", blockers)
         return {
             result: ValidationResult.UNDETERMINABLE,
-            missingUserInput: askUserForDataPoints
+            missingUserInput: askUserForDataPoints,
+            violations: []
         }
     }
 
@@ -219,6 +229,23 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
 
     return {
         result: secondReport.conforms ? ValidationResult.ELIGIBLE : ValidationResult.INELIGIBLE,
-        missingUserInput: askUserForDataPoints
+        missingUserInput: askUserForDataPoints,
+        violations: collectViolations(secondReport)
     }
+}
+
+function collectViolations(report) {
+    let violations = []
+    for (let result of report.results) {
+        const comp = result.constraintComponent.value.split("#")[1]
+        if (comp === "MinCountConstraintComponent") continue
+        violations.push({
+            constraint: result.constraintComponent.value,
+            focusNode: result.focusNode.value,
+            path: result.path?.[0]?.predicates?.[0]?.value ?? "",
+            violatingValue: result.args.hasValue.id,
+            message: result.message[0] ? result.message[0].value : "",
+        })
+    }
+    return violations
 }
