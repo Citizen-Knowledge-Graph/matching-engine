@@ -56,7 +56,8 @@ export async function validateAll(userProfileStr, requirementProfiles, datafield
             }
             map.missingUserInputsAggregated[key].usedIn.push({
                 filename: filename,
-                optional: userInput.optional
+                optional: userInput.optional,
+                isLastMissingUserInput: report.missingUserInput.length === 1
             })
         }
     }
