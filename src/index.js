@@ -12,9 +12,9 @@ import { Store } from "n3"
 import toposort from "toposort"
 
 export const ValidationResult = {
-    ELIGIBLE: 1,
-    INELIGIBLE: 2,
-    UNDETERMINABLE: 3
+    ELIGIBLE: "eligible",
+    INELIGIBLE: "ineligible",
+    UNDETERMINABLE: "undeterminable"
 }
 
 export async function validateUserProfile(userProfile, datafieldsStr, debug = false) {
@@ -37,20 +37,30 @@ export async function validateUserProfile(userProfile, datafieldsStr, debug = fa
 }
 
 export async function validateAll(userProfileStr, requirementProfiles, datafieldsStr, materializationStr, debug = false) {
-    let report = {
-        eligible: [],
-        nonEligible: [],
-        missingDataPoints: {}
+    let map = {
+        reports: [],
+        missingUserInputsAggregated: {}
     }
     for (let [filename, reqProfileStr] of Object.entries(requirementProfiles)) {
-        let validation = await validateOne(userProfileStr, reqProfileStr, datafieldsStr, materializationStr, debug)
-        if (validation.conforms) {
-            report.eligible.push(filename)
+        let report = await validateOne(userProfileStr, reqProfileStr, datafieldsStr, materializationStr, debug)
+        report.filename = filename
+        map.reports.push(report)
+        for (let userInput of report.missingUserInput) {
+            let key = userInput.subject + "_" + userInput.predicate
+            if (!map.missingUserInputsAggregated[key]) {
+                map.missingUserInputsAggregated[key] = {
+                    subject: userInput.subject,
+                    predicate: userInput.predicate,
+                    usedIn: []
+                }
+            }
+            map.missingUserInputsAggregated[key].usedIn.push({
+                filename: filename,
+                optional: userInput.optional
+            })
         }
-
-        // TODO
     }
-    return report
+    return map
 }
 
 export async function validateOne(userProfile, requirementProfile, datafieldsStr, materializationStr, debug = false) {
@@ -139,10 +149,7 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
         if (debug) console.log("Mandatory data points missing:", blockers)
         return {
             result: ValidationResult.UNDETERMINABLE,
-            missing: {
-                mandatory: blockers,
-                optional: optionals
-            }
+            missingUserInput: askUserForDataPoints
         }
     }
 
@@ -211,8 +218,6 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
 
     return {
         result: secondReport.conforms ? ValidationResult.ELIGIBLE : ValidationResult.INELIGIBLE,
-        missing: {
-            optionals: optionals
-        }
+        missingUserInput: askUserForDataPoints
     }
 }

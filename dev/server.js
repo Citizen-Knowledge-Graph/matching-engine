@@ -38,10 +38,9 @@ const passUserProfileToValidateAll = async (jsonProfile, res) => {
             requirementProfiles[file] = await fsPromise.readFile(`${DB_DIR}/shacl/${file}`, "utf8")
         }
 
-        let report = await validateAll(turtleUserProfile, requirementProfiles, datafieldsStr, materializationStr, true)
-        console.log(report)
+        let report = await validateAll(turtleUserProfile, requirementProfiles, datafieldsStr, materializationStr, false)
 
-        res.json({ success: true, report: report })
+        res.json({ success: true, response: report })
     } catch (error) {
         res.status(500).json({ success: false, error: error.message })
     }
