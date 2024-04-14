@@ -1,6 +1,6 @@
 import data from "./opendva-profile-data.json" assert { type: "json" }
 
-fetch("http://localhost:3000/foerderfunke-eligibility-check", {
+fetch("http://localhost:3000/foerderfunke", {
     method: "POST",
     body: JSON.stringify({ jsonProfile: data }),
     headers: { "Content-Type": "application/json" }

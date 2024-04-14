@@ -3,13 +3,22 @@ import express from "express"
 const app = express()
 const port = 3000
 app.use(express.json())
+import jsonProfileLocal from "../dev/opendva-profile-data.json" assert { type: "json" }
 
-app.post("/foerderfunke-eligibility-check", async (req, res) => {
+app.post("/foerderfunke", async (req, res) => {
     if (Object.keys(req.body).length === 0 || !req.body.jsonProfile) {
         return res.status(400).json({ success: false, message: "Request body is empty" })
     }
+    await validateAll(req.body.jsonProfile, res)
+})
+
+app.post("/foerderfunke-fallback", async (req, res) => {
+    await validateAll(jsonProfileLocal, res)
+})
+
+const validateAll = async (jsonProfile, res) => {
     try {
-        const turtleProfile = await buildTurtleFromOpenDvaDemoJson(req.body.jsonProfile)
+        const turtleProfile = await buildTurtleFromOpenDvaDemoJson(jsonProfile)
 
         // TODO
 
@@ -17,7 +26,7 @@ app.post("/foerderfunke-eligibility-check", async (req, res) => {
     } catch (error) {
         res.status(500).json({ success: false, error: error.message })
     }
-})
+}
 
 app.listen(port, () => {
     console.log(`Server listening at http://localhost:${port}`)
