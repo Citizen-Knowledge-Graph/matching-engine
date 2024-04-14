@@ -11,7 +11,7 @@ import {
 import { Store } from "n3"
 import toposort from "toposort"
 
-export async function validateUserProfile(userProfile, datafieldsStr) {
+export async function validateUserProfile(userProfile, datafieldsStr, debug = false) {
     let store = new Store()
     await addRdfStringToStore(userProfile, store)
     let query = `
@@ -26,7 +26,7 @@ export async function validateUserProfile(userProfile, datafieldsStr) {
 
     let report = await runValidationOnStore(store)
 
-    printDatasetAsTurtle(report.dataset)
+    if (debug) printDatasetAsTurtle(report.dataset)
     return report.conforms
 }
 
@@ -191,6 +191,6 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
 
     return {
         conforms: secondReport.conforms,
-        report: secondReport
+        report: "TODO"
     }
 }

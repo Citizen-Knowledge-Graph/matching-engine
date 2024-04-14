@@ -3,26 +3,45 @@ import express from "express"
 const app = express()
 const port = 3000
 app.use(express.json())
+import path from "path"
+import { fileURLToPath } from "url"
+import { validateAll, validateUserProfile } from "../src/index.js";
+import { promises as fsPromise } from "fs";
 import jsonProfileLocal from "./opendva-profile-data.json" assert { type: "json" }
+
+const DB_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "requirement-profiles")
 
 app.post("/foerderfunke", async (req, res) => {
     if (Object.keys(req.body).length === 0 || !req.body.jsonProfile) {
         return res.status(400).json({ success: false, message: "Request body is empty" })
     }
-    await validateAll(req.body.jsonProfile, res)
+    await passUserProfileToValidateAll(req.body.jsonProfile, res)
 })
 
 app.post("/foerderfunke-fallback", async (req, res) => {
-    await validateAll(jsonProfileLocal, res)
+    await passUserProfileToValidateAll(jsonProfileLocal, res)
 })
 
-const validateAll = async (jsonProfile, res) => {
+const passUserProfileToValidateAll = async (jsonProfile, res) => {
     try {
-        const turtleProfile = await buildTurtleFromOpenDvaDemoJson(jsonProfile)
+        const turtleUserProfile = await buildTurtleFromOpenDvaDemoJson(jsonProfile)
+        let datafieldsStr = await fsPromise.readFile(`${DB_DIR}/datafields.ttl`, "utf8")
+        if (!(await validateUserProfile(turtleUserProfile, datafieldsStr))) {
+            console.error("Invalid user profile", turtleUserProfile)
+            res.json({ success: false, error: "Invalid user profile" })
+        }
+        let shaclFiles = await fsPromise.readdir(`${DB_DIR}/shacl`)
+        let materializationStr = await fsPromise.readFile(`${DB_DIR}/materialization.ttl`, "utf8")
+        let requirementProfiles = {}
+        for (let file of shaclFiles) {
+            if (!file.includes("opendva")) continue
+            requirementProfiles[file] = await fsPromise.readFile(`${DB_DIR}/shacl/${file}`, "utf8")
+        }
 
-        // TODO
+        let report = await validateAll(turtleUserProfile, requirementProfiles, datafieldsStr, materializationStr, true)
+        console.log(report)
 
-        res.json({ success: true, turtleProfile })
+        res.json({ success: true, report: report })
     } catch (error) {
         res.status(500).json({ success: false, error: error.message })
     }
