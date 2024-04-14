@@ -11,6 +11,12 @@ import {
 import { Store } from "n3"
 import toposort from "toposort"
 
+export const ValidationResult = {
+    ELIGIBLE: 1,
+    INELIGIBLE: 2,
+    UNDETERMINABLE: 3
+}
+
 export async function validateUserProfile(userProfile, datafieldsStr, debug = false) {
     let store = new Store()
     await addRdfStringToStore(userProfile, store)
@@ -30,11 +36,19 @@ export async function validateUserProfile(userProfile, datafieldsStr, debug = fa
     return report.conforms
 }
 
-export async function validateAll(userProfile, requirementProfiles, datafieldsStr, materializationStr, debug = false) {
-    let report = []
-    for (let [filename, profile] of Object.entries(requirementProfiles)) {
-        let validation = await validateOne(userProfile, profile, datafieldsStr, materializationStr, debug)
-        report.push({ filename: filename, validation: validation })
+export async function validateAll(userProfileStr, requirementProfiles, datafieldsStr, materializationStr, debug = false) {
+    let report = {
+        eligible: [],
+        nonEligible: [],
+        missingDataPoints: {}
+    }
+    for (let [filename, reqProfileStr] of Object.entries(requirementProfiles)) {
+        let validation = await validateOne(userProfileStr, reqProfileStr, datafieldsStr, materializationStr, debug)
+        if (validation.conforms) {
+            report.eligible.push(filename)
+        }
+
+        // TODO
     }
     return report
 }
@@ -117,16 +131,18 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
     let blockers = askUserForDataPoints.filter(missing => !missing.optional)
 
     // ----- missing data points that are optional, don't stop the workflow -----
-    if (optionals.length > 0 && debug)
+    if (debug && optionals.length > 0)
         console.log("Optional data points missing:", optionals)
 
     // ----- mandatory missing data points stop the workflow, it makes no sense to continue -----
     if (blockers.length > 0) {
+        if (debug) console.log("Mandatory data points missing:", blockers)
         return {
-            conforms: false,
-            report: firstReport,
-            blockers: blockers,
-            optionals: optionals
+            result: ValidationResult.UNDETERMINABLE,
+            missing: {
+                mandatory: blockers,
+                optional: optionals
+            }
         }
     }
 
@@ -183,6 +199,10 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
         printDatasetAsTurtle(secondReport.dataset)
     }
 
+    // If we are here, data points can't be missing anymore. But the materialized ones can
+    // be having values that are outside the allowed range. These wouldn't have showed up in
+    // the first validation report because the data points were not materialized there yet.
+
     // render list of conditions
     // use debug SHACL or SPARQL for a summary in the end with reasoning/calculations?
     // rdf-star for timestamping triples?
@@ -190,7 +210,9 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
     // ask user about suggestPermanentMaterialization
 
     return {
-        conforms: secondReport.conforms,
-        report: "TODO"
+        result: secondReport.conforms ? ValidationResult.ELIGIBLE : ValidationResult.INELIGIBLE,
+        missing: {
+            optionals: optionals
+        }
     }
 }
