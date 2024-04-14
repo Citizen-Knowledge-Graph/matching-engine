@@ -241,10 +241,10 @@ function collectViolations(report) {
         if (comp === "MinCountConstraintComponent") continue
         violations.push({
             constraint: result.constraintComponent.value,
-            focusNode: result.focusNode.value,
+            focusNode: result.focusNode?.value ?? "",
             path: result.path?.[0]?.predicates?.[0]?.value ?? "",
-            violatingValue: result.args.hasValue.id,
-            message: result.message[0] ? result.message[0].value : "",
+            violatingValue: result.args?.hasValue?.id ?? "",
+            message: result.message?.[0]?.value ?? ""
         })
     }
     return violations
