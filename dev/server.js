@@ -3,7 +3,7 @@ import express from "express"
 const app = express()
 const port = 3000
 app.use(express.json())
-import jsonProfileLocal from "../dev/opendva-profile-data.json" assert { type: "json" }
+import jsonProfileLocal from "./opendva-profile-data.json" assert { type: "json" }
 
 app.post("/foerderfunke", async (req, res) => {
     if (Object.keys(req.body).length === 0 || !req.body.jsonProfile) {
