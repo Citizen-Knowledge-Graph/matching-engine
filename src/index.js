@@ -80,12 +80,14 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
         printDatasetAsTurtle(firstReport.dataset)
     }
 
+    // ignore HasValueConstraintComponent if they have an equivalent MinCountConstraintComponent?
     let violations = collectViolations(firstReport)
     if (violations.length > 0) {
         return {
             result: ValidationResult.INELIGIBLE,
+            violations: violations,
             missingUserInput: [],
-            violations: violations
+            inMemoryMaterializedTriples: []
         }
     }
 
@@ -133,6 +135,7 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
     }
 
     // ----- enrich the ones we'll ask for with labels -----
+    // should we send more along than then the label?
     for (let dataPoint of askUserForDataPoints) {
         let query = `
             PREFIX ff: <https://foerderfunke.org/default#>
@@ -159,8 +162,9 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
         if (debug) console.log("Mandatory data points missing:", blockers)
         return {
             result: ValidationResult.UNDETERMINABLE,
+            violations: [],
             missingUserInput: askUserForDataPoints,
-            violations: []
+            inMemoryMaterializedTriples: []
         }
     }
 
@@ -180,10 +184,17 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
     if (debug) console.log("Topologically sorted materialization rules", sorted)
 
     // ----- apply the materialization rules in the correct order -----
+
+    let constructedQuads = []
     for (let rule of sorted.slice(1)) {
         let query = materializableDataPointsMap[rule].query
-        let constructed = await runSparqlConstructQueryOnStore(query, store)
-        store.addQuads(constructed)
+        constructedQuads = await runSparqlConstructQueryOnStore(query, store)
+        store.addQuads(constructedQuads)
+    }
+
+    let materializedTriples = [] // include permanent materialization and period check prompt? TODO
+    for (let quad of constructedQuads) {
+        materializedTriples.push({ s: quad.subject.value, p: quad.predicate.value, o: quad.object.value })
     }
 
     // ----- remove the minCount constraint from optional conditions so that they won't cause the validation to fail again -----
@@ -229,8 +240,9 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
 
     return {
         result: secondReport.conforms ? ValidationResult.ELIGIBLE : ValidationResult.INELIGIBLE,
+        violations: collectViolations(secondReport),
         missingUserInput: askUserForDataPoints,
-        violations: collectViolations(secondReport)
+        inMemoryMaterializedTriples: materializedTriples
     }
 }
 
