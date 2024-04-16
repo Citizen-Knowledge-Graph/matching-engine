@@ -5,7 +5,7 @@ const port = 3000
 app.use(express.json())
 import path from "path"
 import { fileURLToPath } from "url"
-import { validateAll, validateUserProfile } from "../src/index.js";
+import { validateAll, validateUserProfile, ValidationResult } from "../src/index.js";
 import { promises as fsPromise } from "fs";
 import jsonProfileLocal from "./opendva-profile-data.json" assert { type: "json" }
 
@@ -34,13 +34,43 @@ const passUserProfileToValidateAll = async (jsonProfile, res) => {
         let materializationStr = await fsPromise.readFile(`${DB_DIR}/materialization.ttl`, "utf8")
         let requirementProfiles = {}
         for (let file of shaclFiles) {
-            if (!file.includes("opendva")) continue
+            if (file.startsWith("dev")) continue
             requirementProfiles[file] = await fsPromise.readFile(`${DB_DIR}/shacl/${file}`, "utf8")
         }
 
-        let report = await validateAll(turtleUserProfile, requirementProfiles, datafieldsStr, materializationStr, false)
+        let validateAllReport = await validateAll(turtleUserProfile, requirementProfiles, datafieldsStr, materializationStr, false)
 
-        res.json({ success: true, response: report })
+        let response = {
+            displayStrings: ["Ergebnis des FörderFunke Quick-Check", ""],
+            resultsShort: {
+                eligible: [],
+                ineligible: [],
+                missingData: []
+            },
+            resultsLong: validateAllReport
+        }
+
+        for (let report of validateAllReport.reports) {
+            if (report.result === ValidationResult.ELIGIBLE) response.resultsShort.eligible.push(report.title)
+            if (report.result === ValidationResult.INELIGIBLE) response.resultsShort.ineligible.push(report.title)
+            if (report.result === ValidationResult.UNDETERMINABLE) response.resultsShort.missingData.push(report.title)
+        }
+
+        response.displayStrings.push("Sie sind für folgende Leistungen berechtigt:")
+        response.resultsShort.eligible.forEach((title) => response.displayStrings.push(`--> ${title}`))
+        response.displayStrings.push("Klicken Sie hier um zu den jeweiligen Antragsformularen zu gelangen.")
+        response.displayStrings.push("")
+        response.displayStrings.push("Für folgende Leistungen sind Sie nicht berechtigt:")
+        response.resultsShort.ineligible.forEach((title) => response.displayStrings.push(`--> ${title}`))
+        response.displayStrings.push("Klicken Sie hier um die Gründe zu erfahren.")
+        response.displayStrings.push("")
+        response.displayStrings.push("Um die Berechtigung für folgende Leistungen zu prüfen, fehlen noch Datenpunkte:")
+        response.resultsShort.missingData.forEach((title) => response.displayStrings.push(`--> ${title}`))
+        response.displayStrings.push("Klicken Sie hier um die fehlenden Datenpunkte zu ergänzen.")
+        response.displayStrings.push("")
+
+        res.json({ response: response })
+        // res.json({ success: true, response: report })
     } catch (error) {
         res.status(500).json({ success: false, error: error.message })
     }
