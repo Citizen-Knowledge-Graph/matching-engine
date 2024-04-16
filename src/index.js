@@ -44,6 +44,9 @@ export async function validateAll(userProfileStr, requirementProfiles, datafield
     for (let [filename, reqProfileStr] of Object.entries(requirementProfiles)) {
         let report = await validateOne(userProfileStr, reqProfileStr, datafieldsStr, materializationStr, debug)
         report.filename = filename
+        let regex = /ff:title "([^"]+)"/ // use grapoi instead?
+        let match = reqProfileStr.match(regex)
+        if (match) report.title = match[1]
         map.reports.push(report)
         for (let userInput of report.missingUserInput) {
             let key = userInput.subject + "_" + userInput.predicate
