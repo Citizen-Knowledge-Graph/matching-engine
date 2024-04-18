@@ -84,7 +84,7 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
     }
 
     // ignore HasValueConstraintComponent if they have an equivalent MinCountConstraintComponent?
-    let violations = collectViolations(firstReport)
+    let violations = collectViolations(firstReport, true)
     if (violations.length > 0) {
         return {
             result: ValidationResult.INELIGIBLE,
@@ -243,17 +243,17 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
 
     return {
         result: secondReport.conforms ? ValidationResult.ELIGIBLE : ValidationResult.INELIGIBLE,
-        violations: collectViolations(secondReport),
+        violations: collectViolations(secondReport, false),
         missingUserInput: askUserForDataPoints,
         inMemoryMaterializedTriples: materializedTriples
     }
 }
 
-function collectViolations(report) {
+function collectViolations(report, skipMinCountAndNode) {
     let violations = []
     for (let result of report.results) {
         const comp = result.constraintComponent.value.split("#")[1]
-        if (comp === "MinCountConstraintComponent") continue
+        if (skipMinCountAndNode && (comp === "MinCountConstraintComponent" || comp === "NodeConstraintComponent")) continue
         violations.push({
             constraint: result.constraintComponent.value,
             focusNode: result.focusNode?.value ?? "",
