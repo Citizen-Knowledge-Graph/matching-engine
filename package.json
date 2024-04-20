@@ -1,6 +1,6 @@
 {
   "name": "@foerderfunke/matching-engine",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Checks eligibilities by validating a user profile against requirement profiles",
   "author": "@foerderfunke",
   "license": "MIT",
@@ -9,7 +9,8 @@
   "scripts": {
     "start": "npm run update && node dev/dev.js",
     "update": "chmod +x dev/script.sh && ./dev/script.sh",
-    "server": "node dev/server.js"
+    "server": "node dev/server.js",
+    "build": "webpack"
   },
   "dependencies": {
     "@comunica/query-sparql-rdfjs": "^2.10.2",
@@ -19,5 +20,9 @@
     "shacl-engine": "github:rdf-ext/shacl-engine#sparql",
     "sparqljs": "^3.7.1",
     "toposort": "^2.0.2"
+  },
+  "devDependencies": {
+    "webpack": "^5.91.0",
+    "webpack-cli": "^5.1.4"
   }
 }
