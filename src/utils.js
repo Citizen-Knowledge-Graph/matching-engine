@@ -4,6 +4,14 @@ import Validator from "shacl-engine/Validator.js"
 import rdf from "rdf-ext"
 import { QueryEngine } from "@comunica/query-sparql-rdfjs"
 
+export async function rdfStringsToStore(rdfStrings) {
+    let store = new Store()
+    for (let rdfString of rdfStrings) {
+        await addRdfStringToStore(rdfString, store)
+    }
+    return store
+}
+
 export function rdfStringToStore(rdfStr) {
     let store = new Store()
     return addRdfStringToStore(rdfStr, store)

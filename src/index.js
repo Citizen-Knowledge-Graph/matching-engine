@@ -264,7 +264,3 @@ function collectViolations(report, skipMinCountAndNode) {
     }
     return violations
 }
-
-export function dev() {
-    return "foo"
-}

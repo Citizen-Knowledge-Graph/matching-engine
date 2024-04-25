@@ -3,13 +3,18 @@ import {
     validateUserProfile,
     validateOne,
     validateAll,
-    dev
 } from "./src/index.js"
+
+import {
+    rdfStringsToStore,
+    runSparqlSelectQueryOnStore
+} from "./src/utils.js";
 
 window.MatchingEngine = {
     ValidationResult,
     validateUserProfile,
     validateOne,
     validateAll,
-    dev
+    rdfStringsToStore,
+    runSparqlSelectQueryOnStore
 }
