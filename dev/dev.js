@@ -1,3 +1,4 @@
+import util from "util"
 import path from "path"
 import { fileURLToPath } from "url"
 import fs, { promises as fsPromise } from "fs"
@@ -55,7 +56,8 @@ async function devValidateAll() {
     }
 
     let report = await validateAll(userProfile, requirementProfiles, datafieldsStr, materializationStr, true)
-    console.log(report)
+    // console.log(report)
+    console.log(util.inspect(report, { showHidden: false, depth: null, colors: true }))
 }
 
 async function devValidateOne() {
