@@ -84,6 +84,7 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
     }
 
     // ignore HasValueConstraintComponent if they have an equivalent MinCountConstraintComponent?
+    // the problem of them both occurring can be avoided by using e.g. "sh:in (true)" instead of "sh:hasValue true", not sure that's the best solution though
     let violations = collectViolations(firstReport, true)
     if (violations.length > 0) {
         return {
