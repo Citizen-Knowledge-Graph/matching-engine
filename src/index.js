@@ -97,7 +97,7 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
     let missingList = []
     for (let result of firstReport.results) {
         const comp = result.constraintComponent.value.split("#")[1]
-        if (comp === "MinCountConstraintComponent") {
+        if (comp === "MinCountConstraintComponent" || comp === "QualifiedMinCountConstraintComponent") {
             let missingPredicate = result.path[0].predicates[0].id // can these two arrays be bigger than 1?
             let fromSubject = result.focusNode.value
             let message = result.message[0].value // can the arrays be bigger than 1?
@@ -267,7 +267,7 @@ function collectViolations(report, skipMinCountAndNode) {
     let violations = []
     for (let result of report.results) {
         const comp = result.constraintComponent.value.split("#")[1]
-        if (skipMinCountAndNode && (comp === "MinCountConstraintComponent" || comp === "NodeConstraintComponent")) continue
+        if (skipMinCountAndNode && (comp === "MinCountConstraintComponent" || comp === "QualifiedMinCountConstraintComponent" || comp === "NodeConstraintComponent")) continue
         violations.push({
             constraint: result.constraintComponent.value,
             focusNode: result.focusNode?.value ?? "",
