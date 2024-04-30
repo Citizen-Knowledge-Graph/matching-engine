@@ -132,8 +132,22 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
     let askUserForDataPoints = []
 
     // ----- for the ones we can't materialize we need user input -----
+    // this is one-dimensional so far, only predicates directly at mainPerson are possible TODO
+    // and we should tell the user that for instance either hasAge (rule output) or hasBirthday (rule input) is missing TOOD
+
+    // get all predicates directly attached to mainPerson
+    let query = `
+        PREFIX ff: <https://foerderfunke.org/default#>
+        SELECT DISTINCT ?predicate WHERE {
+            ff:mainPerson ?predicate ?object .
+        }`
+    let result = await runSparqlSelectQueryOnStore(query, store)
+    let existingMainPersonPredicates = result.map(n => n.predicate)
+
     for (let missing of missingList) {
-        if (materializableDataPoints.find(n => n.output === missing.predicate)) continue
+        let matchingRule = materializableDataPoints.find(n => n.output === missing.predicate)
+        // we can only use a materialization rule that outputs our missing data point, if we have the input for this rule
+        if (matchingRule && existingMainPersonPredicates.includes(matchingRule.input)) continue
         askUserForDataPoints.push(missing)
     }
 
