@@ -133,10 +133,9 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
     let askUserForDataPoints = []
 
     // ----- for the ones we can't materialize we need user input -----
-    // this is one-dimensional so far, only predicates directly at mainPerson are possible TODO
-    // and we should tell the user that for instance either hasAge (rule output) or hasBirthday (rule input) is missing TOOD
+    // we should tell the user that for instance either hasAge (rule output) or hasBirthday (rule input) is missing TODO
 
-    // get all predicates directly attached to mainPerson
+    // get all predicates directly attached to mainPerson, this is one-dimensional TODO
     let query = `
         PREFIX ff: <https://foerderfunke.org/default#>
         SELECT DISTINCT ?predicate WHERE {
@@ -147,8 +146,13 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
 
     for (let missing of missingList) {
         let matchingRule = materializableDataPoints.find(n => n.output === missing.predicate)
-        // we can only use a materialization rule that outputs our missing data point, if we have the input for this rule
-        if (matchingRule && existingMainPersonPredicates.includes(matchingRule.input)) continue
+        let otherRuleWithThatInputAsOutput = undefined
+        if (matchingRule && matchingRule.input) {
+            otherRuleWithThatInputAsOutput = materializableDataPoints.find(n => n.output === matchingRule.input)
+        }
+        // quite annoying to check all these options, maybe another approach also removing the need for topological sorting? TODO
+        // I am thinking of rounds of materialization: in each we look what's possible, and we do it until no rule triggers anymore
+        if (matchingRule && (!matchingRule.input || otherRuleWithThatInputAsOutput || existingMainPersonPredicates.includes(matchingRule.input))) continue
         askUserForDataPoints.push(missing)
     }
 

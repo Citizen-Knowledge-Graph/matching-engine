@@ -52,6 +52,7 @@ async function devValidateAll() {
 
     let requirementProfiles = {}
     for (let file of shaclFiles) {
+        // if (!(file === "kinderzuschlag.ttl")) continue
         requirementProfiles[file] = await fsPromise.readFile(`${SHACL_DIR}/${file}`, "utf8")
     }
 
