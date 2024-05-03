@@ -116,6 +116,10 @@ export async function runSparqlDeleteQueryOnStore(query, store) {
 
 export async function extractRequirementProfilesMetadata(shaclFileContents) {
     let store = await rdfStringsToStore(shaclFileContents)
+    return await extractRequirementProfilesMetadataFromStore(store)
+}
+
+export async function extractRequirementProfilesMetadataFromStore(store) {
     let query = `
 PREFIX ff: <https://foerderfunke.org/default#>
 SELECT * WHERE {

@@ -111,8 +111,8 @@ async function devExtractRequirementProfileMedatada() {
 
 // devRunSparqlSelectQueryOnRdfString()
 // devRunSparqlConstructQueryOnRdfString()
-// devValidateAll()
+devValidateAll()
 // devValidateOne()
 // devValidateOneStrings()
 // devValidateUserProfile()
-devExtractRequirementProfileMedatada()
+// devExtractRequirementProfileMedatada()

@@ -1,5 +1,6 @@
 import {
     addRdfStringToStore,
+    extractRequirementProfilesMetadataFromStore,
     printDatasetAsTurtle,
     printStoreAsTurtle,
     runSparqlAskQueryOnStore,
@@ -39,15 +40,19 @@ export async function validateUserProfile(userProfile, datafieldsStr, debug = fa
 export async function validateAll(userProfileStr, requirementProfiles, datafieldsStr, materializationStr, debug = false) {
     let map = {
         reports: [],
-        missingUserInputsAggregated: {}
+        missingUserInputsAggregated: {},
+        metadata: {}
     }
     for (let [filename, reqProfileStr] of Object.entries(requirementProfiles)) {
         let report = await validateOne(userProfileStr, reqProfileStr, datafieldsStr, materializationStr, debug)
-        report.filename = filename
-        let regex = /ff:title\s+"([^"]+)"/; // use grapoi instead?
-        let match = reqProfileStr.match(regex)
-        if (match) report.title = match[1]
         map.reports.push(report)
+        map.metadata = { ...map.metadata, ...report.metadata }
+        let rqId = Object.keys(report.metadata)[0]
+        report.metadata = {
+            ...report.metadata[rqId],
+            id: rqId,
+            filename: filename
+        }
         for (let userInput of report.missingUserInput) {
             let key = userInput.subject + "_" + userInput.predicate
             if (!map.missingUserInputsAggregated[key]) {
@@ -76,6 +81,9 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
     await addRdfStringToStore(materializationStr, store)
     await addRdfStringToStore(datafieldsStr, store)
 
+    // ----- extract metadata from the requirement profile -----`
+    let rqMetadata = await extractRequirementProfilesMetadataFromStore(store)
+
     // ----- first validation to identify missing data points  -----
     let firstReport = await runValidationOnStore(store)
     if (debug) {
@@ -91,7 +99,8 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
             result: ValidationResult.INELIGIBLE,
             violations: violations,
             missingUserInput: [],
-            inMemoryMaterializedTriples: []
+            inMemoryMaterializedTriples: [],
+            metadata: rqMetadata
         }
     }
 
@@ -186,7 +195,8 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
             result: ValidationResult.UNDETERMINABLE,
             violations: [],
             missingUserInput: askUserForDataPoints,
-            inMemoryMaterializedTriples: []
+            inMemoryMaterializedTriples: [],
+            metadata: rqMetadata
         }
     }
 
@@ -264,7 +274,8 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
         result: secondReport.conforms ? ValidationResult.ELIGIBLE : ValidationResult.INELIGIBLE,
         violations: collectViolations(secondReport, false),
         missingUserInput: askUserForDataPoints,
-        inMemoryMaterializedTriples: materializedTriples
+        inMemoryMaterializedTriples: materializedTriples,
+        metadata: rqMetadata
     }
 }
 
