@@ -10,7 +10,8 @@
     "start": "npm run update && node dev/dev.js",
     "update": "chmod +x dev/script.sh && ./dev/script.sh",
     "server": "node dev/server.js",
-    "build": "webpack"
+    "build": "webpack",
+    "publish": "npm run build && npm publish"
   },
   "dependencies": {
     "@comunica/query-sparql-rdfjs": "^2.10.2",
