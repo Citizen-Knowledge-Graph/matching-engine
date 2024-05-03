@@ -1,6 +1,6 @@
 {
   "name": "@foerderfunke/matching-engine",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "description": "Checks eligibilities by validating a user profile against requirement profiles",
   "author": "@foerderfunke",
   "license": "MIT",
@@ -10,8 +10,7 @@
     "start": "npm run update && node dev/dev.js",
     "update": "chmod +x dev/script.sh && ./dev/script.sh",
     "server": "node dev/server.js",
-    "build": "webpack",
-    "publish": "npm run build && npm publish"
+    "build": "webpack"
   },
   "dependencies": {
     "@comunica/query-sparql-rdfjs": "^2.10.2",
