@@ -3,7 +3,7 @@ import path from "path"
 import { fileURLToPath } from "url"
 import fs, { promises as fsPromise } from "fs"
 import { validateAll, validateOne, validateUserProfile } from "../src/index.js"
-import { runSparqlConstructQueryOnRdfString, runSparqlSelectQueryOnRdfString } from "../src/utils.js"
+import { extractRequirementProfilesMetadata, runSparqlConstructQueryOnRdfString, runSparqlSelectQueryOnRdfString } from "../src/utils.js"
 
 const DB_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "requirement-profiles")
 const SHACL_DIR = `${DB_DIR}/shacl`
@@ -100,9 +100,19 @@ async function devValidateUserProfile() {
     console.log(conforms)
 }
 
+async function devExtractRequirementProfileMedatada() {
+    let shaclFiles = await fsPromise.readdir(SHACL_DIR)
+    let shaclFileContents = []
+    for (let file of shaclFiles) {
+        shaclFileContents.push(await fsPromise.readFile(`${SHACL_DIR}/${file}`, "utf8"))
+    }
+    console.log(await extractRequirementProfilesMetadata(shaclFileContents))
+}
+
 // devRunSparqlSelectQueryOnRdfString()
 // devRunSparqlConstructQueryOnRdfString()
-devValidateAll()
+// devValidateAll()
 // devValidateOne()
 // devValidateOneStrings()
 // devValidateUserProfile()
+devExtractRequirementProfileMedatada()

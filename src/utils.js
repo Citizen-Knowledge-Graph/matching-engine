@@ -113,3 +113,26 @@ export async function runSparqlDeleteQueryOnStore(query, store) {
     const queryEngine = new QueryEngine()
     return await queryEngine.queryVoid(query, { sources: [ store ] })
 }
+
+export async function extractRequirementProfilesMetadata(shaclFileContents) {
+    let store = await rdfStringsToStore(shaclFileContents)
+    let query = `
+PREFIX ff: <https://foerderfunke.org/default#>
+SELECT * WHERE {
+    ?id a ff:RequirementProfile .
+    ?id ff:title ?title .
+    OPTIONAL { ?id ff:category ?category } .
+}`
+    let rqMetadata = {}
+    let rows = await runSparqlSelectQueryOnStore(query, store)
+    for (let row of rows) {
+        if (!rqMetadata[row.id]) {
+            rqMetadata[row.id] = {
+                title: row.title,
+                categories: []
+            }
+        }
+        if (row.category) rqMetadata[row.id].categories.push(row.category)
+    }
+    return rqMetadata
+}

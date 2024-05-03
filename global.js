@@ -7,7 +7,8 @@ import {
 
 import {
     rdfStringsToStore,
-    runSparqlSelectQueryOnStore
+    runSparqlSelectQueryOnStore,
+    extractRequirementProfilesMetadata
 } from "./src/utils.js";
 
 window.MatchingEngine = {
@@ -16,5 +17,6 @@ window.MatchingEngine = {
     validateOne,
     validateAll,
     rdfStringsToStore,
-    runSparqlSelectQueryOnStore
+    runSparqlSelectQueryOnStore,
+    extractRequirementProfilesMetadata
 }
