@@ -47,10 +47,10 @@ export async function validateAll(userProfileStr, requirementProfiles, datafield
         let report = await validateOne(userProfileStr, reqProfileStr, datafieldsStr, materializationStr, debug)
         map.reports.push(report)
         map.metadata = { ...map.metadata, ...report.metadata }
-        let rqId = Object.keys(report.metadata)[0]
+        let rpId = Object.keys(report.metadata)[0]
         report.metadata = {
-            ...report.metadata[rqId],
-            id: rqId,
+            ...report.metadata[rpId],
+            id: rpId,
             filename: filename
         }
         for (let userInput of report.missingUserInput) {
@@ -59,11 +59,12 @@ export async function validateAll(userProfileStr, requirementProfiles, datafield
                 map.missingUserInputsAggregated[key] = {
                     subject: userInput.subject,
                     predicate: userInput.predicate,
+                    label: userInput.label,
                     usedIn: []
                 }
             }
             map.missingUserInputsAggregated[key].usedIn.push({
-                filename: filename,
+                id: rpId,
                 optional: userInput.optional,
                 isLastMissingUserInput: report.missingUserInput.length === 1
             })
@@ -82,7 +83,7 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
     await addRdfStringToStore(datafieldsStr, store)
 
     // ----- extract metadata from the requirement profile -----`
-    let rqMetadata = await extractRequirementProfilesMetadataFromStore(store)
+    let rpMetadata = await extractRequirementProfilesMetadataFromStore(store)
 
     // ----- first validation to identify missing data points  -----
     let firstReport = await runValidationOnStore(store)
@@ -100,7 +101,7 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
             violations: violations,
             missingUserInput: [],
             inMemoryMaterializedTriples: [],
-            metadata: rqMetadata
+            metadata: rpMetadata
         }
     }
 
@@ -196,7 +197,7 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
             violations: [],
             missingUserInput: askUserForDataPoints,
             inMemoryMaterializedTriples: [],
-            metadata: rqMetadata
+            metadata: rpMetadata
         }
     }
 
@@ -275,7 +276,7 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
         violations: collectViolations(secondReport, false),
         missingUserInput: askUserForDataPoints,
         inMemoryMaterializedTriples: materializedTriples,
-        metadata: rqMetadata
+        metadata: rpMetadata
     }
 }
 
