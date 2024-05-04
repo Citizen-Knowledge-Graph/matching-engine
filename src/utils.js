@@ -6,8 +6,8 @@ import { QueryEngine } from "@comunica/query-sparql-rdfjs"
 
 export async function rdfStringsToStore(rdfStrings) {
     let store = new Store()
-    for (let rdfString of rdfStrings) {
-        await addRdfStringToStore(rdfString, store)
+    for (let str of rdfStrings) {
+        await addRdfStringToStore(str, store)
     }
     return store
 }
@@ -114,29 +114,59 @@ export async function runSparqlDeleteQueryOnStore(query, store) {
     return await queryEngine.queryVoid(query, { sources: [ store ] })
 }
 
-export async function extractRequirementProfilesMetadata(shaclFileContents) {
-    let store = await rdfStringsToStore(shaclFileContents)
-    return await extractRequirementProfilesMetadataFromStore(store)
+export async function extractRpUriFromRpString(requirementProfileStr) {
+    let store = await rdfStringToStore(requirementProfileStr)
+    let query = `
+        PREFIX ff: <https://foerderfunke.org/default#>
+        SELECT * WHERE {
+            ?rpUri a ff:RequirementProfile .
+        }`
+    let rows = await runSparqlSelectQueryOnStore(query, store)
+    return rows[0].rpUri
 }
 
-export async function extractRequirementProfilesMetadataFromStore(store) {
+export async function extractRequirementProfilesMetadata(requirementProfileStrings) {
+    let store = await rdfStringsToStore(requirementProfileStrings)
     let query = `
-PREFIX ff: <https://foerderfunke.org/default#>
-SELECT * WHERE {
-    ?id a ff:RequirementProfile .
-    ?id ff:title ?title .
-    OPTIONAL { ?id ff:category ?category } .
-}`
-    let rqMetadata = {}
+        PREFIX ff: <https://foerderfunke.org/default#>
+        SELECT * WHERE {
+            ?rpUri a ff:RequirementProfile .
+            OPTIONAL { ?rpUri ff:title ?title } .
+            OPTIONAL { ?rpUri ff:category ?category } .
+        }`
+    let metadata = {}
     let rows = await runSparqlSelectQueryOnStore(query, store)
     for (let row of rows) {
-        if (!rqMetadata[row.id]) {
-            rqMetadata[row.id] = {
-                title: row.title,
+        if (!metadata[row.rpUri]) {
+            metadata[row.rpUri] = {
+                uri: row.rpUri,
+                title: row.title ?? "",
                 categories: []
             }
         }
-        if (row.category) rqMetadata[row.id].categories.push(row.category)
+        if (row.category) metadata[row.rpUri].categories.push(row.category)
     }
-    return rqMetadata
+    return metadata
+}
+
+export async function extractDatafieldsMetadata(datafieldsStr) {
+    let store = await rdfStringToStore(datafieldsStr)
+    let query = `
+        PREFIX ff: <https://foerderfunke.org/default#>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        SELECT * WHERE {
+            ?dfUri a ff:DataField .
+            OPTIONAL { ?dfUri rdfs:label ?label } .
+            OPTIONAL { ?dfUri rdfs:comment ?comment } .
+        }`
+    let metadata = {}
+    let rows = await runSparqlSelectQueryOnStore(query, store)
+    for (let row of rows) {
+        metadata[row.dfUri] = {
+            uri: row.dfUri,
+            label: row.label ?? "",
+            comment: row.comment ?? ""
+        }
+    }
+    return metadata
 }

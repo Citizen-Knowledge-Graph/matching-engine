@@ -3,11 +3,16 @@ import path from "path"
 import { fileURLToPath } from "url"
 import fs, { promises as fsPromise } from "fs"
 import { validateAll, validateOne, validateUserProfile } from "../src/index.js"
-import { extractRequirementProfilesMetadata, runSparqlConstructQueryOnRdfString, runSparqlSelectQueryOnRdfString } from "../src/utils.js"
+import {
+    extractDatafieldsMetadata,
+    extractRequirementProfilesMetadata,
+    runSparqlConstructQueryOnRdfString,
+    runSparqlSelectQueryOnRdfString
+} from "../src/utils.js"
 
 const DB_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "requirement-profiles")
 const SHACL_DIR = `${DB_DIR}/shacl`
-const USER_PROFILE = `${DB_DIR}/user-profile-examples/kinderzuschlag-user-profile.ttl`
+const USER_PROFILE = `${DB_DIR}/user-profile-examples/empty-user-profile.ttl`
 const DATAFIELDS = `${DB_DIR}/datafields.ttl`
 const MATERIALIZATION = `${DB_DIR}/materialization.ttl`
 
@@ -100,13 +105,13 @@ async function devValidateUserProfile() {
     console.log(conforms)
 }
 
-async function devExtractRequirementProfileMedatada() {
-    let shaclFiles = await fsPromise.readdir(SHACL_DIR)
-    let shaclFileContents = []
-    for (let file of shaclFiles) {
-        shaclFileContents.push(await fsPromise.readFile(`${SHACL_DIR}/${file}`, "utf8"))
+async function devExtractMedatada() {
+    let rpStrings = []
+    for (let file of await fsPromise.readdir(SHACL_DIR)) {
+        rpStrings.push(await fsPromise.readFile(`${SHACL_DIR}/${file}`, "utf8"))
     }
-    console.log(await extractRequirementProfilesMetadata(shaclFileContents))
+    console.log("Requirement profiles metadata:", await extractRequirementProfilesMetadata(rpStrings))
+    console.log("Datafields metadata:", await extractDatafieldsMetadata(await fsPromise.readFile(DATAFIELDS, "utf8")))
 }
 
 // devRunSparqlSelectQueryOnRdfString()
@@ -115,4 +120,4 @@ devValidateAll()
 // devValidateOne()
 // devValidateOneStrings()
 // devValidateUserProfile()
-// devExtractRequirementProfileMedatada()
+// devExtractMedatada()

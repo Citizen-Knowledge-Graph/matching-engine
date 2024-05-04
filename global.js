@@ -8,7 +8,8 @@ import {
 import {
     rdfStringsToStore,
     runSparqlSelectQueryOnStore,
-    extractRequirementProfilesMetadata
+    extractRequirementProfilesMetadata,
+    extractDatafieldsMetadata
 } from "./src/utils.js";
 
 window.MatchingEngine = {
@@ -18,5 +19,6 @@ window.MatchingEngine = {
     validateAll,
     rdfStringsToStore,
     runSparqlSelectQueryOnStore,
-    extractRequirementProfilesMetadata
+    extractRequirementProfilesMetadata,
+    extractDatafieldsMetadata
 }

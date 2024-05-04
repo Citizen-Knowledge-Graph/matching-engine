@@ -1,6 +1,5 @@
 import {
-    addRdfStringToStore,
-    extractRequirementProfilesMetadataFromStore,
+    addRdfStringToStore, extractRpUriFromRpString,
     printDatasetAsTurtle,
     printStoreAsTurtle,
     runSparqlAskQueryOnStore,
@@ -40,31 +39,24 @@ export async function validateUserProfile(userProfile, datafieldsStr, debug = fa
 export async function validateAll(userProfileStr, requirementProfiles, datafieldsStr, materializationStr, debug = false) {
     let map = {
         reports: [],
-        missingUserInputsAggregated: {},
-        metadata: {}
+        missingUserInputsAggregated: {}
     }
     for (let [filename, reqProfileStr] of Object.entries(requirementProfiles)) {
+        let rpUri = await extractRpUriFromRpString(reqProfileStr)
         let report = await validateOne(userProfileStr, reqProfileStr, datafieldsStr, materializationStr, debug)
+        report.rpUri = rpUri
         map.reports.push(report)
-        map.metadata = { ...map.metadata, ...report.metadata }
-        let rpId = Object.keys(report.metadata)[0]
-        report.metadata = {
-            ...report.metadata[rpId],
-            id: rpId,
-            filename: filename
-        }
         for (let userInput of report.missingUserInput) {
-            let key = userInput.subject + "_" + userInput.predicate
+            let key = userInput.subject + "_" + userInput.dfUri
             if (!map.missingUserInputsAggregated[key]) {
                 map.missingUserInputsAggregated[key] = {
                     subject: userInput.subject,
-                    predicate: userInput.predicate,
-                    label: userInput.label,
+                    dfUri: userInput.dfUri,
                     usedIn: []
                 }
             }
             map.missingUserInputsAggregated[key].usedIn.push({
-                id: rpId,
+                rpUri: rpUri,
                 optional: userInput.optional,
                 isLastMissingUserInput: report.missingUserInput.length === 1
             })
@@ -82,9 +74,6 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
     await addRdfStringToStore(materializationStr, store)
     await addRdfStringToStore(datafieldsStr, store)
 
-    // ----- extract metadata from the requirement profile -----`
-    let rpMetadata = await extractRequirementProfilesMetadataFromStore(store)
-
     // ----- first validation to identify missing data points  -----
     let firstReport = await runValidationOnStore(store)
     if (debug) {
@@ -100,8 +89,7 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
             result: ValidationResult.INELIGIBLE,
             violations: violations,
             missingUserInput: [],
-            inMemoryMaterializedTriples: [],
-            metadata: rpMetadata
+            inMemoryMaterializedTriples: []
         }
     }
 
@@ -114,7 +102,7 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
             let message = result.message[0].value // can the arrays be bigger than 1?
             missingList.push({
                 subject: fromSubject,
-                predicate: missingPredicate,
+                dfUri: missingPredicate, // predicate
                 optional: message.toLowerCase().includes("[optional]") // a better way to check for this?
             })
         }
@@ -130,7 +118,7 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
             PREFIX ff: <https://foerderfunke.org/default#>
             SELECT * WHERE {
                 ?rule ff:output ?output .
-                FILTER(?output = <${missing.predicate}>) .
+                FILTER(?output = <${missing.dfUri}>) .
                 ?rule ff:sparqlConstructQuery ?query .
                 OPTIONAL { ?rule ff:input ?input . }
             }
@@ -155,7 +143,7 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
     let existingMainPersonPredicates = result.map(n => n.predicate)
 
     for (let missing of missingList) {
-        let matchingRule = materializableDataPoints.find(n => n.output === missing.predicate)
+        let matchingRule = materializableDataPoints.find(n => n.output === missing.dfUri)
         let otherRuleWithThatInputAsOutput = undefined
         if (matchingRule && matchingRule.input) {
             otherRuleWithThatInputAsOutput = materializableDataPoints.find(n => n.output === matchingRule.input)
@@ -164,22 +152,6 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
         // I am thinking of rounds of materialization: in each we look what's possible, and we do it until no rule triggers anymore
         if (matchingRule && (!matchingRule.input || otherRuleWithThatInputAsOutput || existingMainPersonPredicates.includes(matchingRule.input))) continue
         askUserForDataPoints.push(missing)
-    }
-
-    // ----- enrich the ones we'll ask for with labels -----
-    // should we send more along than then the label?
-    for (let dataPoint of askUserForDataPoints) {
-        let query = `
-            PREFIX ff: <https://foerderfunke.org/default#>
-            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-            SELECT * WHERE {
-                ?predicate a ff:DataField .
-                FILTER(?predicate = <${dataPoint.predicate}>) .
-                ?predicate rdfs:label ?label .
-            }
-        `
-        let resultLine = (await runSparqlSelectQueryOnStore(query, store))[0]
-        if (resultLine) dataPoint.label = resultLine.label
     }
 
     let optionals = askUserForDataPoints.filter(missing => missing.optional)
@@ -196,8 +168,7 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
             result: ValidationResult.UNDETERMINABLE,
             violations: [],
             missingUserInput: askUserForDataPoints,
-            inMemoryMaterializedTriples: [],
-            metadata: rpMetadata
+            inMemoryMaterializedTriples: []
         }
     }
 
@@ -241,7 +212,7 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
                 ?shape a sh:NodeShape .
                 FILTER(?shape = ff:MainPersonShape) .
                 ?shape sh:property ?propertyShape .
-                ?propertyShape sh:path <${optional.predicate}> .
+                ?propertyShape sh:path <${optional.dfUri}> .
                 ?propertyShape ?pred ?obj .
             }
         ` // can this query be simplified?
@@ -275,8 +246,7 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
         result: secondReport.conforms ? ValidationResult.ELIGIBLE : ValidationResult.INELIGIBLE,
         violations: collectViolations(secondReport, false),
         missingUserInput: askUserForDataPoints,
-        inMemoryMaterializedTriples: materializedTriples,
-        metadata: rpMetadata
+        inMemoryMaterializedTriples: materializedTriples
     }
 }
 
