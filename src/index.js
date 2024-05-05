@@ -17,6 +17,10 @@ export const ValidationResult = {
     UNDETERMINABLE: "undeterminable"
 }
 
+export async function validateSingleDatafieldValue() {
+    // TODO
+}
+
 export async function validateUserProfile(userProfile, datafieldsStr, debug = false) {
     let store = new Store()
     await addRdfStringToStore(userProfile, store)
