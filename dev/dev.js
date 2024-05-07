@@ -146,14 +146,8 @@ async function devConvertUserProfileToTurtle() {
 
 async function devValidateSingleDatafieldValue() {
     let datafieldsStr = await fsPromise.readFile(DATAFIELDS, "utf8")
-    let singleDatafieldTriple = {
-        triples: [{
-            subject: "https://foerderfunke.org/default#mainPerson",
-            predicate: "https://foerderfunke.org/default#hasIncomeBrutto",
-            object: "5000"
-        }]
-    }
-    let result = await validateSingleDatafieldValue(singleDatafieldTriple, datafieldsStr)
+    let singleDatafieldValue = { "ff:paysRentCold": 900 }
+    let result = await validateSingleDatafieldValue(singleDatafieldValue, datafieldsStr)
     console.log(result)
 }
 
@@ -164,5 +158,5 @@ async function devValidateSingleDatafieldValue() {
 // devValidateOneStrings()
 // devValidateUserProfile()
 // devExtractMedatada()
-devConvertUserProfileToTurtle()
-// devValidateSingleDatafieldValue()
+// devConvertUserProfileToTurtle()
+devValidateSingleDatafieldValue()
