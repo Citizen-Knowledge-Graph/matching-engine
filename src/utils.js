@@ -229,7 +229,10 @@ export async function convertUserProfileToTurtle(userProfileJson) {
 }
 
 function determineObjectType(objectStr) {
+    if (typeof objectStr === "boolean") return literal(objectStr)
     objectStr = objectStr.toString()
+    if (objectStr.toLowerCase() === "true") return literal(true)
+    if (objectStr.toLowerCase() === "false") return literal(false)
     if (objectStr.startsWith("http")) return namedNode(objectStr)
     if (objectStr.startsWith("ff:")) return namedNode("https://foerderfunke.org/default#" + objectStr.slice(3))
     if (/^\d{4}-\d{2}-\d{2}$/.test(objectStr)) return literal(objectStr, { value: "xsd:date" })

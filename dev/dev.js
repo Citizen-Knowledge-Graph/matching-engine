@@ -146,7 +146,7 @@ async function devConvertUserProfileToTurtle() {
 
 async function devValidateSingleDatafieldValue() {
     let datafieldsStr = await fsPromise.readFile(DATAFIELDS, "utf8")
-    let singleDatafieldValue = { "ff:paysRentCold": 900 }
+    let singleDatafieldValue = { "ff:eligibleForSocialSupport": true }
     let result = await validateSingleDatafieldValue(singleDatafieldValue, datafieldsStr)
     console.log(result)
 }
