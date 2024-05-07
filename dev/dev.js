@@ -2,7 +2,7 @@ import util from "util"
 import path from "path"
 import { fileURLToPath } from "url"
 import fs, { promises as fsPromise } from "fs"
-import { validateAll, validateOne, validateUserProfile } from "../src/index.js"
+import { validateAll, validateOne, validateSingleDatafieldValue, validateUserProfile } from "../src/index.js"
 import {
     convertUserProfileToTurtle,
     extractDatafieldsMetadata,
@@ -127,6 +127,19 @@ async function devConvertUserProfileToTurtle() {
     console.log(turtleStr)
 }
 
+async function devValidateSingleDatafieldValue() {
+    let datafieldsStr = await fsPromise.readFile(DATAFIELDS, "utf8")
+    let singleDatafieldTriple = {
+        triples: [{
+            subject: "https://foerderfunke.org/default#mainPerson",
+            predicate: "https://foerderfunke.org/default#hasIncomeBrutto",
+            object: "5000"
+        }]
+    }
+    let result = await validateSingleDatafieldValue(singleDatafieldTriple, datafieldsStr)
+    console.log(result)
+}
+
 // devRunSparqlSelectQueryOnRdfString()
 // devRunSparqlConstructQueryOnRdfString()
 // devValidateAll()
@@ -134,4 +147,5 @@ async function devConvertUserProfileToTurtle() {
 // devValidateOneStrings()
 // devValidateUserProfile()
 // devExtractMedatada()
-devConvertUserProfileToTurtle()
+// devConvertUserProfileToTurtle()
+devValidateSingleDatafieldValue()

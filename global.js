@@ -3,6 +3,7 @@ import {
     validateUserProfile,
     validateOne,
     validateAll,
+    validateSingleDatafieldValue
 } from "./src/index.js"
 
 import {
@@ -22,5 +23,6 @@ window.MatchingEngine = {
     runSparqlSelectQueryOnStore,
     extractRequirementProfilesMetadata,
     extractDatafieldsMetadata,
-    convertUserProfileToTurtle
+    convertUserProfileToTurtle,
+    validateSingleDatafieldValue
 }

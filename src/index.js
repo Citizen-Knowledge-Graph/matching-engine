@@ -1,5 +1,7 @@
 import {
-    addRdfStringToStore, extractRpUriFromRpString,
+    addRdfStringToStore,
+    convertUserProfileToTurtle,
+    extractRpUriFromRpString,
     printDatasetAsTurtle,
     printStoreAsTurtle,
     runSparqlAskQueryOnStore,
@@ -17,8 +19,9 @@ export const ValidationResult = {
     UNDETERMINABLE: "undeterminable"
 }
 
-export async function validateSingleDatafieldValue() {
-    // TODO
+export async function validateSingleDatafieldValue(singleDatafieldTriple, datafieldsStr) {
+    let adHocMiniUserProfileTurtle = await convertUserProfileToTurtle(singleDatafieldTriple)
+    return validateUserProfile(adHocMiniUserProfileTurtle, datafieldsStr)
 }
 
 export async function validateUserProfile(userProfile, datafieldsStr, debug = false) {
@@ -35,9 +38,12 @@ export async function validateUserProfile(userProfile, datafieldsStr, debug = fa
     await addRdfStringToStore(datafieldsStr, store)
 
     let report = await runValidationOnStore(store)
-
     if (debug) printDatasetAsTurtle(report.dataset)
-    return report.conforms
+
+    return {
+        conforms: report.conforms,
+        violations: collectViolations(report, false)
+    }
 }
 
 export async function validateAll(userProfileStr, requirementProfiles, datafieldsStr, materializationStr, debug = false) {
