@@ -1,4 +1,5 @@
-import { Store, Parser as N3Parser, Writer as N3Writer } from "n3"
+import { Store, Parser as N3Parser, Writer as N3Writer, DataFactory } from "n3"
+const { namedNode, literal } = DataFactory
 import SparqlParser from "sparqljs"
 import Validator from "shacl-engine/Validator.js"
 import rdf from "rdf-ext"
@@ -169,4 +170,28 @@ export async function extractDatafieldsMetadata(datafieldsStr) {
         }
     }
     return metadata
+}
+
+export async function convertUserProfileToTurtle(userProfileJsonArray) {
+    const writer = new N3Writer({ prefixes: {
+            ff: "https://foerderfunke.org/default#"
+        }})
+    writer.addQuad(
+        namedNode("https://foerderfunke.org/default#mainPerson"),
+        namedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
+        namedNode("https://foerderfunke.org/default#Citizen")
+    )
+    for (let triple of userProfileJsonArray.triples) {
+        writer.addQuad(
+            namedNode(triple.subject),
+            namedNode(triple.predicate),
+            triple.object.startsWith("http") ? namedNode(triple.object) : literal(triple.object)
+        )
+    }
+    return new Promise((resolve, reject) => {
+        writer.end((error, result) => {
+            if (error) reject(error)
+            else resolve(result)
+        })
+    })
 }

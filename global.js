@@ -9,7 +9,8 @@ import {
     rdfStringsToStore,
     runSparqlSelectQueryOnStore,
     extractRequirementProfilesMetadata,
-    extractDatafieldsMetadata
+    extractDatafieldsMetadata,
+    convertUserProfileToTurtle
 } from "./src/utils.js";
 
 window.MatchingEngine = {
@@ -20,5 +21,6 @@ window.MatchingEngine = {
     rdfStringsToStore,
     runSparqlSelectQueryOnStore,
     extractRequirementProfilesMetadata,
-    extractDatafieldsMetadata
+    extractDatafieldsMetadata,
+    convertUserProfileToTurtle
 }

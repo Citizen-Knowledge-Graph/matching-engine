@@ -4,6 +4,7 @@ import { fileURLToPath } from "url"
 import fs, { promises as fsPromise } from "fs"
 import { validateAll, validateOne, validateUserProfile } from "../src/index.js"
 import {
+    convertUserProfileToTurtle,
     extractDatafieldsMetadata,
     extractRequirementProfilesMetadata,
     runSparqlConstructQueryOnRdfString,
@@ -114,10 +115,23 @@ async function devExtractMedatada() {
     console.log("Datafields metadata:", await extractDatafieldsMetadata(await fsPromise.readFile(DATAFIELDS, "utf8")))
 }
 
+async function devConvertUserProfileToTurtle() {
+    let userProfileJsonArrayStr = JSON.stringify({
+        triples: [{
+            subject: "https://foerderfunke.org/default#mainPerson",
+            predicate: "https://foerderfunke.org/default#hasResidence",
+            object: "Berlin"
+        }]
+    })
+    let turtleStr = await convertUserProfileToTurtle(JSON.parse(userProfileJsonArrayStr))
+    console.log(turtleStr)
+}
+
 // devRunSparqlSelectQueryOnRdfString()
 // devRunSparqlConstructQueryOnRdfString()
-devValidateAll()
+// devValidateAll()
 // devValidateOne()
 // devValidateOneStrings()
 // devValidateUserProfile()
 // devExtractMedatada()
+devConvertUserProfileToTurtle()
