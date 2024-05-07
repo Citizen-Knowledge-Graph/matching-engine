@@ -185,7 +185,7 @@ export async function convertUserProfileToTurtle(userProfileJsonArray) {
         writer.addQuad(
             namedNode(triple.subject),
             namedNode(triple.predicate),
-            triple.object.startsWith("http") ? namedNode(triple.object) : literal(triple.object)
+            determineObjectType(triple.object)
         )
     }
     return new Promise((resolve, reject) => {
@@ -194,4 +194,11 @@ export async function convertUserProfileToTurtle(userProfileJsonArray) {
             else resolve(result)
         })
     })
+}
+
+function determineObjectType(objectStr) {
+    if (objectStr.startsWith("http")) return namedNode(objectStr)
+    const num = Number(objectStr)
+    if (!isNaN(num)) return literal(num)
+    return literal(objectStr)
 }
