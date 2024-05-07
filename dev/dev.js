@@ -116,14 +116,31 @@ async function devExtractMedatada() {
 }
 
 async function devConvertUserProfileToTurtle() {
-    let userProfileJsonArrayStr = JSON.stringify({
-        triples: [{
-            subject: "https://foerderfunke.org/default#mainPerson",
-            predicate: "https://foerderfunke.org/default#hasResidence",
-            object: "Berlin"
-        }]
+    let userProfileJsonStr = JSON.stringify({
+        "ff:hasFirstNames": "Max",
+        "ff:hasFamilyName": "Mustermann",
+        "ff:hasBirthday": "1992-05-17",
+        "ff:paysRentCold": 900,
+        "ff:hasLivingArea": 80,
+        "ff:hasResidence": "Berlin",
+        "ff:hasParentingSetup": "ff:Elternpaar",
+        "ff:receivesWohngeld": 450,
+        "ff:hasIncomeBrutto": 2700,
+        "ff:hasIncomeNetto": 1600,
+        "ff:hasChild": [
+            {
+                "ff:hasBirthday": "2013-01-23",
+                "ff:hasMaritalStatus": "LD",
+                "ff:receivesKindergeld": 250
+            },
+            {
+                "ff:hasBirthday": "2008-02-15",
+                "ff:hasMaritalStatus": "LD",
+                "ff:receivesKindergeld": 250
+            }
+        ]
     })
-    let turtleStr = await convertUserProfileToTurtle(JSON.parse(userProfileJsonArrayStr))
+    let turtleStr = await convertUserProfileToTurtle(JSON.parse(userProfileJsonStr))
     console.log(turtleStr)
 }
 
@@ -147,5 +164,5 @@ async function devValidateSingleDatafieldValue() {
 // devValidateOneStrings()
 // devValidateUserProfile()
 // devExtractMedatada()
-// devConvertUserProfileToTurtle()
-devValidateSingleDatafieldValue()
+devConvertUserProfileToTurtle()
+// devValidateSingleDatafieldValue()

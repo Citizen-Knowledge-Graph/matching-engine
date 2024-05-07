@@ -172,8 +172,9 @@ export async function extractDatafieldsMetadata(datafieldsStr) {
     return metadata
 }
 
-export async function convertUserProfileToTurtle(userProfileJsonArray) {
+export async function convertUserProfileToTurtle(userProfileJson) {
     const writer = new N3Writer({ prefixes: {
+            xsd: "http://www.w3.org/2001/XMLSchema#",
             ff: "https://foerderfunke.org/default#"
         }})
     writer.addQuad(
@@ -181,12 +182,43 @@ export async function convertUserProfileToTurtle(userProfileJsonArray) {
         namedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
         namedNode("https://foerderfunke.org/default#Citizen")
     )
-    for (let triple of userProfileJsonArray.triples) {
-        writer.addQuad(
-            namedNode(triple.subject),
-            namedNode(triple.predicate),
-            determineObjectType(triple.object)
-        )
+
+    for (let [key, value] of Object.entries(userProfileJson)) {
+        if (key.startsWith("ff:")) key = "https://foerderfunke.org/default#" + key.slice(3)
+
+        if (Array.isArray(value)) {
+            for (let i = 0; i < value.length; i++) {
+                let arrayElement = value[i]
+                let instanceClass = "https://foerderfunke.org/default#Child" // read from datafields.ttl TODO
+                let instanceLocalName = instanceClass.split("#")[1].toLowerCase() + i
+                let subject = namedNode("https://foerderfunke.org/default#" + instanceLocalName)
+                writer.addQuad(
+                    namedNode("https://foerderfunke.org/default#mainPerson"),
+                    namedNode(key),
+                    subject
+                )
+                writer.addQuad(
+                    subject,
+                    namedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
+                    namedNode(instanceClass)
+                )
+                // do this recursively instead TODO
+                for (let [arrayElementKey, arrayElementValue] of Object.entries(arrayElement)) {
+                    if (arrayElementKey.startsWith("ff:")) arrayElementKey = "https://foerderfunke.org/default#" + arrayElementKey.slice(3)
+                    writer.addQuad(
+                        subject,
+                        namedNode(arrayElementKey),
+                        determineObjectType(arrayElementValue)
+                    )
+                }
+            }
+        } else {
+            writer.addQuad(
+                namedNode("https://foerderfunke.org/default#mainPerson"),
+                namedNode(key),
+                determineObjectType(value)
+            )
+        }
     }
     return new Promise((resolve, reject) => {
         writer.end((error, result) => {
@@ -197,7 +229,10 @@ export async function convertUserProfileToTurtle(userProfileJsonArray) {
 }
 
 function determineObjectType(objectStr) {
+    objectStr = objectStr.toString()
     if (objectStr.startsWith("http")) return namedNode(objectStr)
+    if (objectStr.startsWith("ff:")) return namedNode("https://foerderfunke.org/default#" + objectStr.slice(3))
+    if (/^\d{4}-\d{2}-\d{2}$/.test(objectStr)) return literal(objectStr, { value: "xsd:date" })
     const num = Number(objectStr)
     if (!isNaN(num)) return literal(num)
     return literal(objectStr)
