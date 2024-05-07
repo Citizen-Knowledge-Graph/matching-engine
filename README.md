@@ -4,7 +4,13 @@
 
 In use in the [foerderfunke-app](https://github.com/Citizen-Knowledge-Graph/foerderfunke-app).
 
-## Developing this library
+## Local development
+
+```shell
+# after bumping the @foerderfunke/matching-engine version
+npm run build
+npm publish
+```
 
 ```shell
 # to run dev.js
