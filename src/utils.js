@@ -155,10 +155,15 @@ export async function extractDatafieldsMetadata(datafieldsStr) {
     let query = `
         PREFIX ff: <https://foerderfunke.org/default#>
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        PREFIX sh: <http://www.w3.org/ns/shacl#>
         SELECT * WHERE {
             ?dfUri a ff:DataField .
             OPTIONAL { ?dfUri rdfs:label ?label } .
             OPTIONAL { ?dfUri rdfs:comment ?comment } .
+            OPTIONAL { 
+                ?property sh:path ?dfUri ;
+                    sh:class ?class .
+            }
         }`
     let metadata = {}
     let rows = await runSparqlSelectQueryOnStore(query, store)
@@ -166,7 +171,8 @@ export async function extractDatafieldsMetadata(datafieldsStr) {
         metadata[row.dfUri] = {
             uri: row.dfUri,
             label: row.label ?? "",
-            comment: row.comment ?? ""
+            comment: row.comment ?? "",
+            objectHasClass: row.class ?? ""
         }
     }
     return metadata
