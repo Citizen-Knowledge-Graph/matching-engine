@@ -13,7 +13,7 @@ import {
 
 const DB_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "requirement-profiles")
 const SHACL_DIR = `${DB_DIR}/shacl`
-const USER_PROFILE = `${DB_DIR}/user-profile-examples/empty-user-profile.ttl`
+const USER_PROFILE = `${DB_DIR}/user-profile-examples/kinderzuschlag-user-profile.ttl`
 const DATAFIELDS = `${DB_DIR}/datafields.ttl`
 const MATERIALIZATION = `${DB_DIR}/materialization.ttl`
 
@@ -153,10 +153,10 @@ async function devValidateSingleDatafieldValue() {
 
 // devRunSparqlSelectQueryOnRdfString()
 // devRunSparqlConstructQueryOnRdfString()
-// devValidateAll()
+devValidateAll()
 // devValidateOne()
 // devValidateOneStrings()
 // devValidateUserProfile()
 // devExtractMedatada()
 // devConvertUserProfileToTurtle()
-devValidateSingleDatafieldValue()
+// devValidateSingleDatafieldValue()

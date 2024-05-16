@@ -82,7 +82,7 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
     await addRdfStringToStore(userProfile, store)
     await addRdfStringToStore(requirementProfile, store)
     await addRdfStringToStore(materializationStr, store)
-    await addRdfStringToStore(datafieldsStr, store)
+    await addRdfStringToStore(datafieldsStr, store) // TODO this is not needed anymore?
 
     // ----- first validation to identify missing data points  -----
     let firstReport = await runValidationOnStore(store)
