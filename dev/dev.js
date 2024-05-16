@@ -123,7 +123,7 @@ async function devConvertUserProfileToTurtle() {
         "ff:paysRentCold": 900,
         "ff:hasLivingArea": 80,
         "ff:hasResidence": "Berlin",
-        "ff:hasParentingSetup": "ff:Elternpaar",
+        "ff:parentingSetup": "ff:Elternpaar",
         "ff:receivesWohngeld": 450,
         "ff:hasIncomeBrutto": 2700,
         "ff:hasIncomeNetto": 1600,
@@ -131,12 +131,12 @@ async function devConvertUserProfileToTurtle() {
             {
                 "ff:hasBirthday": "2013-01-23",
                 "ff:hasMaritalStatus": "LD",
-                "ff:receivesKindergeld": 250
+                "ff:receiveKindergeld": 250
             },
             {
                 "ff:hasBirthday": "2008-02-15",
                 "ff:hasMaritalStatus": "LD",
-                "ff:receivesKindergeld": 250
+                "ff:receiveKindergeld": 250
             }
         ]
     })
