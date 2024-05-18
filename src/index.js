@@ -99,13 +99,31 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
             result: ValidationResult.INELIGIBLE,
             violations: violations,
             missingUserInput: [],
-            materializationReport: []
+            materializationReport: {}
+        }
+    }
+
+    // ----- collect missing data points -----
+    let missingList = {}
+    for (let result of firstReport.results) {
+        const comp = result.constraintComponent.value.split("#")[1]
+        if (comp === "MinCountConstraintComponent" || comp === "QualifiedMinCountConstraintComponent") {
+            let missingPredicate = result.path[0].predicates[0].id // can these two arrays be bigger than 1?
+            let fromSubject = result.focusNode.value
+            let message = result.message[0].value // can the arrays be bigger than 1?
+            // can there be more than one per s_p, and it should be an array then?
+            missingList[fromSubject + "_" + missingPredicate] = {
+                subject: fromSubject,
+                dfUri: missingPredicate, // predicate
+                optional: message.toLowerCase().includes("[optional]") // a better way to check for this?
+            }
         }
     }
 
     // ----- apply materialization rules again and again until none applies anymore -----
     // some missing data points can maybe be materialized without asking the user
     // materialization rules can come from the requirement profile, or from the materialization.ttl that has common materialization rules (a bit like utils functions)
+    // only add those to the store, that are actually missing as identified above
     let materializationRules = await runSparqlSelectQueryOnStore(`
         PREFIX ff: <https://foerderfunke.org/default#>
         SELECT * WHERE {
@@ -114,13 +132,15 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
 
     let materializationReport = { rounds: [] }
     let rulesAppliedCount = 1
+    let spPairs = []
     while (rulesAppliedCount > 0) {
         let rulesApplied = {} // rules applied this round
         for (let rule of materializationRules) {
             let constructedQuads = await runSparqlConstructQueryOnStore(rule.query, store)
             for (let quad of constructedQuads) {
-                if (store.has(quad)) continue
                 let spo = quadToSpo(quad)
+                let spPair = spo.s + "_" + spo.p
+                if (!missingList[spPair] || store.has(quad)) continue
                 store.getQuads(quad.subject, quad.predicate, null).forEach(q => {
                     store.delete(q)
                     if (!spo.overwrote) spo.overwrote = []
@@ -129,34 +149,15 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
                 if (!rulesApplied[rule.uri]) rulesApplied[rule.uri] = []
                 store.addQuad(quad)
                 rulesApplied[rule.uri].push(spo)
+                spPairs.push(spPair)
             }
         }
         rulesAppliedCount = Object.keys(rulesApplied).length
         if (rulesAppliedCount > 0) materializationReport.rounds.push(rulesApplied)
     }
 
-    // ----- second validation to identify data points that are still missing after materialization -----
-    let secondReport = await runValidationOnStore(store)
-    if (debug) {
-        console.log("Second validation report:")
-        printDatasetAsTurtle(secondReport.dataset)
-    }
-
-    let missingList = []
-    for (let result of secondReport.results) {
-        const comp = result.constraintComponent.value.split("#")[1]
-        if (comp === "MinCountConstraintComponent" || comp === "QualifiedMinCountConstraintComponent") {
-            let missingPredicate = result.path[0].predicates[0].id // can these two arrays be bigger than 1?
-            let fromSubject = result.focusNode.value
-            let message = result.message[0].value // can the arrays be bigger than 1?
-            missingList.push({
-                subject: fromSubject,
-                dfUri: missingPredicate, // predicate
-                optional: message.toLowerCase().includes("[optional]") // a better way to check for this?
-            })
-        }
-    }
-
+    for (let spPair of spPairs) delete missingList[spPair]
+    missingList = Object.values(missingList)
     let optionals = missingList.filter(missing => missing.optional)
     let blockers = missingList.filter(missing => !missing.optional)
 
@@ -200,10 +201,10 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
 
     // ----- no more missing mandatory data points: re-run the validation -----
     // now the existence of the mandatory data points is guaranteed - "only" their values can now cause the validation to fail
-    let thirdReport = await runValidationOnStore(store)
+    let secondReport = await runValidationOnStore(store)
     if (debug) {
         console.log("Third validation report:")
-        printDatasetAsTurtle(thirdReport.dataset)
+        printDatasetAsTurtle(secondReport.dataset)
     }
 
     // If we are here, data points can't be missing anymore. But the materialized ones can
@@ -217,8 +218,8 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
     // ask user about suggestPermanentMaterialization
 
     return {
-        result: thirdReport.conforms ? ValidationResult.ELIGIBLE : ValidationResult.INELIGIBLE,
-        violations: collectViolations(thirdReport, false),
+        result: secondReport.conforms ? ValidationResult.ELIGIBLE : ValidationResult.INELIGIBLE,
+        violations: collectViolations(secondReport, false),
         missingUserInput: missingList,
         materializationReport: materializationReport
     }
