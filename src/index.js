@@ -51,7 +51,7 @@ export async function validateAll(userProfileStr, requirementProfiles, datafield
         reports: [],
         missingUserInputsAggregated: {}
     }
-    for (let [filename, reqProfileStr] of Object.entries(requirementProfiles)) {
+    for (let reqProfileStr of Object.values(requirementProfiles)) {
         let rpUri = await extractRpUriFromRpString(reqProfileStr)
         let report = await validateOne(userProfileStr, reqProfileStr, datafieldsStr, materializationStr, debug)
         report.rpUri = rpUri
