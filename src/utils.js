@@ -246,3 +246,7 @@ function determineObjectType(objectStr) {
     if (!isNaN(num)) return literal(num)
     return literal(objectStr)
 }
+
+export function quadToSpo(quad) {
+    return { s: quad.subject.value, p: quad.predicate.value, o: quad.object.value }
+}

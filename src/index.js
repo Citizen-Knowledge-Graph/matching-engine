@@ -4,6 +4,7 @@ import {
     extractRpUriFromRpString,
     printDatasetAsTurtle,
     printStoreAsTurtle,
+    quadToSpo,
     runSparqlAskQueryOnStore,
     runSparqlConstructQueryOnStore,
     runSparqlDeleteQueryOnStore,
@@ -11,7 +12,6 @@ import {
     runValidationOnStore
 } from "./utils.js"
 import { Store } from "n3"
-import toposort from "toposort"
 
 export const ValidationResult = {
     ELIGIBLE: "eligible",
@@ -82,9 +82,9 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
     await addRdfStringToStore(userProfile, store)
     await addRdfStringToStore(requirementProfile, store)
     await addRdfStringToStore(materializationStr, store)
-    await addRdfStringToStore(datafieldsStr, store) // TODO this is not needed anymore?
+    await addRdfStringToStore(datafieldsStr, store) // this is not needed anymore? could be useful for materializations using similarTo/sameAs-datafields
 
-    // ----- first validation to identify missing data points  -----
+    // ----- first validation to identify violations  -----
     let firstReport = await runValidationOnStore(store)
     if (debug) {
         console.log("First validation report:")
@@ -99,12 +99,51 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
             result: ValidationResult.INELIGIBLE,
             violations: violations,
             missingUserInput: [],
-            inMemoryMaterializedTriples: []
+            materializationReport: []
         }
     }
 
+    // ----- apply materialization rules again and again until none applies anymore -----
+    // some missing data points can maybe be materialized without asking the user
+    // materialization rules can come from the requirement profile, or from the materialization.ttl that has common materialization rules (a bit like utils functions)
+    let materializationRules = await runSparqlSelectQueryOnStore(`
+        PREFIX ff: <https://foerderfunke.org/default#>
+        SELECT * WHERE {
+            ?uri ff:sparqlConstructQuery ?query .
+        }`, store)
+
+    let materializationReport = { rounds: [] }
+    let rulesAppliedCount = 1
+    while (rulesAppliedCount > 0) {
+        let rulesApplied = {} // rules applied this round
+        for (let rule of materializationRules) {
+            let constructedQuads = await runSparqlConstructQueryOnStore(rule.query, store)
+            for (let quad of constructedQuads) {
+                if (store.has(quad)) continue
+                let spo = quadToSpo(quad)
+                store.getQuads(quad.subject, quad.predicate, null).forEach(q => {
+                    store.delete(q)
+                    if (!spo.overwrote) spo.overwrote = []
+                    spo.overwrote.push(quadToSpo(q))
+                })
+                if (!rulesApplied[rule.uri]) rulesApplied[rule.uri] = []
+                store.addQuad(quad)
+                rulesApplied[rule.uri].push(spo)
+            }
+        }
+        rulesAppliedCount = Object.keys(rulesApplied).length
+        if (rulesAppliedCount > 0) materializationReport.rounds.push(rulesApplied)
+    }
+
+    // ----- second validation to identify data points that are still missing after materialization -----
+    let secondReport = await runValidationOnStore(store)
+    if (debug) {
+        console.log("Second validation report:")
+        printDatasetAsTurtle(secondReport.dataset)
+    }
+
     let missingList = []
-    for (let result of firstReport.results) {
+    for (let result of secondReport.results) {
         const comp = result.constraintComponent.value.split("#")[1]
         if (comp === "MinCountConstraintComponent" || comp === "QualifiedMinCountConstraintComponent") {
             let missingPredicate = result.path[0].predicates[0].id // can these two arrays be bigger than 1?
@@ -118,54 +157,8 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
         }
     }
 
-    // ----- which of the missing data points can we materialize ourselves without asking the user -----
-    // materialization rules can come from the requirement profile, or from the materialization.ttl that has common materialization rules (a bit like utils functions)
-    let materializableDataPointsMap = {}
-    materializableDataPointsMap["root"] = { rule: "root" }
-
-    for (let missing of missingList) {
-        let query = `
-            PREFIX ff: <https://foerderfunke.org/default#>
-            SELECT * WHERE {
-                ?rule ff:output ?output .
-                FILTER(?output = <${missing.dfUri}>) .
-                ?rule ff:sparqlConstructQuery ?query .
-                OPTIONAL { ?rule ff:input ?input . }
-            }
-        `
-        let resultLine = (await runSparqlSelectQueryOnStore(query, store))[0]
-        if (resultLine) materializableDataPointsMap[resultLine.rule] = resultLine
-    }
-
-    let materializableDataPoints = Object.values(materializableDataPointsMap)
-    let askUserForDataPoints = []
-
-    // ----- for the ones we can't materialize we need user input -----
-    // we should tell the user that for instance either hasAge (rule output) or hasBirthday (rule input) is missing TODO
-
-    // get all predicates directly attached to mainPerson, this is one-dimensional TODO
-    let query = `
-        PREFIX ff: <https://foerderfunke.org/default#>
-        SELECT DISTINCT ?predicate WHERE {
-            ff:mainPerson ?predicate ?object .
-        }`
-    let result = await runSparqlSelectQueryOnStore(query, store)
-    let existingMainPersonPredicates = result.map(n => n.predicate)
-
-    for (let missing of missingList) {
-        let matchingRule = materializableDataPoints.find(n => n.output === missing.dfUri)
-        let otherRuleWithThatInputAsOutput = undefined
-        if (matchingRule && matchingRule.input) {
-            otherRuleWithThatInputAsOutput = materializableDataPoints.find(n => n.output === matchingRule.input)
-        }
-        // quite annoying to check all these options, maybe another approach also removing the need for topological sorting? TODO
-        // I am thinking of rounds of materialization: in each we look what's possible, and we do it until no rule triggers anymore
-        if (matchingRule && (!matchingRule.input || otherRuleWithThatInputAsOutput || existingMainPersonPredicates.includes(matchingRule.input))) continue
-        askUserForDataPoints.push(missing)
-    }
-
-    let optionals = askUserForDataPoints.filter(missing => missing.optional)
-    let blockers = askUserForDataPoints.filter(missing => !missing.optional)
+    let optionals = missingList.filter(missing => missing.optional)
+    let blockers = missingList.filter(missing => !missing.optional)
 
     // ----- missing data points that are optional, don't stop the workflow -----
     if (debug && optionals.length > 0)
@@ -177,38 +170,9 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
         return {
             result: ValidationResult.UNDETERMINABLE,
             violations: [],
-            missingUserInput: askUserForDataPoints,
-            inMemoryMaterializedTriples: []
+            missingUserInput: missingList,
+            materializationReport: materializationReport
         }
-    }
-
-    // ----- use the input/output declarations of the materialization rules to determine a correct materialization order -----
-    // extracting input/output could potentially be done automatically by parsing the SPARQL query and extracting the variables?
-    let edges = []
-    for (let node of materializableDataPoints) {
-        let requiresInputFromThis = materializableDataPoints.find(n => node !== n && n.output === node.input)
-        if (requiresInputFromThis) {
-            edges.push([requiresInputFromThis.rule, node.rule])
-        } else if (node.rule !== "root") {
-            edges.push(["root", node.rule])
-        }
-    }
-
-    const sorted = toposort(edges) // topological sort to get legal execution order
-    if (debug) console.log("Topologically sorted materialization rules", sorted)
-
-    // ----- apply the materialization rules in the correct order -----
-
-    let constructedQuads = []
-    for (let rule of sorted.slice(1)) {
-        let query = materializableDataPointsMap[rule].query
-        constructedQuads = await runSparqlConstructQueryOnStore(query, store)
-        store.addQuads(constructedQuads)
-    }
-
-    let materializedTriples = [] // include permanent materialization and period check prompt? TODO
-    for (let quad of constructedQuads) {
-        materializedTriples.push({ s: quad.subject.value, p: quad.predicate.value, o: quad.object.value })
     }
 
     // ----- remove the minCount constraint from optional conditions so that they won't cause the validation to fail again -----
@@ -236,10 +200,10 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
 
     // ----- no more missing mandatory data points: re-run the validation -----
     // now the existence of the mandatory data points is guaranteed - "only" their values can now cause the validation to fail
-    let secondReport = await runValidationOnStore(store)
+    let thirdReport = await runValidationOnStore(store)
     if (debug) {
-        console.log("Second validation report:")
-        printDatasetAsTurtle(secondReport.dataset)
+        console.log("Third validation report:")
+        printDatasetAsTurtle(thirdReport.dataset)
     }
 
     // If we are here, data points can't be missing anymore. But the materialized ones can
@@ -253,10 +217,10 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
     // ask user about suggestPermanentMaterialization
 
     return {
-        result: secondReport.conforms ? ValidationResult.ELIGIBLE : ValidationResult.INELIGIBLE,
-        violations: collectViolations(secondReport, false),
-        missingUserInput: askUserForDataPoints,
-        inMemoryMaterializedTriples: materializedTriples
+        result: thirdReport.conforms ? ValidationResult.ELIGIBLE : ValidationResult.INELIGIBLE,
+        violations: collectViolations(thirdReport, false),
+        missingUserInput: missingList,
+        materializationReport: materializationReport
     }
 }
 
