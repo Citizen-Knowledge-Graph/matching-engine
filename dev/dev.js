@@ -140,7 +140,8 @@ async function devConvertUserProfileToTurtle() {
             }
         ]
     })
-    let turtleStr = await convertUserProfileToTurtle(JSON.parse(userProfileJsonStr))
+    let datafieldsStr = await fsPromise.readFile(DATAFIELDS, "utf8")
+    let turtleStr = await convertUserProfileToTurtle(JSON.parse(userProfileJsonStr), datafieldsStr)
     console.log(turtleStr)
 }
 
