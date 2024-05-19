@@ -195,59 +195,42 @@ export async function extractDatafieldsMetadata(datafieldsStr) {
 
 export async function convertUserProfileToTurtle(userProfileJson, datafieldsStr) {
     let store
+    const mainPerson = namedNode("https://foerderfunke.org/default#mainPerson")
+    const a = namedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
     const writer = new N3Writer({ prefixes: {
             xsd: "http://www.w3.org/2001/XMLSchema#",
             ff: "https://foerderfunke.org/default#"
         }})
-    writer.addQuad(
-        namedNode("https://foerderfunke.org/default#mainPerson"),
-        namedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
-        namedNode("https://foerderfunke.org/default#Citizen")
-    )
+    writer.addQuad(mainPerson, a, namedNode("https://foerderfunke.org/default#Citizen"))
 
     for (let [key, value] of Object.entries(userProfileJson)) {
-        if (key.startsWith("ff:")) key = "https://foerderfunke.org/default#" + key.slice(3)
+        key = expandPrefixedPredicateStr(key)
 
-        if (Array.isArray(value)) {
-            for (let i = 0; i < value.length; i++) {
-                let arrayElement = value[i]
-                if (!store) store = await rdfStringToStore(datafieldsStr)
-                let query = `
-                    PREFIX sh: <http://www.w3.org/ns/shacl#>
-                    SELECT * WHERE {
-                        ?property sh:path <${key}> ;
-                            sh:class ?clazz .
-                    }`
-                let rows = await runSparqlSelectQueryOnStore(query, store)
-                let objectClass = rows[0]?.clazz ?? key + "ObjectClass"
-                let instanceLocalName = objectClass.split("#")[1].toLowerCase() + i
-                let subject = namedNode("https://foerderfunke.org/default#" + instanceLocalName)
-                writer.addQuad(
-                    namedNode("https://foerderfunke.org/default#mainPerson"),
-                    namedNode(key),
-                    subject
-                )
-                writer.addQuad(
-                    subject,
-                    namedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
-                    namedNode(objectClass)
-                )
-                // do this recursively instead TODO
-                for (let [arrayElementKey, arrayElementValue] of Object.entries(arrayElement)) {
-                    if (arrayElementKey.startsWith("ff:")) arrayElementKey = "https://foerderfunke.org/default#" + arrayElementKey.slice(3)
-                    writer.addQuad(
-                        subject,
-                        namedNode(arrayElementKey),
-                        determineObjectType(arrayElementValue)
-                    )
-                }
+        if (!Array.isArray(value)) {
+            writer.addQuad(mainPerson, namedNode(key), determineObjectType(value))
+            continue
+        }
+
+        for (let i = 0; i < value.length; i++) {
+            let arrayElement = value[i]
+            if (!store) store = await rdfStringToStore(datafieldsStr)
+            let query = `
+                PREFIX sh: <http://www.w3.org/ns/shacl#>
+                SELECT * WHERE {
+                    ?property sh:path <${key}> ;
+                        sh:class ?clazz .
+                }`
+            let rows = await runSparqlSelectQueryOnStore(query, store)
+            let objectClass = rows[0]?.clazz ?? key + "ObjectClass"
+            let instanceLocalName = objectClass.split("#")[1].toLowerCase() + i
+            let subject = namedNode("https://foerderfunke.org/default#" + instanceLocalName)
+            writer.addQuad(mainPerson, namedNode(key), subject)
+            writer.addQuad(subject, a, namedNode(objectClass))
+            // do this recursively instead TODO
+            for (let [arrayElementKey, arrayElementValue] of Object.entries(arrayElement)) {
+                arrayElementKey = expandPrefixedPredicateStr(arrayElementKey)
+                writer.addQuad(subject, namedNode(arrayElementKey), determineObjectType(arrayElementValue))
             }
-        } else {
-            writer.addQuad(
-                namedNode("https://foerderfunke.org/default#mainPerson"),
-                namedNode(key),
-                determineObjectType(value)
-            )
         }
     }
     return new Promise((resolve, reject) => {
@@ -256,6 +239,11 @@ export async function convertUserProfileToTurtle(userProfileJson, datafieldsStr)
             else resolve(result)
         })
     })
+}
+
+function expandPrefixedPredicateStr(str) {
+    if (str.startsWith("ff:")) return "https://foerderfunke.org/default#" + str.slice(3)
+    return str
 }
 
 function determineObjectType(objectStr) {
