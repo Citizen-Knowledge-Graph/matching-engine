@@ -20,7 +20,7 @@ export const ValidationResult = {
 }
 
 export async function validateSingleDatafieldValue(singleDatafieldValue, datafieldsStr) {
-    let adHocMiniUserProfileTurtle = await convertUserProfileToTurtle(singleDatafieldValue)
+    let adHocMiniUserProfileTurtle = await convertUserProfileToTurtle(singleDatafieldValue, datafieldsStr)
     return validateUserProfile(adHocMiniUserProfileTurtle, datafieldsStr)
 }
 
