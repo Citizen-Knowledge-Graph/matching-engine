@@ -117,6 +117,8 @@ async function devExtractMedatada() {
 
 async function devConvertUserProfileToTurtle() {
     let userProfileJsonStr = JSON.stringify({
+        "@id": "ff:mainPerson",
+        "@type": "ff:Citizen",
         "ff:hasFirstNames": "Max",
         "ff:hasFamilyName": "Mustermann",
         "ff:hasBirthday": "1992-05-17",
@@ -129,19 +131,22 @@ async function devConvertUserProfileToTurtle() {
         "ff:hasIncomeNetto": 1600,
         "ff:hasChild": [
             {
+                "@id": "ff:child0",
+                "@type": "ff:Child",
                 "ff:hasBirthday": "2013-01-23",
                 "ff:hasMaritalStatus": "LD",
                 "ff:receiveKindergeld": 250
             },
             {
+                "@id": "ff:child1",
+                "@type": "ff:Child",
                 "ff:hasBirthday": "2008-02-15",
                 "ff:hasMaritalStatus": "LD",
                 "ff:receiveKindergeld": 250
             }
         ]
     })
-    let datafieldsStr = await fsPromise.readFile(DATAFIELDS, "utf8")
-    let turtleStr = await convertUserProfileToTurtle(JSON.parse(userProfileJsonStr), datafieldsStr)
+    let turtleStr = await convertUserProfileToTurtle(JSON.parse(userProfileJsonStr))
     console.log(turtleStr)
 }
 

@@ -193,46 +193,40 @@ export async function extractDatafieldsMetadata(datafieldsStr) {
     return metadata
 }
 
-export async function convertUserProfileToTurtle(userProfileJson, datafieldsStr) {
-    let store
-    const mainPerson = namedNode("https://foerderfunke.org/default#mainPerson")
-    const a = namedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
+const a = namedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
+
+function convertUserProfileToTurtleRecursively(jsonNode, writer) {
+    if (!(jsonNode["@id"] && jsonNode["@type"])) {
+        console.log("JSON node must have @id and @type, skipping it: " + JSON.stringify(jsonNode))
+        return
+    }
+    let subject = namedNode(expandPrefixedStr(jsonNode["@id"]))
+    let type = namedNode(expandPrefixedStr(jsonNode["@type"]))
+    writer.addQuad(subject, a, type)
+    for (let [predicate, objectOrArray] of Object.entries(jsonNode)) {
+        if (predicate.startsWith("@")) continue
+        predicate = namedNode(expandPrefixedStr(predicate)) // = dfUri
+        if (!Array.isArray(objectOrArray)) {
+            writer.addQuad(subject, predicate, convertObjectStr(objectOrArray))
+            continue
+        }
+        for (let arrayElement of objectOrArray) {
+            if (!arrayElement["@id"]) {
+                console.log("JSON array element must have @id, skipping it: " + JSON.stringify(arrayElement))
+                continue
+            }
+            writer.addQuad(subject, predicate, namedNode(expandPrefixedStr(arrayElement["@id"])))
+            convertUserProfileToTurtleRecursively(arrayElement, writer)
+        }
+    }
+}
+
+export async function convertUserProfileToTurtle(userProfileJson) {
     const writer = new N3Writer({ prefixes: {
             xsd: "http://www.w3.org/2001/XMLSchema#",
             ff: "https://foerderfunke.org/default#"
         }})
-    writer.addQuad(mainPerson, a, namedNode("https://foerderfunke.org/default#Citizen"))
-
-    for (let [key, value] of Object.entries(userProfileJson)) {
-        key = expandPrefixedPredicateStr(key)
-
-        if (!Array.isArray(value)) {
-            writer.addQuad(mainPerson, namedNode(key), determineObjectType(value))
-            continue
-        }
-
-        for (let i = 0; i < value.length; i++) {
-            let arrayElement = value[i]
-            if (!store) store = await rdfStringToStore(datafieldsStr)
-            let query = `
-                PREFIX sh: <http://www.w3.org/ns/shacl#>
-                SELECT * WHERE {
-                    ?property sh:path <${key}> ;
-                        sh:class ?clazz .
-                }`
-            let rows = await runSparqlSelectQueryOnStore(query, store)
-            let objectClass = rows[0]?.clazz ?? key + "ObjectClass"
-            let instanceLocalName = objectClass.split("#")[1].toLowerCase() + i
-            let subject = namedNode("https://foerderfunke.org/default#" + instanceLocalName)
-            writer.addQuad(mainPerson, namedNode(key), subject)
-            writer.addQuad(subject, a, namedNode(objectClass))
-            // do this recursively instead TODO
-            for (let [arrayElementKey, arrayElementValue] of Object.entries(arrayElement)) {
-                arrayElementKey = expandPrefixedPredicateStr(arrayElementKey)
-                writer.addQuad(subject, namedNode(arrayElementKey), determineObjectType(arrayElementValue))
-            }
-        }
-    }
+    convertUserProfileToTurtleRecursively(userProfileJson, writer)
     return new Promise((resolve, reject) => {
         writer.end((error, result) => {
             if (error) reject(error)
@@ -241,12 +235,12 @@ export async function convertUserProfileToTurtle(userProfileJson, datafieldsStr)
     })
 }
 
-function expandPrefixedPredicateStr(str) {
+function expandPrefixedStr(str) {
     if (str.startsWith("ff:")) return "https://foerderfunke.org/default#" + str.slice(3)
     return str
 }
 
-function determineObjectType(objectStr) {
+function convertObjectStr(objectStr) {
     if (typeof objectStr === "boolean") return literal(objectStr)
     objectStr = objectStr.toString()
     if (objectStr.toLowerCase() === "true") return literal(true)
