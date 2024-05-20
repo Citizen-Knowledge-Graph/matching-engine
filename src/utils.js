@@ -1,6 +1,5 @@
 import { Store, Parser as N3Parser, Writer as N3Writer, DataFactory } from "n3"
 const { namedNode, literal } = DataFactory
-import SparqlParser from "sparqljs"
 import Validator from "shacl-engine/Validator.js"
 import rdf from "rdf-ext"
 import { QueryEngine } from "@comunica/query-sparql-rdfjs"
@@ -40,12 +39,13 @@ export async function rdfStringToDataset(rdfStr) {
     return rdf.dataset(store.getQuads())
 }
 
-export function parseSparqlQuery(query) {
+/*export function parseSparqlQuery(query) {
+    // import SparqlParser from "sparqljs"
     // import util from "util"
     // console.log(util.inspect(queryObj, false, null, true))
     const queryParser = new SparqlParser.Parser()
     return queryParser.parse(query)
-}
+}*/
 
 export function printDatasetAsTurtle(dataset) {
     const writer = getWriter()

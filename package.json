@@ -14,12 +14,9 @@
   },
   "dependencies": {
     "@comunica/query-sparql-rdfjs": "^2.10.2",
-    "express": "^4.19.2",
     "n3": "^1.17.2",
     "rdf-ext": "^2.5.1",
-    "shacl-engine": "github:rdf-ext/shacl-engine#sparql",
-    "sparqljs": "^3.7.1",
-    "toposort": "^2.0.2"
+    "shacl-engine": "github:rdf-ext/shacl-engine#sparql"
   },
   "devDependencies": {
     "webpack": "^5.91.0",
