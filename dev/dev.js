@@ -2,7 +2,7 @@ import util from "util"
 import path from "path"
 import { fileURLToPath } from "url"
 import fs, { promises as fsPromise } from "fs"
-import { validateAll, validateOne, validateSingleDatafieldValue, validateUserProfile } from "../src/index.js"
+import { validateAll, validateOne, validateUserProfile } from "../src/index.js"
 import {
     convertUserProfileToTurtle,
     extractDatafieldsMetadata,
@@ -106,7 +106,7 @@ async function devValidateUserProfile() {
     console.log(conforms)
 }
 
-async function devExtractMedatada() {
+async function devExtractMetadata() {
     let rpStrings = []
     for (let file of await fsPromise.readdir(SHACL_DIR)) {
         rpStrings.push(await fsPromise.readFile(`${SHACL_DIR}/${file}`, "utf8"))
@@ -150,19 +150,11 @@ async function devConvertUserProfileToTurtle() {
     console.log(turtleStr)
 }
 
-async function devValidateSingleDatafieldValue() {
-    let datafieldsStr = await fsPromise.readFile(DATAFIELDS, "utf8")
-    let singleDatafieldValue = { "ff:eligibleForSocialSupport": true }
-    let result = await validateSingleDatafieldValue(singleDatafieldValue, datafieldsStr)
-    console.log(result)
-}
-
 // devRunSparqlSelectQueryOnRdfString()
 // devRunSparqlConstructQueryOnRdfString()
 devValidateAll()
 // devValidateOne()
 // devValidateOneStrings()
 // devValidateUserProfile()
-// devExtractMedatada()
+// devExtractMetadata()
 // devConvertUserProfileToTurtle()
-// devValidateSingleDatafieldValue()
