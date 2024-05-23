@@ -19,11 +19,6 @@ export const ValidationResult = {
     UNDETERMINABLE: "undeterminable"
 }
 
-export async function validateSingleDatafieldValue(singleDatafieldValue, datafieldsStr) {
-    let adHocMiniUserProfileTurtle = await convertUserProfileToTurtle(singleDatafieldValue, datafieldsStr)
-    return validateUserProfile(adHocMiniUserProfileTurtle, datafieldsStr)
-}
-
 export async function validateUserProfile(userProfile, datafieldsStr, debug = false) {
     let store = new Store()
     await addRdfStringToStore(userProfile, store)

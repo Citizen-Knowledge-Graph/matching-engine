@@ -1,14 +1,10 @@
 import {
     ValidationResult,
     validateUserProfile,
-    validateOne,
-    validateAll,
-    validateSingleDatafieldValue
+    validateAll
 } from "./src/index.js"
 
 import {
-    rdfStringsToStore,
-    runSparqlSelectQueryOnStore,
     extractRequirementProfilesMetadata,
     extractDatafieldsMetadata,
     convertUserProfileToTurtle
@@ -17,12 +13,8 @@ import {
 window.MatchingEngine = {
     ValidationResult,
     validateUserProfile,
-    validateOne,
     validateAll,
-    rdfStringsToStore,
-    runSparqlSelectQueryOnStore,
     extractRequirementProfilesMetadata,
     extractDatafieldsMetadata,
     convertUserProfileToTurtle,
-    validateSingleDatafieldValue
 }
