@@ -2,7 +2,7 @@ import util from "util"
 import path from "path"
 import { fileURLToPath } from "url"
 import fs, { promises as fsPromise } from "fs"
-import { validateAll, validateOne, validateUserProfile } from "../src/index.js"
+import { checkUserProfileForMaterializations, validateAll, validateOne, validateUserProfile } from "../src/index.js"
 import {
     convertUserProfileToTurtle,
     extractDatafieldsMetadata,
@@ -150,11 +150,19 @@ async function devConvertUserProfileToTurtle() {
     console.log(turtleStr)
 }
 
+async function devCheckUserProfileForMaterializations() {
+    let userProfileStr = await fsPromise.readFile(USER_PROFILE, "utf8")
+    let materializationStr = await fsPromise.readFile(MATERIALIZATION, "utf8")
+    let result = await checkUserProfileForMaterializations(userProfileStr, materializationStr)
+    console.log(result)
+}
+
 // devRunSparqlSelectQueryOnRdfString()
 // devRunSparqlConstructQueryOnRdfString()
-devValidateAll()
+// devValidateAll()
 // devValidateOne()
 // devValidateOneStrings()
 // devValidateUserProfile()
 // devExtractMetadata()
 // devConvertUserProfileToTurtle()
+devCheckUserProfileForMaterializations()
