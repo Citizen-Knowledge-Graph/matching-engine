@@ -2,7 +2,8 @@ import {
     ValidationResult,
     validateUserProfile,
     validateAll,
-    checkUserProfileForMaterializations
+    checkUserProfileForMaterializations,
+    inferNewUserDataFromCompliedRPs
 } from "./src/index.js"
 
 import {
@@ -18,5 +19,6 @@ window.MatchingEngine = {
     extractRequirementProfilesMetadata,
     extractDatafieldsMetadata,
     convertUserProfileToTurtle,
-    checkUserProfileForMaterializations
+    checkUserProfileForMaterializations,
+    inferNewUserDataFromCompliedRPs
 }

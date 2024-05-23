@@ -50,6 +50,15 @@ export async function checkUserProfileForMaterializations(userProfileStr, materi
     return {}
 }
 
+export async function inferNewUserDataFromCompliedRPs(userProfileStr, requirementProfileStr) {
+    let store = new Store()
+    await addRdfStringToStore(userProfileStr, store)
+    await addRdfStringToStore(requirementProfileStr, store)
+
+    // TODO
+    return {}
+}
+
 export async function validateAll(userProfileStr, requirementProfiles, datafieldsStr, materializationStr, debug = false) {
     let map = {
         reports: [],

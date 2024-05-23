@@ -2,7 +2,13 @@ import util from "util"
 import path from "path"
 import { fileURLToPath } from "url"
 import fs, { promises as fsPromise } from "fs"
-import { checkUserProfileForMaterializations, validateAll, validateOne, validateUserProfile } from "../src/index.js"
+import {
+    checkUserProfileForMaterializations,
+    inferNewUserDataFromCompliedRPs,
+    validateAll,
+    validateOne,
+    validateUserProfile
+} from "../src/index.js"
 import {
     convertUserProfileToTurtle,
     extractDatafieldsMetadata,
@@ -157,6 +163,13 @@ async function devCheckUserProfileForMaterializations() {
     console.log(result)
 }
 
+async function devInferNewUserDataFromCompliedRPs() {
+    let userProfileStr = await fsPromise.readFile(USER_PROFILE, "utf8")
+    let requirementProfileStr = await fsPromise.readFile(`${SHACL_DIR}/opendva-jenabonus.ttl`, "utf8")
+    let result = await inferNewUserDataFromCompliedRPs(userProfileStr, requirementProfileStr)
+    console.log(result)
+}
+
 // devRunSparqlSelectQueryOnRdfString()
 // devRunSparqlConstructQueryOnRdfString()
 // devValidateAll()
@@ -166,3 +179,4 @@ async function devCheckUserProfileForMaterializations() {
 // devExtractMetadata()
 // devConvertUserProfileToTurtle()
 devCheckUserProfileForMaterializations()
+// devInferNewUserDataFromCompliedRPs()
