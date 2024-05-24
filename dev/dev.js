@@ -166,8 +166,8 @@ async function devCheckUserProfileForMaterializations() {
 async function devInferNewUserDataFromCompliedRPs() {
     let userProfileStr = await fsPromise.readFile(USER_PROFILE, "utf8")
     let requirementProfileStr = await fsPromise.readFile(`${SHACL_DIR}/opendva-jenabonus.ttl`, "utf8")
-    let result = await inferNewUserDataFromCompliedRPs(userProfileStr, requirementProfileStr)
-    console.log(result)
+    let report = await inferNewUserDataFromCompliedRPs(userProfileStr, requirementProfileStr)
+    console.log(report)
 }
 
 // devRunSparqlSelectQueryOnRdfString()
@@ -178,5 +178,5 @@ async function devInferNewUserDataFromCompliedRPs() {
 // devValidateUserProfile()
 // devExtractMetadata()
 // devConvertUserProfileToTurtle()
-devCheckUserProfileForMaterializations()
-// devInferNewUserDataFromCompliedRPs()
+// devCheckUserProfileForMaterializations()
+devInferNewUserDataFromCompliedRPs()

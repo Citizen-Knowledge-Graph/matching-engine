@@ -51,9 +51,32 @@ export async function inferNewUserDataFromCompliedRPs(userProfileStr, requiremen
     let store = new Store()
     await addRdfStringToStore(userProfileStr, store)
     await addRdfStringToStore(requirementProfileStr, store)
-
-    // TODO
-    return {}
+    // this is super limited for now, must support a lot more SHACL patterns TODO
+    let query= `
+        PREFIX ff: <https://foerderfunke.org/default#>
+        PREFIX sh: <http://www.w3.org/ns/shacl#>
+        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        SELECT * WHERE {
+            ?mainPersonShape sh:targetClass ff:Citizen . # TODO: support other targetClasses
+            ?mainPersonShape sh:property ?propertyShape .
+            ?propertyShape sh:path ?predicate .
+            OPTIONAL {
+                ?propertyShape sh:in ?shIn .
+                ?shIn rdf:rest*/rdf:first ?value . # TODO: support multiple values
+            }
+        }`
+    let rows = await runSparqlSelectQueryOnStore(query, store)
+    let report = {
+        inferred: []
+    }
+    for (let row of rows) {
+        report.inferred.push({
+            subject: "https://foerderfunke.org/default#mainPerson",
+            predicate: row.predicate,
+            object: row.value
+        })
+    }
+    return report
 }
 
 export async function validateAll(userProfileStr, requirementProfiles, datafieldsStr, materializationStr, debug = false) {
