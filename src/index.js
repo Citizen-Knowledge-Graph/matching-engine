@@ -1,6 +1,5 @@
 import {
     addRdfStringToStore,
-    convertUserProfileToTurtle,
     extractRpUriFromRpString,
     printDatasetAsTurtle,
     printStoreAsTurtle,
@@ -45,9 +44,7 @@ export async function checkUserProfileForMaterializations(userProfileStr, materi
     let store = new Store()
     await addRdfStringToStore(userProfileStr, store)
     await addRdfStringToStore(materializationStr, store)
-
-    // TODO
-    return {}
+    return await applyMaterializationRules(store)
 }
 
 export async function inferNewUserDataFromCompliedRPs(userProfileStr, requirementProfileStr) {

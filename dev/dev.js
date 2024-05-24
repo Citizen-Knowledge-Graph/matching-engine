@@ -108,8 +108,8 @@ function devValidateOneStrings() {
 async function devValidateUserProfile() {
     let userProfile = await fsPromise.readFile(USER_PROFILE, "utf8")
     let datafieldsStr = await fsPromise.readFile(DATAFIELDS, "utf8")
-    let conforms = await validateUserProfile(userProfile, datafieldsStr)
-    console.log(conforms)
+    let report = await validateUserProfile(userProfile, datafieldsStr)
+    console.log(report)
 }
 
 async function devExtractMetadata() {
@@ -159,8 +159,8 @@ async function devConvertUserProfileToTurtle() {
 async function devCheckUserProfileForMaterializations() {
     let userProfileStr = await fsPromise.readFile(USER_PROFILE, "utf8")
     let materializationStr = await fsPromise.readFile(MATERIALIZATION, "utf8")
-    let result = await checkUserProfileForMaterializations(userProfileStr, materializationStr)
-    console.log(result)
+    let report = await checkUserProfileForMaterializations(userProfileStr, materializationStr)
+    console.log(util.inspect(report, false, null, true))
 }
 
 async function devInferNewUserDataFromCompliedRPs() {
