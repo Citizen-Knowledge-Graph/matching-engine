@@ -228,6 +228,8 @@ async function applyMaterializationRules(store, missingList = null) {
         PREFIX ff: <https://foerderfunke.org/default#>
         SELECT * WHERE {
             ?uri ff:sparqlConstructQuery ?query .
+            OPTIONAL { ?uri ff:input ?input . }
+            OPTIONAL { ?uri ff:output ?output . }
         }`, store)
 
     let materializationReport = { rounds: [] }
@@ -249,6 +251,8 @@ async function applyMaterializationRules(store, missingList = null) {
                 if (!rulesApplied[rule.uri]) rulesApplied[rule.uri] = []
                 store.addQuad(quad)
                 rulesApplied[rule.uri].push(spo)
+                if (rule.input) rulesApplied[rule.uri].input = rule.input
+                if (rule.output) rulesApplied[rule.uri].output = rule.output
                 spPairs.push(spPair)
             }
         }
