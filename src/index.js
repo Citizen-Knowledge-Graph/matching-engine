@@ -137,39 +137,8 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
     // some missing data points can maybe be materialized without asking the user
     // materialization rules can come from the requirement profile, or from the materialization.ttl that has common materialization rules (a bit like utils functions)
     // only add those to the store, that are actually missing as identified above
-    let materializationRules = await runSparqlSelectQueryOnStore(`
-        PREFIX ff: <https://foerderfunke.org/default#>
-        SELECT * WHERE {
-            ?uri ff:sparqlConstructQuery ?query .
-        }`, store)
+    let materializationReport = await applyMaterializationRules(store, missingList)
 
-    let materializationReport = { rounds: [] }
-    let rulesAppliedCount = 1
-    let spPairs = []
-    while (rulesAppliedCount > 0) {
-        let rulesApplied = {} // rules applied this round
-        for (let rule of materializationRules) {
-            let constructedQuads = await runSparqlConstructQueryOnStore(rule.query, store)
-            for (let quad of constructedQuads) {
-                let spo = quadToSpo(quad)
-                let spPair = spo.s + "_" + spo.p
-                if (!missingList[spPair] || store.has(quad)) continue
-                store.getQuads(quad.subject, quad.predicate, null).forEach(q => {
-                    store.delete(q)
-                    if (!spo.overwrote) spo.overwrote = []
-                    spo.overwrote.push(quadToSpo(q))
-                })
-                if (!rulesApplied[rule.uri]) rulesApplied[rule.uri] = []
-                store.addQuad(quad)
-                rulesApplied[rule.uri].push(spo)
-                spPairs.push(spPair)
-            }
-        }
-        rulesAppliedCount = Object.keys(rulesApplied).length
-        if (rulesAppliedCount > 0) materializationReport.rounds.push(rulesApplied)
-    }
-
-    for (let spPair of spPairs) delete missingList[spPair]
     missingList = Object.values(missingList)
     let optionals = missingList.filter(missing => missing.optional)
     let blockers = missingList.filter(missing => !missing.optional)
@@ -252,4 +221,42 @@ function collectViolations(report, skipMinCountAndNode) {
         })
     }
     return violations
+}
+
+async function applyMaterializationRules(store, missingList = null) {
+    let materializationRules = await runSparqlSelectQueryOnStore(`
+        PREFIX ff: <https://foerderfunke.org/default#>
+        SELECT * WHERE {
+            ?uri ff:sparqlConstructQuery ?query .
+        }`, store)
+
+    let materializationReport = { rounds: [] }
+    let rulesAppliedCount = 1
+    let spPairs = []
+    while (rulesAppliedCount > 0) {
+        let rulesApplied = {} // rules applied this round
+        for (let rule of materializationRules) {
+            let constructedQuads = await runSparqlConstructQueryOnStore(rule.query, store)
+            for (let quad of constructedQuads) {
+                let spo = quadToSpo(quad)
+                let spPair = spo.s + "_" + spo.p
+                if ((missingList && !missingList[spPair]) || store.has(quad)) continue
+                store.getQuads(quad.subject, quad.predicate, null).forEach(q => {
+                    store.delete(q)
+                    if (!spo.overwrote) spo.overwrote = []
+                    spo.overwrote.push(quadToSpo(q))
+                })
+                if (!rulesApplied[rule.uri]) rulesApplied[rule.uri] = []
+                store.addQuad(quad)
+                rulesApplied[rule.uri].push(spo)
+                spPairs.push(spPair)
+            }
+        }
+        rulesAppliedCount = Object.keys(rulesApplied).length
+        if (rulesAppliedCount > 0) materializationReport.rounds.push(rulesApplied)
+    }
+    if (missingList) {
+        for (let spPair of spPairs) delete missingList[spPair]
+    }
+    return materializationReport
 }
