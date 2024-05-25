@@ -270,9 +270,9 @@ async function applyMaterializationRules(store, missingList = null) {
                     if (!spo.overwrote) spo.overwrote = []
                     spo.overwrote.push(quadToSpo(q))
                 })
-                if (!rulesApplied[rule.uri]) rulesApplied[rule.uri] = []
+                if (!rulesApplied[rule.uri]) rulesApplied[rule.uri] = { triples: [] }
                 store.addQuad(quad)
-                rulesApplied[rule.uri].push(spo)
+                rulesApplied[rule.uri].triples.push(spo)
                 if (rule.input) rulesApplied[rule.uri].input = rule.input
                 if (rule.output) rulesApplied[rule.uri].output = rule.output
                 spPairs.push(spPair)
