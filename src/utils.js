@@ -256,3 +256,7 @@ function convertObjectStr(objectStr) {
 export function quadToSpo(quad) {
     return { s: quad.subject.value, p: quad.predicate.value, o: quad.object.value }
 }
+
+export function storeContainsTriple(store, triple) {
+    return store.has(namedNode(triple.subject), namedNode(triple.predicate), convertObjectStr(triple.object))
+}

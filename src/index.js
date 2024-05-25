@@ -4,6 +4,7 @@ import {
     printDatasetAsTurtle,
     printStoreAsTurtle,
     quadToSpo,
+    storeContainsTriple,
     runSparqlAskQueryOnStore,
     runSparqlConstructQueryOnStore,
     runSparqlDeleteQueryOnStore,
@@ -70,11 +71,12 @@ export async function inferNewUserDataFromCompliedRPs(userProfileStr, requiremen
         inferred: []
     }
     for (let row of rows) {
-        report.inferred.push({
+        let triple = {
             subject: "https://foerderfunke.org/default#mainPerson",
             predicate: row.predicate,
             object: row.value
-        })
+        }
+        if (!storeContainsTriple(store, triple)) report.inferred.push(triple)
     }
     return report
 }

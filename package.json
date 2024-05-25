@@ -1,6 +1,6 @@
 {
   "name": "@foerderfunke/matching-engine",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Checks eligibilities by validating a user profile against requirement profiles",
   "author": "@foerderfunke",
   "license": "MIT",
