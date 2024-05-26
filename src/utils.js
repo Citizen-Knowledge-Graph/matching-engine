@@ -223,7 +223,9 @@ function convertUserProfileToTurtleRecursively(jsonNode, writer) {
 
 export async function convertUserProfileToTurtle(userProfileJson) {
     const writer = new N3Writer({ prefixes: {
+            rdf: "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
             xsd: "http://www.w3.org/2001/XMLSchema#",
+            dcterms: "http://purl.org/dc/terms/",
             ff: "https://foerderfunke.org/default#"
         }})
     convertUserProfileToTurtleRecursively(userProfileJson, writer)
