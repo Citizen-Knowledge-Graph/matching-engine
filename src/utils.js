@@ -258,5 +258,5 @@ export function quadToSpo(quad) {
 }
 
 export function storeContainsTriple(store, triple) {
-    return store.has(namedNode(triple.subject), namedNode(triple.predicate), convertObjectStr(triple.object))
+    return store.has(namedNode(triple.s), namedNode(triple.p), convertObjectStr(triple.o))
 }

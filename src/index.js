@@ -68,15 +68,16 @@ export async function inferNewUserDataFromCompliedRPs(userProfileStr, requiremen
         }`
     let rows = await runSparqlSelectQueryOnStore(query, store)
     let report = {
-        inferred: []
+        triples: []
     }
     for (let row of rows) {
+        if (!row.value) continue
         let triple = {
-            subject: "https://foerderfunke.org/default#mainPerson",
-            predicate: row.predicate,
-            object: row.value
+            s: "https://foerderfunke.org/default#mainPerson",
+            p: row.predicate,
+            o: row.value
         }
-        if (!storeContainsTriple(store, triple)) report.inferred.push(triple)
+        if (!storeContainsTriple(store, triple)) report.triples.push(triple)
     }
     return report
 }
