@@ -260,3 +260,18 @@ export function quadToSpo(quad) {
 export function storeContainsTriple(store, triple) {
     return store.has(namedNode(triple.s), namedNode(triple.p), convertObjectStr(triple.o))
 }
+
+export async function getDeferments(store) {
+    let defermentRows = await runSparqlSelectQueryOnStore(`
+        PREFIX ff: <https://foerderfunke.org/default#>
+        SELECT * WHERE {
+            ?defermentUri a ff:Deferment ;
+                rdf:subject ?subject ;
+                rdf:predicate ?predicate .
+        }`, store)
+    let deferments = {}
+    for (let row of defermentRows) {
+        deferments[row.subject + "_" + row.predicate] = { uri: row.defermentUri }
+    }
+    return deferments
+}

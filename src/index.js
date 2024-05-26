@@ -9,7 +9,9 @@ import {
     runSparqlConstructQueryOnStore,
     runSparqlDeleteQueryOnStore,
     runSparqlSelectQueryOnStore,
-    runValidationOnStore
+    runValidationOnStore,
+    getDeferments,
+    rdfStringToStore
 } from "./utils.js"
 import { Store } from "n3"
 
@@ -52,6 +54,9 @@ export async function inferNewUserDataFromCompliedRPs(userProfileStr, requiremen
     let store = new Store()
     await addRdfStringToStore(userProfileStr, store)
     await addRdfStringToStore(requirementProfileStr, store)
+
+    let deferments = await getDeferments(store)
+
     // this is super limited for now, must support a lot more SHACL patterns TODO
     let query= `
         PREFIX ff: <https://foerderfunke.org/default#>
@@ -77,6 +82,8 @@ export async function inferNewUserDataFromCompliedRPs(userProfileStr, requiremen
             p: row.predicate,
             o: row.value
         }
+        let spPair = triple.s + "_" + triple.p
+        if (deferments[spPair]) triple.deferredBy = deferments[spPair].uri
         if (!storeContainsTriple(store, triple)) report.triples.push(triple)
     }
     return report
@@ -87,6 +94,8 @@ export async function validateAll(userProfileStr, requirementProfiles, datafield
         reports: [],
         missingUserInputsAggregated: {}
     }
+
+    let deferments = await getDeferments(await rdfStringToStore(userProfileStr))
 
     for (let rpStr of Object.values(requirementProfiles)) {
         let rpUri = await extractRpUriFromRpString(rpStr)
@@ -101,6 +110,7 @@ export async function validateAll(userProfileStr, requirementProfiles, datafield
                     dfUri: userInput.dfUri,
                     usedIn: []
                 }
+                if (deferments[spPair]) map.missingUserInputsAggregated[spPair].deferredBy = deferments[spPair].uri
             }
             map.missingUserInputsAggregated[spPair].usedIn.push({
                 rpUri: rpUri,
@@ -117,6 +127,8 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
     // ----- build up store -----
     let store = new Store()
     await addRdfStringToStore(userProfile, store)
+    let deferments = await getDeferments(store)
+    let containsDeferredMissingUserInput = null
     await addRdfStringToStore(requirementProfile, store)
     await addRdfStringToStore(materializationStr, store)
     await addRdfStringToStore(datafieldsStr, store) // this is not needed anymore? could be useful for materializations using similarTo/sameAs-datafields
@@ -136,7 +148,8 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
             result: ValidationResult.INELIGIBLE,
             violations: violations,
             missingUserInput: [],
-            materializationReport: {}
+            materializationReport: {},
+            containsDeferredMissingUserInput: containsDeferredMissingUserInput
         }
     }
 
@@ -162,7 +175,12 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
     // materialization rules can come from the requirement profile, or from the materialization.ttl that has common materialization rules (a bit like utils functions)
     // only add those to the store, that are actually missing as identified above
     let materializationReport = await applyMaterializationRules(store, missingList)
-
+    for (let spPair of Object.keys(missingList)) {
+        if (deferments[spPair]) {
+            missingList[spPair].deferredBy = deferments[spPair].uri
+            containsDeferredMissingUserInput = true
+        }
+    }
     missingList = Object.values(missingList)
     let optionals = missingList.filter(missing => missing.optional)
     let blockers = missingList.filter(missing => !missing.optional)
@@ -178,7 +196,8 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
             result: ValidationResult.UNDETERMINABLE,
             violations: [],
             missingUserInput: missingList,
-            materializationReport: materializationReport
+            materializationReport: materializationReport,
+            containsDeferredMissingUserInput: containsDeferredMissingUserInput
         }
     }
 
@@ -227,7 +246,8 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
         result: secondReport.conforms ? ValidationResult.ELIGIBLE : ValidationResult.INELIGIBLE,
         violations: collectViolations(secondReport, false),
         missingUserInput: missingList,
-        materializationReport: materializationReport
+        materializationReport: materializationReport,
+        containsDeferredMissingUserInput: containsDeferredMissingUserInput
     }
 }
 
@@ -256,6 +276,8 @@ async function applyMaterializationRules(store, missingList = null) {
             OPTIONAL { ?uri ff:output ?output . }
         }`, store)
 
+    let deferments = await getDeferments(store)
+
     let materializationReport = { rounds: [] }
     let rulesAppliedCount = 1
     let spPairs = []
@@ -266,6 +288,7 @@ async function applyMaterializationRules(store, missingList = null) {
             for (let quad of constructedQuads) {
                 let spo = quadToSpo(quad)
                 let spPair = spo.s + "_" + spo.p
+                if (deferments[spPair]) spo.deferredBy = deferments[spPair].uri
                 if ((missingList && !missingList[spPair]) || store.has(quad)) continue
                 store.getQuads(quad.subject, quad.predicate, null).forEach(q => {
                     store.delete(q)

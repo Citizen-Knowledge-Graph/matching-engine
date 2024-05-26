@@ -170,6 +170,26 @@ async function devInferNewUserDataFromCompliedRPs() {
     console.log(report)
 }
 
+async function devDeferment() {
+    let userProfileStr = await fsPromise.readFile(`${DB_DIR}/user-profile-examples/dev-deferment-user-profile.ttl`, "utf8")
+    let datafieldsStr = await fsPromise.readFile(DATAFIELDS, "utf8")
+    let requirementProfileStr = await fsPromise.readFile(`${SHACL_DIR}/dev-child-toy.ttl`, "utf8")
+    let materializationStr = await fsPromise.readFile(MATERIALIZATION, "utf8")
+
+    // check 1: validation
+    let report = await validateAll(userProfileStr, { rp: requirementProfileStr }, datafieldsStr, materializationStr, false)
+    console.log("1. Validation", util.inspect(report, { showHidden: false, depth: null, colors: true }))
+
+    // check 2: materialization
+    report = await checkUserProfileForMaterializations(userProfileStr, materializationStr)
+    console.log("2. Materialization", util.inspect(report, { showHidden: false, depth: null, colors: true }))
+
+    // check 3: inference from complied RPs
+    let compliedRpStr = await fsPromise.readFile(`${SHACL_DIR}/opendva-jenabonus.ttl`, "utf8")
+    report = await inferNewUserDataFromCompliedRPs(userProfileStr, compliedRpStr)
+    console.log("3. Inference", report)
+}
+
 // devRunSparqlSelectQueryOnRdfString()
 // devRunSparqlConstructQueryOnRdfString()
 // devValidateAll()
@@ -179,4 +199,5 @@ async function devInferNewUserDataFromCompliedRPs() {
 // devExtractMetadata()
 // devConvertUserProfileToTurtle()
 // devCheckUserProfileForMaterializations()
-devInferNewUserDataFromCompliedRPs()
+// devInferNewUserDataFromCompliedRPs()
+devDeferment()
