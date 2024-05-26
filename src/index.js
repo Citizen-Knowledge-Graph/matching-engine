@@ -86,21 +86,22 @@ export async function validateAll(userProfileStr, requirementProfiles, datafield
         reports: [],
         missingUserInputsAggregated: {}
     }
-    for (let reqProfileStr of Object.values(requirementProfiles)) {
-        let rpUri = await extractRpUriFromRpString(reqProfileStr)
-        let report = await validateOne(userProfileStr, reqProfileStr, datafieldsStr, materializationStr, debug)
+
+    for (let rpStr of Object.values(requirementProfiles)) {
+        let rpUri = await extractRpUriFromRpString(rpStr)
+        let report = await validateOne(userProfileStr, rpStr, datafieldsStr, materializationStr, debug)
         report.rpUri = rpUri
         map.reports.push(report)
         for (let userInput of report.missingUserInput) {
-            let key = userInput.subject + "_" + userInput.dfUri
-            if (!map.missingUserInputsAggregated[key]) {
-                map.missingUserInputsAggregated[key] = {
+            let spPair = userInput.subject + "_" + userInput.dfUri
+            if (!map.missingUserInputsAggregated[spPair]) {
+                map.missingUserInputsAggregated[spPair] = {
                     subject: userInput.subject,
                     dfUri: userInput.dfUri,
                     usedIn: []
                 }
             }
-            map.missingUserInputsAggregated[key].usedIn.push({
+            map.missingUserInputsAggregated[spPair].usedIn.push({
                 rpUri: rpUri,
                 optional: userInput.optional,
                 isLastMissingUserInput: report.missingUserInput.length === 1
