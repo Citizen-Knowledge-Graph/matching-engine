@@ -278,10 +278,7 @@ async function applyMaterializationRules(store) {
         }
         rulesAppliedCount = Object.keys(rulesApplied).length
         if (rulesAppliedCount > 0) {
-            materializationReport.rounds.push({
-                round: materializationReport.rounds.length,
-                ... rulesApplied
-            })
+            materializationReport.rounds.push(rulesApplied)
         }
     }
     materializationReport.spPairs = spPairs
