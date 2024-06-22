@@ -192,7 +192,7 @@ async function devDeferment() {
 
 // devRunSparqlSelectQueryOnRdfString()
 // devRunSparqlConstructQueryOnRdfString()
-// devValidateAll()
+devValidateAll()
 // devValidateOne()
 // devValidateOneStrings()
 // devValidateUserProfile()
@@ -200,4 +200,4 @@ async function devDeferment() {
 // devConvertUserProfileToTurtle()
 // devCheckUserProfileForMaterializations()
 // devInferNewUserDataFromCompliedRPs()
-devDeferment()
+// devDeferment()
