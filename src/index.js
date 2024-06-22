@@ -7,7 +7,6 @@ import {
     storeContainsTriple,
     runSparqlAskQueryOnStore,
     runSparqlConstructQueryOnStore,
-    runSparqlDeleteQueryOnStore,
     runSparqlSelectQueryOnStore,
     runValidationOnStore,
     getDeferments,
@@ -133,29 +132,36 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
     await addRdfStringToStore(materializationStr, store)
     await addRdfStringToStore(datafieldsStr, store) // this is not needed anymore? could be useful for materializations using similarTo/sameAs-datafields
 
-    // ----- first validation to identify violations  -----
-    let firstReport = await runValidationOnStore(store)
+    // ----- apply materialization rules again and again until none applies anymore -----
+    let materializationReport = await applyMaterializationRules(store)
+
     if (debug) {
-        console.log("First validation report:")
-        printDatasetAsTurtle(firstReport.dataset)
+        console.log("Store after applying materialization rules:")
+        printStoreAsTurtle(store)
     }
 
-    // ignore HasValueConstraintComponent if they have an equivalent MinCountConstraintComponent?
-    // the problem of them both occurring can be avoided by using e.g. "sh:in (true)" instead of "sh:hasValue true", not sure that's the best solution though
-    let violations = collectViolations(firstReport, true)
+    // ----- Validation to identify violations and missing data points  -----
+    let validationReport = await runValidationOnStore(store)
+    if (debug) {
+        console.log("Validation report:")
+        printDatasetAsTurtle(validationReport.dataset)
+    }
+
+    let violations = collectViolations(validationReport, true)
     if (violations.length > 0) {
+        delete materializationReport.spPairs
         return {
             result: ValidationResult.INELIGIBLE,
             violations: violations,
             missingUserInput: [],
-            materializationReport: {},
+            materializationReport: materializationReport,
             containsDeferredMissingUserInput: containsDeferredMissingUserInput
         }
     }
 
     // ----- collect missing data points -----
     let missingList = {}
-    for (let result of firstReport.results) {
+    for (let result of validationReport.results) {
         const comp = result.constraintComponent.value.split("#")[1]
         if (comp === "MinCountConstraintComponent" || comp === "QualifiedMinCountConstraintComponent") {
             let missingPredicate = result.path[0].predicates[0].id // can these two arrays be bigger than 1?
@@ -170,11 +176,9 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
         }
     }
 
-    // ----- apply materialization rules again and again until none applies anymore -----
-    // some missing data points can maybe be materialized without asking the user
-    // materialization rules can come from the requirement profile, or from the materialization.ttl that has common materialization rules (a bit like utils functions)
-    // only add those to the store, that are actually missing as identified above
-    let materializationReport = await applyMaterializationRules(store, missingList)
+    for (let spPair of materializationReport.spPairs) delete missingList[spPair]
+    delete materializationReport.spPairs
+
     for (let spPair of Object.keys(missingList)) {
         if (deferments[spPair]) {
             missingList[spPair].deferredBy = deferments[spPair].uri
@@ -182,16 +186,16 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
         }
     }
     missingList = Object.values(missingList)
-    let optionals = missingList.filter(missing => missing.optional)
-    let blockers = missingList.filter(missing => !missing.optional)
+    let optional = missingList.filter(missing => missing.optional)
+    let mandatory = missingList.filter(missing => !missing.optional)
 
-    // ----- missing data points that are optional, don't stop the workflow -----
-    if (debug && optionals.length > 0)
-        console.log("Optional data points missing:", optionals)
+    // ----- optional missing data points are ok -----
+    if (debug && optional.length > 0)
+        console.log("Optional data points missing:", optional)
 
-    // ----- mandatory missing data points stop the workflow, it makes no sense to continue -----
-    if (blockers.length > 0) {
-        if (debug) console.log("Mandatory data points missing:", blockers)
+    // ----- mandatory missing data points are not ok -----
+    if (mandatory.length > 0) {
+        if (debug) console.log("Mandatory data points missing:", mandatory)
         return {
             result: ValidationResult.UNDETERMINABLE,
             violations: [],
@@ -201,41 +205,6 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
         }
     }
 
-    // ----- remove the minCount constraint from optional conditions so that they won't cause the validation to fail again -----
-    for (let optional of optionals) {
-        let query = `
-            PREFIX ff: <https://foerderfunke.org/default#>
-            PREFIX sh: <http://www.w3.org/ns/shacl#>
-            DELETE { 
-                ?propertyShape sh:minCount ?obj .
-            } WHERE {
-                ?shape a sh:NodeShape .
-                FILTER(?shape = ff:MainPersonShape) .
-                ?shape sh:property ?propertyShape .
-                ?propertyShape sh:path <${optional.dfUri}> .
-                ?propertyShape ?pred ?obj .
-            }
-        ` // can this query be simplified?
-        await runSparqlDeleteQueryOnStore(query, store)
-    }
-
-    if (debug) {
-        console.log("Store after applying materialization rules and removing sh:minCount from optionals:")
-        printStoreAsTurtle(store)
-    }
-
-    // ----- no more missing mandatory data points: re-run the validation -----
-    // now the existence of the mandatory data points is guaranteed - "only" their values can now cause the validation to fail
-    let secondReport = await runValidationOnStore(store)
-    if (debug) {
-        console.log("Third validation report:")
-        printDatasetAsTurtle(secondReport.dataset)
-    }
-
-    // If we are here, data points can't be missing anymore. But the materialized ones can
-    // be having values that are outside the allowed range. These wouldn't have showed up in
-    // the first validation report because the data points were not materialized there yet.
-
     // render list of conditions
     // use debug SHACL or SPARQL for a summary in the end with reasoning/calculations?
     // rdf-star for timestamping triples?
@@ -243,8 +212,8 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
     // ask user about suggestPermanentMaterialization
 
     return {
-        result: secondReport.conforms ? ValidationResult.ELIGIBLE : ValidationResult.INELIGIBLE,
-        violations: collectViolations(secondReport, false),
+        result: ValidationResult.ELIGIBLE,
+        violations: [],
         missingUserInput: missingList,
         materializationReport: materializationReport,
         containsDeferredMissingUserInput: containsDeferredMissingUserInput
@@ -252,6 +221,8 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
 }
 
 function collectViolations(report, skipMinCountAndNode) {
+    // ignore HasValueConstraintComponent if they have an equivalent MinCountConstraintComponent?
+    // the problem of them both occurring can be avoided by using e.g. "sh:in (true)" instead of "sh:hasValue true", not sure that's the best solution though
     let violations = []
     for (let result of report.results) {
         const comp = result.constraintComponent.value.split("#")[1]
@@ -267,7 +238,9 @@ function collectViolations(report, skipMinCountAndNode) {
     return violations
 }
 
-async function applyMaterializationRules(store, missingList = null) {
+// some missing data points can maybe be materialized without asking the user
+// materialization rules can come from the requirement profile, or from the materialization.ttl that has common materialization rules (a bit like utils functions)
+async function applyMaterializationRules(store) {
     let materializationRules = await runSparqlSelectQueryOnStore(`
         PREFIX ff: <https://foerderfunke.org/default#>
         SELECT * WHERE {
@@ -289,7 +262,7 @@ async function applyMaterializationRules(store, missingList = null) {
                 let spo = quadToSpo(quad)
                 let spPair = spo.s + "_" + spo.p
                 if (deferments[spPair]) spo.deferredBy = deferments[spPair].uri
-                if ((missingList && !missingList[spPair]) || store.has(quad)) continue
+                if (store.has(quad)) continue
                 store.getQuads(quad.subject, quad.predicate, null).forEach(q => {
                     store.delete(q)
                     if (!spo.overwrote) spo.overwrote = []
@@ -304,10 +277,13 @@ async function applyMaterializationRules(store, missingList = null) {
             }
         }
         rulesAppliedCount = Object.keys(rulesApplied).length
-        if (rulesAppliedCount > 0) materializationReport.rounds.push(rulesApplied)
+        if (rulesAppliedCount > 0) {
+            materializationReport.rounds.push({
+                round: materializationReport.rounds.length,
+                ... rulesApplied
+            })
+        }
     }
-    if (missingList) {
-        for (let spPair of spPairs) delete missingList[spPair]
-    }
+    materializationReport.spPairs = spPairs
     return materializationReport
 }
