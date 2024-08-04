@@ -23,7 +23,7 @@ const USER_PROFILE = `${DB_DIR}/user-profile-examples/kinderzuschlag-user-profil
 const DATAFIELDS = `${DB_DIR}/datafields.ttl`
 const MATERIALIZATION = `${DB_DIR}/materialization.ttl`
 
-function devRunSparqlSelectQueryOnRdfString() {
+async function devRunSparqlSelectQueryOnRdfString() {
     let query = `
         PREFIX foaf: <http://xmlns.com/foaf/0.1/>
         SELECT * WHERE { 
@@ -36,9 +36,28 @@ function devRunSparqlSelectQueryOnRdfString() {
         ex:sub1 ex:pred1 ex:obj1 .
         ex:sub2 ex:pred2 ex:obj2 .
     `*/
-    fs.readFile(USER_PROFILE, "utf8", (err, data) => {
-        runSparqlSelectQueryOnRdfString(query, data).then(result => console.log(result))
-    })
+
+    // query = `
+    //     PREFIX ff: <https://foerderfunke.org/default#>
+    //     PREFIX sh: <http://www.w3.org/ns/shacl#>
+    //     SELECT * WHERE {
+    //         ?df a ff:DataField .
+    //         ?df rdfs:label ?label .
+    //         OPTIONAL { ?df rdfs:comment ?comment } .
+    //         OPTIONAL { ?df ff:explanation ?explanation } .
+    //
+    //         #?df ff:hasOOshape ?ooShape .
+    //         #?ooShape sh:datatype ?datatype .
+    //         #?ooShape sh:in/rdf:rest*/rdf:first ?value .
+    //
+    //         ?df ff:hasSOshape ?ooShape .
+    //         ?ooShape sh:property ?property .
+    //         ?property sh:maxCount ?maxCount .
+    //     }
+    // `
+
+    let rdfStr = await fsPromise.readFile(`${DB_DIR}/sozialplattform/materialization.ttl`, "utf8")
+    runSparqlSelectQueryOnRdfString(query, rdfStr).then(result => console.log(result))
 }
 
 function devRunSparqlConstructQueryOnRdfString() {
@@ -74,12 +93,12 @@ async function devValidateAll() {
 }
 
 async function devValidateOne() {
-    let userProfile = await fsPromise.readFile(USER_PROFILE, "utf8")
-    let requirementProfile = await fsPromise.readFile(`${SHACL_DIR}/kinderzuschlag.ttl`, "utf8")
-    let datafieldsStr = await fsPromise.readFile(DATAFIELDS, "utf8")
-    let materializationStr = await fsPromise.readFile(MATERIALIZATION, "utf8")
-    let report = await validateOne(userProfile, requirementProfile, datafieldsStr, materializationStr, true)
-    console.log(report)
+    let userProfile = await fsPromise.readFile(`${DB_DIR}/sozialplattform/user-profile-dev.ttl`, "utf8")
+    let requirementProfile = await fsPromise.readFile(`${DB_DIR}/sozialplattform/shacl/10-bildung-und-teilhabe-bei-bezug-von-buergergeld.ttl`, "utf8")
+    let datafieldsStr = await fsPromise.readFile(`${DB_DIR}/sozialplattform/datafields.ttl`, "utf8")
+    let materializationStr = await fsPromise.readFile(`${DB_DIR}/sozialplattform/materialization.ttl`, "utf8")
+    let report = await validateOne(userProfile, requirementProfile, datafieldsStr, materializationStr, false)
+    console.log(util.inspect(report, false, null, true))
 }
 
 function devValidateOneStrings() {
@@ -106,9 +125,9 @@ function devValidateOneStrings() {
 }
 
 async function devValidateUserProfile() {
-    let userProfile = await fsPromise.readFile(USER_PROFILE, "utf8")
-    let datafieldsStr = await fsPromise.readFile(DATAFIELDS, "utf8")
-    let report = await validateUserProfile(userProfile, datafieldsStr)
+    let userProfileStr = await fsPromise.readFile(`${DB_DIR}/sozialplattform/user-profile-dev.ttl`, "utf8")
+    let datafieldsStr = await fsPromise.readFile(`${DB_DIR}/sozialplattform/datafields.ttl`, "utf8")
+    let report = await validateUserProfile(userProfileStr, datafieldsStr, true)
     console.log(report)
 }
 
@@ -192,8 +211,8 @@ async function devDeferment() {
 
 // devRunSparqlSelectQueryOnRdfString()
 // devRunSparqlConstructQueryOnRdfString()
-devValidateAll()
-// devValidateOne()
+// devValidateAll()
+devValidateOne()
 // devValidateOneStrings()
 // devValidateUserProfile()
 // devExtractMetadata()
