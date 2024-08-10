@@ -16,7 +16,7 @@
     "@comunica/query-sparql-rdfjs": "^2.10.2",
     "n3": "^1.17.2",
     "rdf-ext": "^2.5.1",
-    "shacl-engine": "github:rdf-ext/shacl-engine#sparql"
+    "shacl-engine": "^1.0.1"
   },
   "devDependencies": {
     "webpack": "^5.91.0",
