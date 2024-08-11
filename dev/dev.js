@@ -16,6 +16,7 @@ import {
     runSparqlConstructQueryOnRdfString,
     runSparqlSelectQueryOnRdfString
 } from "../src/utils.js"
+import { getBenefitCategories } from "../src/prematch.js";
 
 const DB_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "requirement-profiles")
 const SHACL_DIR = `${DB_DIR}/shacl`
@@ -209,10 +210,22 @@ async function devDeferment() {
     console.log("3. Inference", report)
 }
 
+async function devGetBenefitCategories() {
+    let datafieldsStr = await fsPromise.readFile(`${DB_DIR}/sozialplattform/datafields.ttl`, "utf8")
+    let shaclDir = `${DB_DIR}/sozialplattform/shacl`
+    let shaclFiles = await fsPromise.readdir(`${shaclDir}`)
+    let rps = []
+    for (let file of shaclFiles) {
+        rps.push(await fsPromise.readFile(`${shaclDir}/${file}`, "utf8"))
+    }
+    let result = await getBenefitCategories(datafieldsStr, rps, true)
+    console.log(util.inspect(result, false, null, true))
+}
+
 // devRunSparqlSelectQueryOnRdfString()
 // devRunSparqlConstructQueryOnRdfString()
 // devValidateAll()
-devValidateOne()
+//devValidateOne()
 // devValidateOneStrings()
 // devValidateUserProfile()
 // devExtractMetadata()
@@ -220,3 +233,4 @@ devValidateOne()
 // devCheckUserProfileForMaterializations()
 // devInferNewUserDataFromCompliedRPs()
 // devDeferment()
+devGetBenefitCategories()

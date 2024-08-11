@@ -12,6 +12,10 @@ import {
     convertUserProfileToTurtle
 } from "./src/utils.js";
 
+import {
+    getBenefitCategories
+} from "./src/prematch.js";
+
 window.MatchingEngine = {
     ValidationResult,
     validateUserProfile,
@@ -20,5 +24,6 @@ window.MatchingEngine = {
     extractDatafieldsMetadata,
     convertUserProfileToTurtle,
     checkUserProfileForMaterializations,
-    inferNewUserDataFromCompliedRPs
+    inferNewUserDataFromCompliedRPs,
+    getBenefitCategories
 }
