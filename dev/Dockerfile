@@ -1,3 +1,5 @@
+# (this was at root level of the project, just archiving it here in the dev/ folder)
+
 # docker build -t foerderfunke-server .
 # docker run -p 3000:3000 -d foerderfunke-server
 # --> see dev/dev-docker-endpoint-call.js for an example how to call the endpoint
