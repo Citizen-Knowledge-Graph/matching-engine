@@ -88,7 +88,7 @@ export async function inferNewUserDataFromCompliedRPs(userProfileStr, requiremen
     return report
 }
 
-export async function validateAll(userProfileStr, requirementProfiles, datafieldsStr, materializationStr, debug = false) {
+export async function validateAll(userProfileStr, reqProfileStrMap, datafieldsStr, materializationStr, debug = false) {
     let map = {
         reports: [],
         missingUserInputsAggregated: {}
@@ -96,7 +96,7 @@ export async function validateAll(userProfileStr, requirementProfiles, datafield
 
     let deferments = await getDeferments(await rdfStringToStore(userProfileStr))
 
-    for (let rpStr of Object.values(requirementProfiles)) {
+    for (let rpStr of Object.values(reqProfileStrMap)) {
         let rpUri = await extractRpUriFromRpString(rpStr)
         let report = await validateOne(userProfileStr, rpStr, datafieldsStr, materializationStr, debug)
         report.rpUri = rpUri

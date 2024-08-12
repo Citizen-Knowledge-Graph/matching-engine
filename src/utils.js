@@ -115,15 +115,13 @@ export async function runSparqlDeleteQueryOnStore(query, store) {
     return await queryEngine.queryVoid(query, { sources: [ store ] })
 }
 
-export async function extractRpUriFromRpString(requirementProfileStr) {
-    let store = await rdfStringToStore(requirementProfileStr)
-    let query = `
-        PREFIX ff: <https://foerderfunke.org/default#>
-        SELECT * WHERE {
-            ?rpUri a ff:RequirementProfile .
-        }`
-    let rows = await runSparqlSelectQueryOnStore(query, store)
-    return rows[0].rpUri
+export function extractRpUriFromRpString(rpStr) {
+    const match = rpStr.match(/(.*?)\s+a ff:RequirementProfile/) // make this more robust with whitespaces/trimming TODO
+    if (match) {
+        return expandPrefixedStr(match[1])
+    }
+    console.error("Could not extract identifier from requirement profile string: " + rpStr)
+    return "error"
 }
 
 export async function extractRequirementProfilesMetadata(requirementProfileStrings) {
