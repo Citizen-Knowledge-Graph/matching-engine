@@ -16,7 +16,7 @@ import {
     runSparqlConstructQueryOnRdfString,
     runSparqlSelectQueryOnRdfString
 } from "../src/utils.js"
-import { getBenefitCategories } from "../src/prematch.js";
+import { getBenefitCategories, getPrioritizedMissingDataFieldsJson } from "../src/prematch.js";
 
 const DB_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "requirement-profiles")
 const SHACL_DIR = `${DB_DIR}/shacl`
@@ -222,10 +222,31 @@ async function devGetBenefitCategories() {
     console.log(util.inspect(result, false, null, true))
 }
 
+async function devGetPrioritizedMissingDataFieldsJson() {
+    let userProfileStr = `
+        @prefix ff: <https://foerderfunke.org/default#> .
+        ff:mainPerson a ff:Citizen .
+    `
+    let datafieldsStr = await fsPromise.readFile(`${DB_DIR}/sozialplattform/datafields.ttl`, "utf8")
+    let materializationStr = await fsPromise.readFile(`${DB_DIR}/sozialplattform/materialization.ttl`, "utf8")
+    let shaclDir = `${DB_DIR}/sozialplattform/shacl`
+    let shaclFiles = await fsPromise.readdir(`${shaclDir}`)
+    let rps = []
+    for (let file of shaclFiles) {
+        rps.push(await fsPromise.readFile(`${shaclDir}/${file}`, "utf8"))
+    }
+    let benefitCategories = ["ff:leistungen-fuer-familien-bc-kategorie", "ff:sozialhilfe-grundsicherung-bc-kategorie"]
+    let benefits = ["ff:hilfe-zum-lebensunterhalt"]
+    benefitCategories = []
+    benefits = []
+    let result = await getPrioritizedMissingDataFieldsJson(benefitCategories, benefits, userProfileStr, datafieldsStr, rps, materializationStr)
+    console.log(util.inspect(result, false, null, true))
+}
+
 // devRunSparqlSelectQueryOnRdfString()
 // devRunSparqlConstructQueryOnRdfString()
 // devValidateAll()
-//devValidateOne()
+// devValidateOne()
 // devValidateOneStrings()
 // devValidateUserProfile()
 // devExtractMetadata()
@@ -233,4 +254,5 @@ async function devGetBenefitCategories() {
 // devCheckUserProfileForMaterializations()
 // devInferNewUserDataFromCompliedRPs()
 // devDeferment()
-devGetBenefitCategories()
+// devGetBenefitCategories()
+devGetPrioritizedMissingDataFieldsJson()

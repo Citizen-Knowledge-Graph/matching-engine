@@ -1,11 +1,16 @@
-import { rdfStringsToStore, runSparqlSelectQueryOnStore } from "./utils.js"
+import { convertReqProfilesStrArrToMap, rdfStringsToStore, runSparqlSelectQueryOnStore } from "./utils.js"
+import { validateAll } from "./index.js";
 
 function shortenUri(uri, shorten) {
     return shorten ? "ff:" + uri.split("#")[1] : uri
 }
 
-export async function getBenefitCategories(datafieldsStr, reqProfilesStrArr, doShortenUri = false) {
-    let store = await rdfStringsToStore([datafieldsStr, ...reqProfilesStrArr])
+function expandUri(uri) {
+    return uri.startsWith("ff:") ? "https://foerderfunke.org/default#" + uri.split(":")[1] : uri
+}
+
+export async function getBenefitCategories(datafieldsStr, reqProfileStrArr, doShortenUri = false) {
+    let store = await rdfStringsToStore([datafieldsStr, ...reqProfileStrArr])
     let categories = {}
     let requirementProfiles = {}
     let query = `
@@ -53,4 +58,43 @@ export async function getBenefitCategories(datafieldsStr, reqProfilesStrArr, doS
         "byCategories": categories,
         "byRequirementProfiles": requirementProfiles
     }
+}
+
+export async function getPrioritizedMissingDataFieldsJson(selectedBenefitCategories = [], selectedBenefits = [], userProfileStr, datafieldsStr, reqProfileStrArr, materializationStr) {
+    let store = await rdfStringsToStore([userProfileStr, datafieldsStr, ...reqProfileStrArr, materializationStr])
+
+    let rpIDsInFocus = selectedBenefits.map(id => expandUri(id))
+    if (selectedBenefitCategories.length > 0) {
+        let query = `
+            PREFIX ff: <https://foerderfunke.org/default#>
+            SELECT DISTINCT ?rp WHERE {
+                ?rp a ff:RequirementProfile .
+                ?rp ff:category ?category .
+                VALUES ?category { ${selectedBenefitCategories.map(id => shortenUri(id)).join(" ")} }
+            }`
+        let rows = await runSparqlSelectQueryOnStore(query, store)
+        rpIDsInFocus = [...rpIDsInFocus, ...rows.map(row => row.rp)]
+    }
+    if (rpIDsInFocus.length === 0 && selectedBenefitCategories.length === 0) {
+        let query = `
+            PREFIX ff: <https://foerderfunke.org/default#>
+            SELECT * WHERE { ?rp a ff:RequirementProfile . }`
+        let rows = await runSparqlSelectQueryOnStore(query, store)
+        rpIDsInFocus = rows.map(row => row.rp)
+    }
+    // list of requirement profiles is now fully determined
+
+    let rpMapAll = convertReqProfilesStrArrToMap(reqProfileStrArr)
+    let rpMapInFocus = {}
+    for (let rpId of rpIDsInFocus) {
+        rpMapInFocus[rpId] = rpMapAll[rpId]
+    }
+
+    let report = await validateAll(userProfileStr, rpMapInFocus, datafieldsStr, materializationStr)
+    let sorted = Object.entries(report.missingUserInputsAggregated).sort((a, b) => b[1].usedIn.length - a[1].usedIn.length)
+
+    console.log(sorted)
+    // TODO
+
+    return []
 }

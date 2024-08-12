@@ -124,6 +124,14 @@ export function extractRpUriFromRpString(rpStr) {
     return "error"
 }
 
+export function convertReqProfilesStrArrToMap(reqProfileStrArr) {
+    let map = {}
+    for (let rpStr of reqProfileStrArr) {
+        map[extractRpUriFromRpString(rpStr)] = rpStr
+    }
+    return map
+}
+
 export async function extractRequirementProfilesMetadata(requirementProfileStrings) {
     let store = await rdfStringsToStore(requirementProfileStrings)
     let query = `

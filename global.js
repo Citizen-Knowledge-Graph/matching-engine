@@ -13,7 +13,8 @@ import {
 } from "./src/utils.js";
 
 import {
-    getBenefitCategories
+    getBenefitCategories,
+    getPrioritizedMissingDataFieldsJson
 } from "./src/prematch.js";
 
 window.MatchingEngine = {
@@ -25,5 +26,6 @@ window.MatchingEngine = {
     convertUserProfileToTurtle,
     checkUserProfileForMaterializations,
     inferNewUserDataFromCompliedRPs,
-    getBenefitCategories
+    getBenefitCategories,
+    getPrioritizedMissingDataFields: getPrioritizedMissingDataFieldsJson
 }
