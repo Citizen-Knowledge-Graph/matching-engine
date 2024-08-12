@@ -239,7 +239,8 @@ async function devGetPrioritizedMissingDataFieldsJson() {
     let benefits = ["ff:hilfe-zum-lebensunterhalt"]
     benefitCategories = []
     benefits = []
-    let result = await getPrioritizedMissingDataFieldsJson(benefitCategories, benefits, userProfileStr, datafieldsStr, rps, materializationStr)
+    let lang = "de" // "en"
+    let result = await getPrioritizedMissingDataFieldsJson(benefitCategories, benefits, userProfileStr, datafieldsStr, rps, materializationStr, lang)
     console.log(util.inspect(result, false, null, true))
 }
 
