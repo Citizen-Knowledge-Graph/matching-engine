@@ -92,6 +92,8 @@ export async function getPrioritizedMissingDataFieldsJson(selectedBenefitCategor
 
     let report = await validateAll(userProfileStr, rpMapInFocus, datafieldsStr, materializationStr)
     let sorted = Object.entries(report.missingUserInputsAggregated).sort((a, b) => b[1].usedIn.length - a[1].usedIn.length)
+    let usedInCounts = {}
+    for (let [, df] of sorted) usedInCounts[df.dfUri] = df.usedIn.length
     let sortedUris = sorted.map(df => df[1].dfUri)
     let sortedUrisShortened = sorted.map(df => shortenUri(df[1].dfUri))
 
@@ -122,7 +124,8 @@ export async function getPrioritizedMissingDataFieldsJson(selectedBenefitCategor
         let field = {
             "datafield": shortenUri(row.df),
             "title": row.title,
-            "question": row.question
+            "question": row.question,
+            "usedIn": usedInCounts[row.df]
         }
         if (row.datatype) {
             field.datatype = row.datatype.split("#")[1]
