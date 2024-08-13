@@ -109,18 +109,28 @@ export async function getPrioritizedMissingDataFieldsJson(selectedBenefitCategor
             ?df schema:question ?question .
             FILTER (lang(?title) = "${lang}")
             FILTER (lang(?question) = "${lang}")
-            ?df ff:objectConstraints ?constraints .
-            OPTIONAL { ?constraints sh:datatype ?datatype . }
+            ?df ff:objectConstraints ?oConstraints .
+            OPTIONAL { ?oConstraints sh:datatype ?datatype . }
+            OPTIONAL { 
+                ?df ff:usageConstraints ?uConstraints .
+                ?uConstraints sh:property ?property .
+                ?property sh:maxCount ?maxCount .
+            }
         }`
     let rows = await runSparqlSelectQueryOnStore(query, store)
     for (let row of rows) {
-        fieldsMap[row.df] = {
+        let field = {
             "datafield": shortenUri(row.df),
             "title": row.title,
-            "question": row.question,
-            "datatype": row.datatype ? row.datatype.split("#")[1] : "selection",
+            "question": row.question
         }
-        if (!row.datatype) fieldsMap[row.df].choices = []
+        if (row.datatype) {
+            field.datatype = row.datatype.split("#")[1]
+        } else {
+            field.datatype = row.maxCount ? "selection" : "selection-multiple"
+            field.choices = []
+        }
+        fieldsMap[row.df] = field
     }
 
     // Query 2: get choices for datafields that have selection as datatype
