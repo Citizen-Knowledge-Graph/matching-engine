@@ -163,8 +163,11 @@ export async function getPrioritizedMissingDataFieldsJson(selectedBenefitCategor
     }
 
     return {
-        "id": "quick-check-profile",
-        "title": "About you",
-        "fields": sortedUris.filter(uri => uri in fieldsMap).map(uri => fieldsMap[uri])
+        validationReport: report,
+        prioritizedMissingDataFields: {
+            "id": "quick-check-profile",
+            "title": "About you",
+            "fields": sortedUris.filter(uri => uri in fieldsMap).map(uri => fieldsMap[uri])
+        }
     }
 }
