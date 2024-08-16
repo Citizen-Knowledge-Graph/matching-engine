@@ -2,6 +2,7 @@ import { convertReqProfilesStrArrToMap, rdfStringsToStore, runSparqlSelectQueryO
 import { validateAll } from "./index.js";
 
 function shortenUri(uri, shorten = true) {
+    if (uri.startsWith("ff:")) return uri
     return shorten ? "ff:" + uri.split("#")[1] : uri
 }
 
@@ -62,7 +63,11 @@ export async function getBenefitCategories(datafieldsStr, reqProfileStrArr, doSh
 
 export async function getPrioritizedMissingDataFieldsJson(selectedBenefitCategories = [], selectedBenefits = [], userProfileStr, datafieldsStr, reqProfileStrArr, materializationStr, lang = "de") {
     let store = await rdfStringsToStore([userProfileStr, datafieldsStr, ...reqProfileStrArr, materializationStr])
-
+    if (!userProfileStr) {
+        userProfileStr = `
+            @prefix ff: <https://foerderfunke.org/default#> .
+            ff:mainPerson a ff:Citizen .`
+    }
     let rpIDsInFocus = selectedBenefits.map(id => expandUri(id))
     if (selectedBenefitCategories.length > 0) {
         let query = `
@@ -93,6 +98,7 @@ export async function getPrioritizedMissingDataFieldsJson(selectedBenefitCategor
     let report = await validateAll(userProfileStr, rpMapInFocus, datafieldsStr, materializationStr)
     let sorted = Object.entries(report.missingUserInputsAggregated).sort((a, b) => b[1].usedIn.length - a[1].usedIn.length)
     let usedInCounts = {}
+    // add sort option flag: by usedIn, by score, by category (non prioritized) TODO
     for (let [, df] of sorted) usedInCounts[df.dfUri] = df.usedIn.length
     let sortedUris = sorted.map(df => df[1].dfUri)
     let sortedUrisShortened = sorted.map(df => shortenUri(df[1].dfUri))
