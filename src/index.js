@@ -25,7 +25,7 @@ export async function validateUserProfile(userProfile, datafieldsStr, debug = fa
     await addRdfStringToStore(userProfile, store)
     let query = `
         PREFIX ff: <https://foerderfunke.org/default#>
-        ASK { ff:mainPerson a ff:Citizen . }
+        ASK { ?userId a ff:Citizen . }
     `
     // otherwise, a completely empty user profile would be valid
     if (!await runSparqlAskQueryOnStore(query, store))
