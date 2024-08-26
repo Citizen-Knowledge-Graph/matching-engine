@@ -255,7 +255,7 @@ function convertObjectStr(objectStr) {
     if (objectStr.toLowerCase() === "false") return literal(false)
     if (objectStr.startsWith("http")) return namedNode(objectStr)
     if (objectStr.startsWith("ff:")) return namedNode("https://foerderfunke.org/default#" + objectStr.slice(3))
-    if (/^\d{4}-\d{2}-\d{2}$/.test(objectStr)) return literal(objectStr, { value: "xsd:date" })
+    if (/^\d{4}-\d{2}-\d{2}.*$/.test(objectStr)) return literal(objectStr.substring(0, 10), { value: "xsd:date" })
     const num = Number(objectStr)
     if (!isNaN(num)) return literal(num)
     return literal(objectStr)
