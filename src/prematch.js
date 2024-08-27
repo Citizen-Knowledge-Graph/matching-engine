@@ -99,6 +99,7 @@ export async function getPrioritizedMissingDataFieldsJson(selectedBenefitCategor
     let sorted = Object.entries(report.missingUserInputsAggregated).sort((a, b) => b[1].usedIn.length - a[1].usedIn.length)
     let usedInCounts = {}
     // add sort option flag: by usedIn, by score, by category (non prioritized) TODO
+    // find a way to score ff:kinder higher than kinder_unter_18 and kinder_18_25, because of the NoKidsImpliesNoKidsInAgeRanges rule TODO
     for (let [, df] of sorted) usedInCounts[df.dfUri] = df.usedIn.length
     let sortedUris = sorted.map(df => df[1].dfUri)
     let sortedUrisShortened = sorted.map(df => shortenUri(df[1].dfUri))
