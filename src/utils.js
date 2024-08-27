@@ -201,6 +201,10 @@ export async function extractDatafieldsMetadata(datafieldsStr) {
 
 const a = namedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 
+function isObject(value) {
+    return value !== null && typeof value === "object" && !Array.isArray(value)
+}
+
 function convertUserProfileToTurtleRecursively(jsonNode, writer) {
     if (!(jsonNode["@id"] && jsonNode["@type"])) {
         console.log("JSON node must have @id and @type, skipping it: " + JSON.stringify(jsonNode))
@@ -217,6 +221,10 @@ function convertUserProfileToTurtleRecursively(jsonNode, writer) {
             continue
         }
         for (let arrayElement of objectOrArray) {
+            if (!isObject(arrayElement)) {
+                writer.addQuad(subject, predicate, namedNode(expandPrefixedStr(arrayElement)))
+                continue
+            }
             if (!arrayElement["@id"]) {
                 console.log("JSON array element must have @id, skipping it: " + JSON.stringify(arrayElement))
                 continue

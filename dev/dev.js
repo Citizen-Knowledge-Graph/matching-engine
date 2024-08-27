@@ -170,7 +170,8 @@ async function devConvertUserProfileToTurtle() {
                 "ff:hasMaritalStatus": "LD",
                 "ff:receiveKindergeld": 250
             }
-        ]
+        ],
+        "ff:einkommen_neu": ["ff:einkommen_neu-ao-alg", "ff:einkommen_neu-ao-selbstaendig"]
     })
     let turtleStr = await convertUserProfileToTurtle(JSON.parse(userProfileJsonStr))
     console.log(turtleStr)
