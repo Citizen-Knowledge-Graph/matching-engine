@@ -15,7 +15,8 @@ import {
 import {
     getBenefitCategories,
     getPrioritizedMissingDataFieldsJson,
-    transformRulesFromRequirementProfile
+    transformRulesFromRequirementProfile,
+    RuleType
 } from "./src/prematch.js";
 
 window.MatchingEngine = {
@@ -29,5 +30,6 @@ window.MatchingEngine = {
     inferNewUserDataFromCompliedRPs,
     getBenefitCategories,
     getPrioritizedMissingDataFieldsJson,
-    transformRulesFromRequirementProfile
+    transformRulesFromRequirementProfile,
+    RuleType
 }
