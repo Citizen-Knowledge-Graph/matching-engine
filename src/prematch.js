@@ -205,14 +205,22 @@ export async function getDetailsAboutDfs(shortenedDfUris = [], store, lang = "en
     return fieldsMap
 }
 
+export const RuleType = {
+    EXISTENCE: "existence",
+    VALUE_IN: "valueIn",
+    VALUE_NOT_IN: "valueNotIn",
+    OR: "or"
+}
+
 export async function transformRulesFromRequirementProfile(reqProfileStr,lang = "en") {
     let store = await rdfStringToStore(reqProfileStr)
-    let rules = {
+    let rulesByType = {
         existence: [],
         valueIn: {},
         valueNotIn: {},
         or: []
     }
+    let rulesByDf = {}
     // Existence
     let query = `
         PREFIX ff: <https://foerderfunke.org/default#>
@@ -226,7 +234,10 @@ export async function transformRulesFromRequirementProfile(reqProfileStr,lang = 
         }`
     let rows = await runSparqlSelectQueryOnStore(query, store)
     for (let row of rows) {
-        rules.existence.push(row.path)
+        rulesByType.existence.push(row.path)
+        rulesByDf[row.path] = {
+            type: RuleType.EXISTENCE,
+        }
     }
     // In
     query = `
@@ -240,7 +251,14 @@ export async function transformRulesFromRequirementProfile(reqProfileStr,lang = 
         }`
     rows = await runSparqlSelectQueryOnStore(query, store)
     for (let row of rows) {
-        (rules.valueIn[row.path] ??= []).push(row.value);
+        (rulesByType.valueIn[row.path] ??= []).push(row.value);
+        if (!rulesByDf[row.path]) {
+            rulesByDf[row.path] = {
+                type: RuleType.VALUE_IN,
+                values: []
+            }
+        }
+        rulesByDf[row.path].values.push(row.value)
     }
     // Not In
     query = `
@@ -255,7 +273,14 @@ export async function transformRulesFromRequirementProfile(reqProfileStr,lang = 
         }`
     rows = await runSparqlSelectQueryOnStore(query, store)
     for (let row of rows) {
-        (rules.valueNotIn[row.path] ??= []).push(row.value);
+        (rulesByType.valueNotIn[row.path] ??= []).push(row.value);
+        if (!rulesByDf[row.path]) {
+            rulesByDf[row.path] = {
+                type: RuleType.VALUE_NOT_IN,
+                values: []
+            }
+        }
+        rulesByDf[row.path].values.push(row.value)
     }
 
     // Or
@@ -274,12 +299,20 @@ export async function transformRulesFromRequirementProfile(reqProfileStr,lang = 
         }`
     rows = await runSparqlSelectQueryOnStore(query, store)
     let oneOrPerRP = [] // TODO
+    let id = ""
     for (let row of rows) {
+        id += row.path + "_"
         oneOrPerRP.push({
             path: row.path,
             valueIn: [row.value]
         })
     }
-    rules.or.push(oneOrPerRP)
-    return rules
+    rulesByDf[id.substring(0, id.length - 1)] = {
+        elements: oneOrPerRP,
+        type: RuleType.OR
+    }
+    return {
+        rulesByType: rulesByType,
+        rulesByDf: rulesByDf
+    }
 }
