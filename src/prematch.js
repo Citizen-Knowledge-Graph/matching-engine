@@ -109,7 +109,7 @@ export async function getPrioritizedMissingDataFieldsJson(selectedBenefitCategor
     let sortedUris = sorted.map(df => df[1].dfUri)
     let sortedUrisShortened = sorted.map(df => shortenUri(df[1].dfUri))
 
-    // ff:pensionable will also show up here but is not in datafields.ttl
+    // ff:pensionable/ff:age are in sortedUrisShortened and get into fieldsMap, but will be filtered out by: .filter(uri => !fieldsMap[uri].materializable)
     let fieldsMap = await getDetailsAboutDfs(sortedUrisShortened, store, lang)
     for (let dfUri of Object.keys(fieldsMap)) {
         fieldsMap[dfUri].usedIn = usedInCounts[dfUri]
@@ -120,7 +120,7 @@ export async function getPrioritizedMissingDataFieldsJson(selectedBenefitCategor
         prioritizedMissingDataFields: {
             "id": "quick-check-profile",
             "title": "About you",
-            "fields": sortedUris.filter(uri => uri in fieldsMap).map(uri => fieldsMap[uri])
+            "fields": sortedUris.filter(uri => uri in fieldsMap).filter(uri => !fieldsMap[uri].materializable).map(uri => fieldsMap[uri])
         }
     }
 }
@@ -156,7 +156,8 @@ export async function getDetailsAboutDfs(shortenedDfUris = [], store, lang = "en
             datafield: shortenUri(row.df),
             label: row.label,
             question: row.question,
-            comment: row.comment ?? ""
+            comment: row.comment ?? "",
+            materializable: false
         }
         if (row.datatype) {
             field.datatype = row.datatype.split("#")[1]
@@ -184,6 +185,22 @@ export async function getDetailsAboutDfs(shortenedDfUris = [], store, lang = "en
             "value": shortenUri(row.option),
             "label": row.label
         })
+    }
+    // Query 3: get data fields that have only a label because they get materialized
+    // Rethink this logic. The ff:NoKidsImpliesNoKidsInAgeRanges rule also materializes data fields, but those can be also set by the user TODO
+    query = `
+        PREFIX ff: <https://foerderfunke.org/default#>
+        SELECT * WHERE {
+            ?df a ff:MaterializableDataField .
+            ?df rdfs:label ?label .
+            FILTER (lang(?label) = "${lang}")
+        }`
+    rows = await runSparqlSelectQueryOnStore(query, store)
+    for (let row of rows) {
+        fieldsMap[row.df] = {
+            label: row.label,
+            materializable: true
+        }
     }
     return fieldsMap
 }
