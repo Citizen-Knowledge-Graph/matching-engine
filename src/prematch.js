@@ -134,10 +134,14 @@ export async function getDetailsAboutDfs(shortenedDfUris = [], store, lang = "en
         SELECT * WHERE {
             ?df a ff:DataField .
             ${shortenedDfUris.length === 0 ? "" : "VALUES ?df { " + shortenedDfUris.join(" ") + " }" }
-            ?df rdfs:label ?title .
+            ?df rdfs:label ?label .
             ?df schema:question ?question .
-            FILTER (lang(?title) = "${lang}")
+            FILTER (lang(?label) = "${lang}")
             FILTER (lang(?question) = "${lang}")
+            OPTIONAL { 
+                ?df rdfs:comment ?comment .
+                FILTER (lang(?comment) = "${lang}")
+            } .
             ?df ff:objectConstraints ?oConstraints .
             OPTIONAL { ?oConstraints sh:datatype ?datatype . }
             OPTIONAL { 
@@ -149,9 +153,10 @@ export async function getDetailsAboutDfs(shortenedDfUris = [], store, lang = "en
     let rows = await runSparqlSelectQueryOnStore(query, store)
     for (let row of rows) {
         let field = {
-            "datafield": shortenUri(row.df),
-            "title": row.title,
-            "question": row.question
+            datafield: shortenUri(row.df),
+            label: row.label,
+            question: row.question,
+            comment: row.comment ?? ""
         }
         if (row.datatype) {
             field.datatype = row.datatype.split("#")[1]

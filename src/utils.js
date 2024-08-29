@@ -3,6 +3,7 @@ const { namedNode, literal } = DataFactory
 import Validator from "shacl-engine/Validator.js"
 import rdf from "rdf-ext"
 import { QueryEngine } from "@comunica/query-sparql-rdfjs"
+import { getDetailsAboutDfs } from "./prematch.js"
 
 export async function rdfStringsToStore(rdfStrings) {
     let store = new Store()
@@ -175,25 +176,31 @@ export async function extractRequirementProfilesMetadata(requirementProfileStrin
 
 export async function extractDatafieldsMetadata(datafieldsStr, lang) {
     let store = await rdfStringToStore(datafieldsStr)
+    return await getDetailsAboutDfs([], store, lang)
+}
+
+// replaced by method above that reuses helper method, but keeping this code for potential later reusage of the class-logic
+/*export async function extractDatafieldsMetadata(datafieldsStr, lang) {
+    let store = await rdfStringToStore(datafieldsStr)
     let query = `
         PREFIX ff: <https://foerderfunke.org/default#>
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
         PREFIX sh: <http://www.w3.org/ns/shacl#>
         SELECT * WHERE {
             ?dfUri a ff:DataField .
-            OPTIONAL { 
+            OPTIONAL {
                 ?dfUri rdfs:label ?label .
                 FILTER (lang(?label) = "${lang}")
             } .
-            OPTIONAL { 
+            OPTIONAL {
                 ?dfUri schema:question ?question .
                 FILTER (lang(?question) = "${lang}")
             } .
-            OPTIONAL { 
+            OPTIONAL {
                 ?dfUri rdfs:comment ?comment .
                 FILTER (lang(?comment) = "${lang}")
             } .
-            OPTIONAL { 
+            OPTIONAL {
                 ?property sh:path ?dfUri ;
                     sh:class ?class .
             }
@@ -225,7 +232,7 @@ export async function extractDatafieldsMetadata(datafieldsStr, lang) {
         }
     }
     return metadata
-}
+}*/
 
 const a = namedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 
