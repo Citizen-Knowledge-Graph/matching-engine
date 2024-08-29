@@ -132,14 +132,27 @@ export function convertReqProfilesStrArrToMap(reqProfileStrArr) {
     return map
 }
 
-export async function extractRequirementProfilesMetadata(requirementProfileStrings) {
+export async function extractRequirementProfilesMetadata(requirementProfileStrings, lang) {
     let store = await rdfStringsToStore(requirementProfileStrings)
     let query = `
         PREFIX ff: <https://foerderfunke.org/default#>
         SELECT * WHERE {
             ?rpUri a ff:RequirementProfile .
-            OPTIONAL { ?rpUri ff:title ?title } .
+            OPTIONAL { 
+                ?rpUri ff:title ?title .
+                FILTER (lang(?title) = "${lang}")
+            } .
+            OPTIONAL { ?rpUri ff:leikaId ?leikaId } .
             OPTIONAL { ?rpUri ff:category ?category } .
+            OPTIONAL { ?rpUri rdfs:seeAlso ?seeAlso } .
+            OPTIONAL { 
+                ?rpUri ff:benefitInfo ?benefitInfo .
+                FILTER (lang(?benefitInfo) = "${lang}")
+            } .
+            OPTIONAL { 
+                ?rpUri ff:ineligibleGeneralExplanation ?ineligibleGeneralExplanation .
+                FILTER (lang(?ineligibleGeneralExplanation) = "${lang}")
+            } .
         }`
     let metadata = {}
     let rows = await runSparqlSelectQueryOnStore(query, store)
@@ -148,6 +161,10 @@ export async function extractRequirementProfilesMetadata(requirementProfileStrin
             metadata[row.rpUri] = {
                 uri: row.rpUri,
                 title: row.title ?? "",
+                leikaId: row.leikaId ?? "",
+                seeAlso: row.seeAlso ?? "",
+                benefitInfo: row.benefitInfo ?? "",
+                ineligibleGeneralExplanation: row.ineligibleGeneralExplanation ?? "",
                 categories: []
             }
         }
@@ -156,7 +173,7 @@ export async function extractRequirementProfilesMetadata(requirementProfileStrin
     return metadata
 }
 
-export async function extractDatafieldsMetadata(datafieldsStr) {
+export async function extractDatafieldsMetadata(datafieldsStr, lang) {
     let store = await rdfStringToStore(datafieldsStr)
     let query = `
         PREFIX ff: <https://foerderfunke.org/default#>
@@ -164,8 +181,18 @@ export async function extractDatafieldsMetadata(datafieldsStr) {
         PREFIX sh: <http://www.w3.org/ns/shacl#>
         SELECT * WHERE {
             ?dfUri a ff:DataField .
-            OPTIONAL { ?dfUri rdfs:label ?label } .
-            OPTIONAL { ?dfUri rdfs:comment ?comment } .
+            OPTIONAL { 
+                ?dfUri rdfs:label ?label .
+                FILTER (lang(?label) = "${lang}")
+            } .
+            OPTIONAL { 
+                ?dfUri schema:question ?question .
+                FILTER (lang(?question) = "${lang}")
+            } .
+            OPTIONAL { 
+                ?dfUri rdfs:comment ?comment .
+                FILTER (lang(?comment) = "${lang}")
+            } .
             OPTIONAL { 
                 ?property sh:path ?dfUri ;
                     sh:class ?class .
@@ -177,6 +204,7 @@ export async function extractDatafieldsMetadata(datafieldsStr) {
         metadata[row.dfUri] = {
             uri: row.dfUri,
             label: row.label ?? "",
+            question: row.question ?? "",
             comment: row.comment ?? "",
             objectHasClass: row.class ?? ""
         }

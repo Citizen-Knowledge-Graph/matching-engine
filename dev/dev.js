@@ -133,12 +133,13 @@ async function devValidateUserProfile() {
 }
 
 async function devExtractMetadata() {
+    const dir = `${DB_DIR}/sozialplattform/shacl`
     let rpStrings = []
-    for (let file of await fsPromise.readdir(SHACL_DIR)) {
-        rpStrings.push(await fsPromise.readFile(`${SHACL_DIR}/${file}`, "utf8"))
+    for (let file of await fsPromise.readdir(dir)) {
+        rpStrings.push(await fsPromise.readFile(`${dir}/${file}`, "utf8"))
     }
-    console.log("Requirement profiles metadata:", await extractRequirementProfilesMetadata(rpStrings))
-    console.log("Datafields metadata:", await extractDatafieldsMetadata(await fsPromise.readFile(DATAFIELDS, "utf8")))
+    console.log("Requirement profiles metadata:", await extractRequirementProfilesMetadata(rpStrings, "en"))
+    console.log("Datafields metadata:", await extractDatafieldsMetadata(await fsPromise.readFile(`${DB_DIR}/sozialplattform/datafields.ttl`, "utf8"), "en"))
 }
 
 async function devConvertUserProfileToTurtle() {
