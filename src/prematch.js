@@ -109,16 +109,31 @@ export async function getPrioritizedMissingDataFieldsJson(selectedBenefitCategor
     let sortedUris = sorted.map(df => df[1].dfUri)
     let sortedUrisShortened = sorted.map(df => shortenUri(df[1].dfUri))
 
-    let fieldsMap = {}
+    // ff:pensionable will also show up here but is not in datafields.ttl
+    let fieldsMap = await getDetailsAboutDfs(sortedUrisShortened, store, lang)
+    for (let dfUri of Object.keys(fieldsMap)) {
+        fieldsMap[dfUri].usedIn = usedInCounts[dfUri]
+    }
 
+    return {
+        validationReport: report,
+        prioritizedMissingDataFields: {
+            "id": "quick-check-profile",
+            "title": "About you",
+            "fields": sortedUris.filter(uri => uri in fieldsMap).map(uri => fieldsMap[uri])
+        }
+    }
+}
+
+export async function getDetailsAboutDfs(shortenedDfUris = [], store, lang = "en") {
+    let fieldsMap = {}
     // Query 1: get info about data fields and their datatype
     let query = `
         PREFIX ff: <https://foerderfunke.org/default#>
         PREFIX sh: <http://www.w3.org/ns/shacl#>
         SELECT * WHERE {
             ?df a ff:DataField .
-            # ff:pensionable will also show up here but is not in datafields.ttl
-            VALUES ?df { ${sortedUrisShortened.join(" ")} }
+            ${shortenedDfUris.length === 0 ? "" : "VALUES ?df { " + shortenedDfUris.join(" ") + " }" }
             ?df rdfs:label ?title .
             ?df schema:question ?question .
             FILTER (lang(?title) = "${lang}")
@@ -136,8 +151,7 @@ export async function getPrioritizedMissingDataFieldsJson(selectedBenefitCategor
         let field = {
             "datafield": shortenUri(row.df),
             "title": row.title,
-            "question": row.question,
-            "usedIn": usedInCounts[row.df]
+            "question": row.question
         }
         if (row.datatype) {
             field.datatype = row.datatype.split("#")[1]
@@ -147,14 +161,13 @@ export async function getPrioritizedMissingDataFieldsJson(selectedBenefitCategor
         }
         fieldsMap[row.df] = field
     }
-
     // Query 2: get choices for datafields that have selection as datatype
     query = `
         PREFIX ff: <https://foerderfunke.org/default#>
         PREFIX sh: <http://www.w3.org/ns/shacl#>
         SELECT * WHERE {
             ?df a ff:DataField .
-            VALUES ?df { ${sortedUrisShortened.join(" ")} }
+            ${shortenedDfUris.length === 0 ? "" : "VALUES ?df { " + shortenedDfUris.join(" ") + " }" }
             ?df ff:objectConstraints ?constraints .
             ?constraints sh:in/rdf:rest*/rdf:first ?option .
             ?option rdfs:label ?label .
@@ -167,15 +180,7 @@ export async function getPrioritizedMissingDataFieldsJson(selectedBenefitCategor
             "label": row.label
         })
     }
-
-    return {
-        validationReport: report,
-        prioritizedMissingDataFields: {
-            "id": "quick-check-profile",
-            "title": "About you",
-            "fields": sortedUris.filter(uri => uri in fieldsMap).map(uri => fieldsMap[uri])
-        }
-    }
+    return fieldsMap
 }
 
 export async function transformRulesFromRequirementProfile(reqProfileStr,lang = "en") {
