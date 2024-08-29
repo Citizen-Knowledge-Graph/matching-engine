@@ -16,7 +16,11 @@ import {
     runSparqlConstructQueryOnRdfString,
     runSparqlSelectQueryOnRdfString
 } from "../src/utils.js"
-import { getBenefitCategories, getPrioritizedMissingDataFieldsJson } from "../src/prematch.js";
+import {
+    getBenefitCategories,
+    getPrioritizedMissingDataFieldsJson,
+    transformRulesFromRequirementProfile
+} from "../src/prematch.js";
 
 const DB_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "requirement-profiles")
 const SHACL_DIR = `${DB_DIR}/shacl`
@@ -246,6 +250,12 @@ async function devGetPrioritizedMissingDataFieldsJson() {
     console.log(util.inspect(result, false, null, true))
 }
 
+async function devTransformRulesFromRequirementProfile() {
+    let requirementProfile = await fsPromise.readFile(`${DB_DIR}/sozialplattform/shacl/1-hilfe-zum-lebensunterhalt.ttl`, "utf8")
+    let result = await transformRulesFromRequirementProfile(requirementProfile, "en")
+    console.log(util.inspect(result, false, null, true))
+}
+
 // devRunSparqlSelectQueryOnRdfString()
 // devRunSparqlConstructQueryOnRdfString()
 // devValidateAll()
@@ -257,5 +267,6 @@ async function devGetPrioritizedMissingDataFieldsJson() {
 // devCheckUserProfileForMaterializations()
 // devInferNewUserDataFromCompliedRPs()
 // devDeferment()
-//devGetBenefitCategories()
-devGetPrioritizedMissingDataFieldsJson()
+// devGetBenefitCategories()
+// devGetPrioritizedMissingDataFieldsJson()
+devTransformRulesFromRequirementProfile()

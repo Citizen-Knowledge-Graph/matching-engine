@@ -1,4 +1,9 @@
-import { convertReqProfilesStrArrToMap, rdfStringsToStore, runSparqlSelectQueryOnStore } from "./utils.js"
+import {
+    convertReqProfilesStrArrToMap,
+    rdfStringsToStore,
+    rdfStringToStore,
+    runSparqlSelectQueryOnStore
+} from "./utils.js"
 import { validateAll } from "./index.js";
 
 function shortenUri(uri, shorten = true) {
@@ -171,4 +176,9 @@ export async function getPrioritizedMissingDataFieldsJson(selectedBenefitCategor
             "fields": sortedUris.filter(uri => uri in fieldsMap).map(uri => fieldsMap[uri])
         }
     }
+}
+
+export async function transformRulesFromRequirementProfile(reqProfileStr,lang = "en") {
+    let store = await rdfStringToStore(reqProfileStr)
+    return {}
 }
