@@ -251,7 +251,7 @@ async function devGetPrioritizedMissingDataFieldsJson() {
 }
 
 async function devTransformRulesFromRequirementProfile() {
-    let requirementProfile = await fsPromise.readFile(`${DB_DIR}/sozialplattform/shacl/1-hilfe-zum-lebensunterhalt.ttl`, "utf8")
+    let requirementProfile = await fsPromise.readFile(`${DB_DIR}/sozialplattform/shacl/02-kindergeld.ttl`, "utf8")
     let result = await transformRulesFromRequirementProfile(requirementProfile, "en")
     console.log(util.inspect(result, false, null, true))
 }

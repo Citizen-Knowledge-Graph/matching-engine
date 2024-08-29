@@ -180,5 +180,79 @@ export async function getPrioritizedMissingDataFieldsJson(selectedBenefitCategor
 
 export async function transformRulesFromRequirementProfile(reqProfileStr,lang = "en") {
     let store = await rdfStringToStore(reqProfileStr)
-    return {}
+    let rules = {
+        existence: [],
+        valueIn: {},
+        valueNotIn: {},
+        or: []
+    }
+    // Existence
+    let query = `
+        PREFIX ff: <https://foerderfunke.org/default#>
+        PREFIX sh: <http://www.w3.org/ns/shacl#>
+        SELECT ?path WHERE {
+            ff:MainPersonShape sh:property ?property .
+            ?property sh:path ?path .
+            ?property sh:minCount 1 .
+            FILTER NOT EXISTS { ?property sh:in ?in }
+            FILTER NOT EXISTS { ?property sh:not ?not }
+        }`
+    let rows = await runSparqlSelectQueryOnStore(query, store)
+    for (let row of rows) {
+        rules.existence.push(row.path)
+    }
+    // In
+    query = `
+        PREFIX ff: <https://foerderfunke.org/default#>
+        PREFIX sh: <http://www.w3.org/ns/shacl#>
+        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        SELECT * WHERE {
+            ff:MainPersonShape sh:property ?property .
+            ?property sh:path ?path .
+            ?property sh:in/rdf:rest*/rdf:first ?value .
+        }`
+    rows = await runSparqlSelectQueryOnStore(query, store)
+    for (let row of rows) {
+        (rules.valueIn[row.path] ??= []).push(row.value);
+    }
+    // Not In
+    query = `
+        PREFIX ff: <https://foerderfunke.org/default#>
+        PREFIX sh: <http://www.w3.org/ns/shacl#>
+        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        SELECT * WHERE {
+            ff:MainPersonShape sh:property ?property .
+            ?property sh:path ?path .
+            ?property sh:not ?not .
+            ?not sh:in/rdf:rest*/rdf:first ?value .
+        }`
+    rows = await runSparqlSelectQueryOnStore(query, store)
+    for (let row of rows) {
+        (rules.valueNotIn[row.path] ??= []).push(row.value);
+    }
+
+    // Or
+    // This has to be properly implemented later on TODO
+    // - It doesn't work anymore if there is anything else than sh:in in the or-blocks
+    // - It can only process one or-block per rp
+    query = `
+        PREFIX ff: <https://foerderfunke.org/default#>
+        PREFIX sh: <http://www.w3.org/ns/shacl#>
+        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        SELECT * WHERE {
+            ff:MainPersonShape sh:or/rdf:rest*/rdf:first ?or .
+            ?or sh:property ?property .
+            ?property sh:path ?path .
+            ?property sh:in/rdf:rest*/rdf:first ?value .        
+        }`
+    rows = await runSparqlSelectQueryOnStore(query, store)
+    let oneOrPerRP = [] // TODO
+    for (let row of rows) {
+        oneOrPerRP.push({
+            path: row.path,
+            valueIn: [row.value]
+        })
+    }
+    rules.or.push(oneOrPerRP)
+    return rules
 }
