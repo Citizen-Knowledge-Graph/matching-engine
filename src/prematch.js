@@ -298,18 +298,20 @@ export async function transformRulesFromRequirementProfile(reqProfileStr,lang = 
             ?property sh:in/rdf:rest*/rdf:first ?value .        
         }`
     rows = await runSparqlSelectQueryOnStore(query, store)
-    let oneOrPerRP = [] // TODO
-    let id = ""
-    for (let row of rows) {
-        id += row.path + "_"
-        oneOrPerRP.push({
-            path: row.path,
-            valueIn: [row.value]
-        })
-    }
-    rulesByDf[id.substring(0, id.length - 1)] = {
-        elements: oneOrPerRP,
-        type: RuleType.OR
+    if (rows.length > 0) {
+        let oneOrPerRP = [] // TODO
+        let id = ""
+        for (let row of rows) {
+            id += row.path + "_"
+            oneOrPerRP.push({
+                path: row.path,
+                valueIn: [row.value]
+            })
+        }
+        rulesByDf[id.substring(0, id.length - 1)] = {
+            elements: oneOrPerRP,
+            type: RuleType.OR
+        }
     }
     return {
         rulesByType: rulesByType,
