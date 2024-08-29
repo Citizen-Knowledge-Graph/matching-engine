@@ -61,7 +61,7 @@ export async function getBenefitCategories(datafieldsStr, reqProfileStrArr, doSh
     }
 }
 
-export async function getPrioritizedMissingDataFieldsJson(selectedBenefitCategories = [], selectedBenefits = [], userProfileStr, datafieldsStr, reqProfileStrArr, materializationStr, lang = "de") {
+export async function getPrioritizedMissingDataFieldsJson(selectedBenefitCategories = [], selectedBenefits = [], userProfileStr, datafieldsStr, reqProfileStrArr, materializationStr, lang = "en") {
     let store = await rdfStringsToStore([userProfileStr, datafieldsStr, ...reqProfileStrArr, materializationStr])
     if (!userProfileStr) {
         userProfileStr = `
