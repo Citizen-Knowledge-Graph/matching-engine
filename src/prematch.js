@@ -209,18 +209,13 @@ export const RuleType = {
     EXISTENCE: "existence",
     VALUE_IN: "valueIn",
     VALUE_NOT_IN: "valueNotIn",
+    MIN_MAX: "minMax",
     OR: "or"
 }
 
 export async function transformRulesFromRequirementProfile(reqProfileStr,lang = "en") {
     let store = await rdfStringToStore(reqProfileStr)
-    let rulesByType = {
-        existence: [],
-        valueIn: {},
-        valueNotIn: {},
-        or: []
-    }
-    let rulesByDf = {}
+    let rules = {}
     // Existence
     let query = `
         PREFIX ff: <https://foerderfunke.org/default#>
@@ -231,12 +226,42 @@ export async function transformRulesFromRequirementProfile(reqProfileStr,lang = 
             ?property sh:minCount 1 .
             FILTER NOT EXISTS { ?property sh:in ?in }
             FILTER NOT EXISTS { ?property sh:not ?not }
+            FILTER NOT EXISTS { ?property sh:minExclusive ?minExclusive }
+            FILTER NOT EXISTS { ?property sh:minInclusive ?minInclusive }
+            FILTER NOT EXISTS { ?property sh:maxExclusive ?maxExclusive }
+            FILTER NOT EXISTS { ?property sh:maxInclusive ?maxInclusive }
         }`
     let rows = await runSparqlSelectQueryOnStore(query, store)
     for (let row of rows) {
-        rulesByType.existence.push(row.path)
-        rulesByDf[row.path] = {
+        rules[row.path] = {
             type: RuleType.EXISTENCE,
+        }
+    }
+    // min/max
+    query = `
+        PREFIX ff: <https://foerderfunke.org/default#>
+        PREFIX sh: <http://www.w3.org/ns/shacl#>
+        SELECT * WHERE {
+            ff:MainPersonShape sh:property ?property .
+            ?property sh:path ?path .
+            ?property sh:minCount 1 .
+            FILTER NOT EXISTS { ?property sh:in ?in }
+            FILTER NOT EXISTS { ?property sh:not ?not }
+            OPTIONAL { ?property sh:minExclusive ?minExclusive }
+            OPTIONAL { ?property sh:minInclusive ?minInclusive }
+            OPTIONAL { ?property sh:maxExclusive ?maxExclusive }
+            OPTIONAL { ?property sh:maxInclusive ?maxInclusive }
+        }`
+    rows = await runSparqlSelectQueryOnStore(query, store)
+    for (let row of rows) {
+        let obj = {}
+        if (row.minExclusive) obj.minExclusive = row.minExclusive
+        if (row.minInclusive) obj.minInclusive = row.minInclusive
+        if (row.maxExclusive) obj.maxExclusive = row.maxExclusive
+        if (row.maxInclusive) obj.maxInclusive = row.maxInclusive
+        if (Object.keys(obj).length > 0) {
+            obj.type = RuleType.MIN_MAX
+            rules[row.path] = obj
         }
     }
     // In
@@ -251,14 +276,13 @@ export async function transformRulesFromRequirementProfile(reqProfileStr,lang = 
         }`
     rows = await runSparqlSelectQueryOnStore(query, store)
     for (let row of rows) {
-        (rulesByType.valueIn[row.path] ??= []).push(row.value);
-        if (!rulesByDf[row.path]) {
-            rulesByDf[row.path] = {
+        if (!rules[row.path]) {
+            rules[row.path] = {
                 type: RuleType.VALUE_IN,
                 values: []
             }
         }
-        rulesByDf[row.path].values.push(row.value)
+        rules[row.path].values.push(row.value)
     }
     // Not In
     query = `
@@ -273,14 +297,13 @@ export async function transformRulesFromRequirementProfile(reqProfileStr,lang = 
         }`
     rows = await runSparqlSelectQueryOnStore(query, store)
     for (let row of rows) {
-        (rulesByType.valueNotIn[row.path] ??= []).push(row.value);
-        if (!rulesByDf[row.path]) {
-            rulesByDf[row.path] = {
+        if (!rules[row.path]) {
+            rules[row.path] = {
                 type: RuleType.VALUE_NOT_IN,
                 values: []
             }
         }
-        rulesByDf[row.path].values.push(row.value)
+        rules[row.path].values.push(row.value)
     }
 
     // Or
@@ -308,13 +331,10 @@ export async function transformRulesFromRequirementProfile(reqProfileStr,lang = 
                 valueIn: [row.value]
             })
         }
-        rulesByDf[id.substring(0, id.length - 1)] = {
+        rules[id.substring(0, id.length - 1)] = {
             elements: oneOrPerRP,
             type: RuleType.OR
         }
     }
-    return {
-        rulesByType: rulesByType,
-        rulesByDf: rulesByDf
-    }
+    return rules
 }
