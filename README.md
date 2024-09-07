@@ -2,7 +2,7 @@
 - **Input**: user profile, requirement profiles, datafield constraints, materialization queries
 - **Output**: a report about eligibilities (yes, no, missing data)
 
-In use in the [Förderfunke app](https://github.com/Citizen-Knowledge-Graph/foerderfunke-react-app).
+In use in the [FörderFunke app](https://github.com/Citizen-Knowledge-Graph/foerderfunke-react-app).
 
 ## Local development
 
