@@ -81,19 +81,29 @@ function devRunSparqlConstructQueryOnRdfString() {
 }
 
 async function devValidateAll() {
+    /*
     let shaclFiles = await fsPromise.readdir(SHACL_DIR)
     let userProfile = await fsPromise.readFile(USER_PROFILE, "utf8")
     let datafieldsStr = await fsPromise.readFile(DATAFIELDS, "utf8")
     let materializationStr = await fsPromise.readFile(MATERIALIZATION, "utf8")
+     */
+    let dir = `${DB_DIR}/sozialplattform/shacl`
+    let shaclFiles = await fsPromise.readdir(dir)
+    let userProfile = await fsPromise.readFile(`${DB_DIR}/sozialplattform/user-profile-dev.ttl`, "utf8")
+    let datafieldsStr = await fsPromise.readFile(`${DB_DIR}/sozialplattform/datafields.ttl`, "utf8")
+    let materializationStr = await fsPromise.readFile(`${DB_DIR}/sozialplattform/materialization.ttl`, "utf8")
 
     let requirementProfiles = {}
     for (let file of shaclFiles) {
         // if (!(file === "kinderzuschlag.ttl")) continue
-        requirementProfiles[file] = await fsPromise.readFile(`${SHACL_DIR}/${file}`, "utf8")
+        // requirementProfiles[file] = await fsPromise.readFile(`${SHACL_DIR}/${file}`, "utf8")
+        requirementProfiles[file] = await fsPromise.readFile(`${dir}/${file}`, "utf8")
+        // console.log(`${dir}/${file}`);
     }
-
-    let report = await validateAll(userProfile, requirementProfiles, datafieldsStr, materializationStr, true)
-    // console.log(report)
+    let startTime = new Date().getTime()
+    let report = await validateAll(userProfile, requirementProfiles, datafieldsStr, materializationStr, false)
+    let endTime = new Date().getTime()
+    console.log("time elapsed", (endTime - startTime) / 1000, "seconds")
     console.log(util.inspect(report, { showHidden: false, depth: null, colors: true }))
 }
 
@@ -258,7 +268,7 @@ async function devTransformRulesFromRequirementProfile() {
 
 // devRunSparqlSelectQueryOnRdfString()
 // devRunSparqlConstructQueryOnRdfString()
-// devValidateAll()
+devValidateAll()
 // devValidateOne()
 // devValidateOneStrings()
 // devValidateUserProfile()
@@ -269,4 +279,4 @@ async function devTransformRulesFromRequirementProfile() {
 // devDeferment()
 // devGetBenefitCategories()
 // devGetPrioritizedMissingDataFieldsJson()
-devTransformRulesFromRequirementProfile()
+// devTransformRulesFromRequirementProfile()
