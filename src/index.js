@@ -121,6 +121,31 @@ export async function validateAll(userProfileStr, reqProfileStrMap, datafieldsSt
     return map
 }
 
+export async function validateAllUserProfilesAgainstOneRp(userProfileStrMap, rpStr, datafieldsStr, materializationStr, debug = false) {
+    let rpUri = await extractRpUriFromRpString(rpStr)
+    let result = {
+        rpUri: rpUri,
+        [ValidationResult.ELIGIBLE]: [],
+        [ValidationResult.INELIGIBLE]: [],
+        [ValidationResult.UNDETERMINABLE]: [],
+    }
+    for (let [filename, userProfileStr] of Object.entries(userProfileStrMap)) {
+        let report = await validateOne(userProfileStr, rpStr, datafieldsStr, materializationStr, debug)
+        switch (report.result) {
+            case ValidationResult.ELIGIBLE:
+                result[ValidationResult.ELIGIBLE].push(filename)
+                break
+            case ValidationResult.INELIGIBLE:
+                result[ValidationResult.INELIGIBLE].push(filename)
+                break
+            case ValidationResult.UNDETERMINABLE:
+                result[ValidationResult.UNDETERMINABLE].push(filename)
+                break
+        }
+    }
+    return result
+}
+
 export async function validateOne(userProfile, requirementProfile, datafieldsStr, materializationStr, debug = false) {
 
     // ----- build up store -----

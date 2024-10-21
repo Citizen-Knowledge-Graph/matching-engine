@@ -5,7 +5,7 @@ import fs, { promises as fsPromise } from "fs"
 import {
     checkUserProfileForMaterializations,
     inferNewUserDataFromCompliedRPs,
-    validateAll,
+    validateAll, validateAllUserProfilesAgainstOneRp,
     validateOne,
     validateUserProfile
 } from "../src/index.js"
@@ -266,9 +266,24 @@ async function devTransformRulesFromRequirementProfile() {
     console.log(util.inspect(result, false, null, true))
 }
 
+async function devValidateMultipleProfilesAgainstOneRP() {
+    let userProfileDir = `${DB_DIR}/user-profile-examples`
+    let userProfileFiles = await fsPromise.readdir(userProfileDir)
+    let datafieldsStr = await fsPromise.readFile(`${DB_DIR}/datafields.ttl`, "utf8")
+    let materializationStr = await fsPromise.readFile(`${DB_DIR}/materialization.ttl`, "utf8")
+    let rpStr = await fsPromise.readFile(`${DB_DIR}/shacl/kinderzuschlag.ttl`, "utf8")
+    let userProfiles = {}
+    for (let userProfileFilename of userProfileFiles) {
+        // console.log(`${userProfileDir}/${userProfileFilename}`);
+        userProfiles[userProfileFilename] = await fsPromise.readFile(`${userProfileDir}/${userProfileFilename}`, "utf8")
+    }
+    let result = await validateAllUserProfilesAgainstOneRp(userProfiles, rpStr, datafieldsStr, materializationStr, false)
+    console.log(util.inspect(result, false, null, true))
+}
+
 // devRunSparqlSelectQueryOnRdfString()
 // devRunSparqlConstructQueryOnRdfString()
-devValidateAll()
+// devValidateAll()
 // devValidateOne()
 // devValidateOneStrings()
 // devValidateUserProfile()
@@ -280,3 +295,4 @@ devValidateAll()
 // devGetBenefitCategories()
 // devGetPrioritizedMissingDataFieldsJson()
 // devTransformRulesFromRequirementProfile()
+devValidateMultipleProfilesAgainstOneRP()
