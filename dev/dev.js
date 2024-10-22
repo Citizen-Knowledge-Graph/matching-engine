@@ -10,17 +10,19 @@ import {
     validateUserProfile
 } from "../src/index.js"
 import {
+    addRdfStringToStore,
     convertUserProfileToTurtle,
     extractDatafieldsMetadata,
-    extractRequirementProfilesMetadata,
+    extractRequirementProfilesMetadata, printDatasetAsTurtle,
     runSparqlConstructQueryOnRdfString,
-    runSparqlSelectQueryOnRdfString
+    runSparqlSelectQueryOnRdfString, runValidationOnStore
 } from "../src/utils.js"
 import {
     getBenefitCategories,
     getPrioritizedMissingDataFieldsJson,
     transformRulesFromRequirementProfile
 } from "../src/prematch.js";
+import {Store} from "n3";
 
 const DB_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "requirement-profiles")
 const SHACL_DIR = `${DB_DIR}/shacl`
@@ -281,6 +283,46 @@ async function devValidateMultipleProfilesAgainstOneRP() {
     console.log(util.inspect(result, false, null, true))
 }
 
+async function shaclSparqlTest() {
+    let userProfileStr = `
+        @prefix ff: <https://foerderfunke.org/default#> .
+        ff:mainPerson a ff:Citizen ;
+            ff:numb1 1000 ;
+            ff:numb2 2000 .
+    `
+    let rpStr = `
+        @prefix sh: <http://www.w3.org/ns/shacl#> .
+        @prefix ff: <https://foerderfunke.org/default#> .
+
+        ff:Test1Shape a sh:NodeShape ;
+        sh:targetClass ff:Citizen ;
+        sh:property [
+            sh:path ff:numb1 ;
+            sh:minCount 1 ;
+        ] .
+    
+        ff:Test2Shape a sh:NodeShape ;
+        sh:targetClass ff:Citizen ;
+        sh:sparql [
+            a sh:SPARQLConstraint ;
+            sh:message "Test 123" ;
+            sh:select """
+                PREFIX ff: <https://foerderfunke.org/default#>
+                SELECT $this WHERE {
+                    $this ff:numb1 ?numb1 .
+                    $this ff:numb2 ?numb2 .
+                    FILTER(?numb1 < ?numb2) .
+                }
+            """ ;
+        ] .
+    `
+    let store = new Store()
+    await addRdfStringToStore(userProfileStr, store)
+    await addRdfStringToStore(rpStr, store)
+    let validationReport = await runValidationOnStore(store)
+    printDatasetAsTurtle(validationReport.dataset)
+}
+
 // devRunSparqlSelectQueryOnRdfString()
 // devRunSparqlConstructQueryOnRdfString()
 // devValidateAll()
@@ -295,4 +337,5 @@ async function devValidateMultipleProfilesAgainstOneRP() {
 // devGetBenefitCategories()
 // devGetPrioritizedMissingDataFieldsJson()
 // devTransformRulesFromRequirementProfile()
-devValidateMultipleProfilesAgainstOneRP()
+// devValidateMultipleProfilesAgainstOneRP()
+shaclSparqlTest()

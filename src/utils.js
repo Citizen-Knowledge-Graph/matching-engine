@@ -1,6 +1,7 @@
 import { Store, Parser as N3Parser, Writer as N3Writer, DataFactory } from "n3"
 const { namedNode, literal } = DataFactory
 import Validator from "shacl-engine/Validator.js"
+import { validations as sparqlValidations } from "shacl-engine/sparql.js"
 import rdf from "rdf-ext"
 import { QueryEngine } from "@comunica/query-sparql-rdfjs"
 import { getDetailsAboutDfs } from "./prematch.js"
@@ -70,7 +71,7 @@ function getWriter() {
 
 export async function runValidationOnStore(store) {
     let dataset = rdf.dataset(store.getQuads())
-    let validator = new Validator(dataset, { factory: rdf, debug: false })
+    let validator = new Validator(dataset, { factory: rdf, debug: false, validations: sparqlValidations })
     return await validator.validate({ dataset: dataset })
 }
 
