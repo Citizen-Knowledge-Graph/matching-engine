@@ -327,3 +327,18 @@ export async function getDeferments(store) {
     }
     return deferments
 }
+
+export async function getModifiableDatafields(store) {
+    let query = `
+        PREFIX ff: <https://foerderfunke.org/default#>
+        SELECT * WHERE {
+            ?df a ff:DataField ;
+                ff:modifiable true .
+        }`
+    let rows = await runSparqlSelectQueryOnStore(query, store)
+    let dfs = []
+    for (let row of rows) {
+        dfs.push(row.df)
+    }
+    return dfs
+}

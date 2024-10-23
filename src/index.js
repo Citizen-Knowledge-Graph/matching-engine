@@ -10,13 +10,14 @@ import {
     runSparqlSelectQueryOnStore,
     runValidationOnStore,
     getDeferments,
-    rdfStringToStore
+    rdfStringToStore, getModifiableDatafields
 } from "./utils.js"
 import { Store } from "n3"
 
 export const ValidationResult = {
     ELIGIBLE: "eligible",
     INELIGIBLE: "ineligible",
+    INELIGIBLE_RECTIFIABLE: "ineligible_rectifiable",
     UNDETERMINABLE: "undeterminable"
 }
 
@@ -128,6 +129,7 @@ export async function validateAllUserProfilesAgainstOneRp(userProfileStrMap, rpS
         [ValidationResult.ELIGIBLE]: [],
         [ValidationResult.INELIGIBLE]: [],
         [ValidationResult.UNDETERMINABLE]: [],
+        [ValidationResult.INELIGIBLE_RECTIFIABLE]: [],
     }
     for (let [filename, userProfileStr] of Object.entries(userProfileStrMap)) {
         let report = await validateOne(userProfileStr, rpStr, datafieldsStr, materializationStr, debug)
@@ -140,6 +142,9 @@ export async function validateAllUserProfilesAgainstOneRp(userProfileStrMap, rpS
                 break
             case ValidationResult.UNDETERMINABLE:
                 result[ValidationResult.UNDETERMINABLE].push(filename)
+                break
+            case ValidationResult.INELIGIBLE_RECTIFIABLE:
+                result[ValidationResult.INELIGIBLE_RECTIFIABLE].push(filename)
                 break
         }
     }
@@ -172,12 +177,25 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
         printDatasetAsTurtle(validationReport.dataset)
     }
 
-    let violations = collectViolations(validationReport, true)
+    const modifiableDFs = await getModifiableDatafields(store)
+    let [violations, rectifiableViolations] = collectViolations(validationReport, true, modifiableDFs)
+
     if (violations.length > 0) {
         delete materializationReport.spPairs
         return {
             result: ValidationResult.INELIGIBLE,
             violations: violations,
+            missingUserInput: [],
+            materializationReport: materializationReport,
+            containsDeferredMissingUserInput: containsDeferredMissingUserInput
+        }
+    }
+
+    if (rectifiableViolations.length > 0) {
+        delete materializationReport.spPairs
+        return {
+            result: ValidationResult.INELIGIBLE_RECTIFIABLE,
+            violations: rectifiableViolations,
             missingUserInput: [],
             materializationReport: materializationReport,
             containsDeferredMissingUserInput: containsDeferredMissingUserInput
@@ -245,22 +263,28 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
     }
 }
 
-function collectViolations(report, skipMinCountAndNode) {
+function collectViolations(report, skipMinCountAndNode, modifiableDFs) {
     // ignore HasValueConstraintComponent if they have an equivalent MinCountConstraintComponent?
     // the problem of them both occurring can be avoided by using e.g. "sh:in (true)" instead of "sh:hasValue true", not sure that's the best solution though
     let violations = []
+    let rectifiableViolations = []
     for (let result of report.results) {
         const comp = result.constraintComponent.value.split("#")[1]
         if (skipMinCountAndNode && (comp === "MinCountConstraintComponent" || comp === "QualifiedMinCountConstraintComponent" || comp === "NodeConstraintComponent")) continue
-        violations.push({
+        let violation = {
             constraint: result.constraintComponent.value,
             focusNode: result.focusNode?.value ?? "",
             path: result.path?.[0]?.predicates?.[0]?.value ?? "",
             violatingValue: result.args?.hasValue?.id ?? "",
             message: result.message?.[0]?.value ?? ""
-        })
+        }
+        if (modifiableDFs.includes(violation.path)) {
+            rectifiableViolations.push(violation)
+        } else {
+            violations.push(violation)
+        }
     }
-    return violations
+    return [violations, rectifiableViolations]
 }
 
 // some missing data points can maybe be materialized without asking the user

@@ -323,6 +323,19 @@ async function shaclSparqlTest() {
     printDatasetAsTurtle(validationReport.dataset)
 }
 
+async function devModifiable() {
+    let dir = `${DB_DIR}/experimental`
+    let user = await fsPromise.readFile(`${dir}/municipality-profile.ttl`, "utf8")
+    let rp = await fsPromise.readFile(`${dir}/municipality-foerderung-spielplatz.ttl`, "utf8")
+    //let user = await fsPromise.readFile(`${dir}/user-profile.ttl`, "utf8")
+    //let rp = await fsPromise.readFile(`${dir}/ausbildungsfoerderung.ttl`, "utf8")
+
+    let df = await fsPromise.readFile(`${dir}/datafields.ttl`, "utf8")
+    let mat = await fsPromise.readFile(`${dir}/materialization.ttl`, "utf8")
+    let report = await validateOne(user, rp, df, mat, false)
+    console.log(util.inspect(report, false, null, true))
+}
+
 // devRunSparqlSelectQueryOnRdfString()
 // devRunSparqlConstructQueryOnRdfString()
 // devValidateAll()
@@ -338,4 +351,5 @@ async function shaclSparqlTest() {
 // devGetPrioritizedMissingDataFieldsJson()
 // devTransformRulesFromRequirementProfile()
 // devValidateMultipleProfilesAgainstOneRP()
-shaclSparqlTest()
+// shaclSparqlTest()
+devModifiable()
