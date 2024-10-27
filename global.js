@@ -9,7 +9,8 @@ import {
 import {
     extractRequirementProfilesMetadata,
     extractDatafieldsMetadata,
-    convertUserProfileToTurtle
+    convertUserProfileToTurtle,
+    getAllTriplesContainingUri
 } from "./src/utils.js";
 
 import {
@@ -31,5 +32,6 @@ window.MatchingEngine = {
     getBenefitCategories,
     getPrioritizedMissingDataFieldsJson,
     transformRulesFromRequirementProfile,
+    getAllTriplesContainingUri,
     RuleType
 }

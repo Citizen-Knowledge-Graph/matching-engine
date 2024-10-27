@@ -342,3 +342,27 @@ export async function getModifiableDatafields(store) {
     }
     return dfs
 }
+
+export async function getAllTriplesContainingUri(uri, rdfStrings) {
+    let store = await rdfStringsToStore(rdfStrings)
+    let query = `
+        SELECT * WHERE {
+            <${uri}> ?p ?o .
+        }`
+    let asSubject = await runSparqlSelectQueryOnStore(query, store)
+    query = `
+        SELECT * WHERE {
+            ?s <${uri}> ?o .
+        }`
+    let asPredicate = await runSparqlSelectQueryOnStore(query, store)
+    query = `
+        SELECT * WHERE {
+            ?s ?p <${uri}> .
+        }`
+    let asObject = await runSparqlSelectQueryOnStore(query, store)
+    return {
+        asSubject: asSubject,
+        asPredicate: asPredicate,
+        asObject: asObject
+    }
+}

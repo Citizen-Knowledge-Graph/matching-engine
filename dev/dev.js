@@ -13,7 +13,7 @@ import {
     addRdfStringToStore,
     convertUserProfileToTurtle,
     extractDatafieldsMetadata,
-    extractRequirementProfilesMetadata, printDatasetAsTurtle,
+    extractRequirementProfilesMetadata, getAllTriplesContainingUri, printDatasetAsTurtle,
     runSparqlConstructQueryOnRdfString,
     runSparqlSelectQueryOnRdfString, runValidationOnStore
 } from "../src/utils.js"
@@ -336,6 +336,23 @@ async function devModifiable() {
     console.log(util.inspect(report, false, null, true))
 }
 
+async function devGetAllTriplesContainingUri() {
+    let uri = "https://foerderfunke.org/default#geburtsdatum"
+
+    let dir = `${DB_DIR}/sozialplattform`
+    let shaclDir = `${dir}/shacl`
+    let df = await fsPromise.readFile(`${dir}/datafields.ttl`, "utf8")
+    let mat = await fsPromise.readFile(`${dir}/materialization.ttl`, "utf8")
+    let shaclFiles = await fsPromise.readdir(`${shaclDir}`)
+    let rps = []
+    for (let file of shaclFiles) {
+        rps.push(await fsPromise.readFile(`${shaclDir}/${file}`, "utf8"))
+    }
+
+    let triples = await getAllTriplesContainingUri(uri, [df, mat, ...rps])
+    console.log(triples)
+}
+
 // devRunSparqlSelectQueryOnRdfString()
 // devRunSparqlConstructQueryOnRdfString()
 // devValidateAll()
@@ -352,4 +369,5 @@ async function devModifiable() {
 // devTransformRulesFromRequirementProfile()
 // devValidateMultipleProfilesAgainstOneRP()
 // shaclSparqlTest()
-devModifiable()
+// devModifiable()
+devGetAllTriplesContainingUri()
