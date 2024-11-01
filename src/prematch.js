@@ -221,7 +221,8 @@ export async function transformRulesFromRequirementProfile(reqProfileStr,lang = 
         PREFIX ff: <https://foerderfunke.org/default#>
         PREFIX sh: <http://www.w3.org/ns/shacl#>
         SELECT ?path WHERE {
-            ff:MainPersonShape sh:property ?property .
+            ?mainPersonShape a sh:NodeShape .
+            ?mainPersonShape sh:property ?property .
             ?property sh:path ?path .
             ?property sh:minCount 1 .
             FILTER NOT EXISTS { ?property sh:in ?in }
@@ -242,7 +243,8 @@ export async function transformRulesFromRequirementProfile(reqProfileStr,lang = 
         PREFIX ff: <https://foerderfunke.org/default#>
         PREFIX sh: <http://www.w3.org/ns/shacl#>
         SELECT * WHERE {
-            ff:MainPersonShape sh:property ?property .
+            ?mainPersonShape a sh:NodeShape .
+            ?mainPersonShape sh:property ?property .
             ?property sh:path ?path .
             ?property sh:minCount 1 .
             FILTER NOT EXISTS { ?property sh:in ?in }
@@ -270,7 +272,8 @@ export async function transformRulesFromRequirementProfile(reqProfileStr,lang = 
         PREFIX sh: <http://www.w3.org/ns/shacl#>
         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
         SELECT * WHERE {
-            ff:MainPersonShape sh:property ?property .
+            ?mainPersonShape a sh:NodeShape .
+            ?mainPersonShape sh:property ?property .
             ?property sh:path ?path .
             ?property sh:in/rdf:rest*/rdf:first ?value .
         }`
@@ -290,7 +293,8 @@ export async function transformRulesFromRequirementProfile(reqProfileStr,lang = 
         PREFIX sh: <http://www.w3.org/ns/shacl#>
         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
         SELECT ?path ?value WHERE {
-            ff:MainPersonShape sh:property ?property .
+            ?mainPersonShape a sh:NodeShape .
+            ?mainPersonShape sh:property ?property .
             ?property sh:path ?path .
             ?property sh:not ?not .
             ?not sh:in/rdf:rest*/rdf:first ?value .
@@ -315,7 +319,8 @@ export async function transformRulesFromRequirementProfile(reqProfileStr,lang = 
         PREFIX sh: <http://www.w3.org/ns/shacl#>
         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
         SELECT ?path ?value WHERE {
-            ff:MainPersonShape sh:or/rdf:rest*/rdf:first ?or .
+            ?mainPersonShape a sh:NodeShape .
+            ?mainPersonShape sh:or/rdf:rest*/rdf:first ?or .
             ?or sh:property ?property .
             ?property sh:path ?path .
             ?property sh:in/rdf:rest*/rdf:first ?value .        
