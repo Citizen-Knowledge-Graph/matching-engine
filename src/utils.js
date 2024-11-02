@@ -345,6 +345,40 @@ export async function getModifiableDatafields(store) {
 
 export async function getAllTriplesContainingUri(uri, rdfStrings) {
     let store = await rdfStringsToStore(rdfStrings)
+    /*
+    Experimented with:
+        ff:kindergeld ff:hasMainPersonShape ff:kindergeldMainPersonShape .
+        ff:kindergeldMainPersonShape a sh:NodeShape ;
+            sh:targetClass ff:Citizen ;
+            sh:property [
+                sh:path ff:kinder_unter_18 ;
+                sh:minCount 1 ;
+            ] .
+    let query = `
+    PREFIX ff: <https://foerderfunke.org/default#>
+    PREFIX sh: <http://www.w3.org/ns/shacl#>
+    SELECT * WHERE {
+        ?blankNode ?pThis ?oThis .
+        FILTER(isBlank(?blankNode)) .
+        OPTIONAL {
+            ?sUp1 ?pUp1 ?blankNode .
+        }
+        OPTIONAL {
+            ?sUp2 ?pUp2 ?sUp1 .
+        }
+    }`
+    query = `
+        PREFIX ff: <https://foerderfunke.org/default#>
+        PREFIX sh: <http://www.w3.org/ns/shacl#>
+        SELECT * WHERE {
+            ?blankNode ?pThis ?oThis .
+            ?sUp1 ?pUp1 ?blankNode .
+            ?sUp2 ?pUp2 ?sUp1 .
+            VALUES ?sUp2 { ff:kindergeld }
+            VALUES ?pUp2 { ff:hasMainPersonShape }
+            VALUES ?sUp1 { ff:kindergeldMainPersonShape }
+            VALUES ?pUp1 { sh:property }
+        }`*/
     let query = `
         SELECT * WHERE {
             <${uri}> ?p ?o .
