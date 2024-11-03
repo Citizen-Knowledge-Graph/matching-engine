@@ -10,7 +10,8 @@ import {
     extractRequirementProfilesMetadata,
     extractDatafieldsMetadata,
     convertUserProfileToTurtle,
-    getAllTriplesContainingUri
+    getAllTriplesContainingUri,
+    createStoreWithTempUrisForBlankNodes
 } from "./src/utils.js";
 
 import {
@@ -33,5 +34,6 @@ window.MatchingEngine = {
     getPrioritizedMissingDataFieldsJson,
     transformRulesFromRequirementProfile,
     getAllTriplesContainingUri,
+    createStoreWithTempUrisForBlankNodes,
     RuleType
 }

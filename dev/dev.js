@@ -11,7 +11,7 @@ import {
 } from "../src/index.js"
 import {
     addRdfStringToStore,
-    convertUserProfileToTurtle,
+    convertUserProfileToTurtle, createStoreWithTempUrisForBlankNodes,
     extractDatafieldsMetadata,
     extractRequirementProfilesMetadata, getAllTriplesContainingUri, printDatasetAsTurtle,
     runSparqlConstructQueryOnRdfString,
@@ -349,7 +349,8 @@ async function devGetAllTriplesContainingUri() {
         rps.push(await fsPromise.readFile(`${shaclDir}/${file}`, "utf8"))
     }
 
-    let triples = await getAllTriplesContainingUri(uri, [df, mat, ...rps])
+    let store = await createStoreWithTempUrisForBlankNodes([df, mat, ...rps])
+    let triples = await getAllTriplesContainingUri(uri, store)
     console.log(triples)
 }
 

@@ -65,7 +65,8 @@ function getWriter() {
     return new N3Writer({ prefixes: {
         sh: "http://www.w3.org/ns/shacl#",
         ff: "https://foerderfunke.org/default#",
-        foaf: "http://xmlns.com/foaf/0.1/"
+        foaf: "http://xmlns.com/foaf/0.1/",
+        temp: "https://foerderfunke.org/temp#"
     }})
 }
 
@@ -343,42 +344,7 @@ export async function getModifiableDatafields(store) {
     return dfs
 }
 
-export async function getAllTriplesContainingUri(uri, rdfStrings) {
-    let store = await rdfStringsToStore(rdfStrings)
-    /*
-    Experimented with:
-        ff:kindergeld ff:hasMainPersonShape ff:kindergeldMainPersonShape .
-        ff:kindergeldMainPersonShape a sh:NodeShape ;
-            sh:targetClass ff:Citizen ;
-            sh:property [
-                sh:path ff:kinder_unter_18 ;
-                sh:minCount 1 ;
-            ] .
-    let query = `
-    PREFIX ff: <https://foerderfunke.org/default#>
-    PREFIX sh: <http://www.w3.org/ns/shacl#>
-    SELECT * WHERE {
-        ?blankNode ?pThis ?oThis .
-        FILTER(isBlank(?blankNode)) .
-        OPTIONAL {
-            ?sUp1 ?pUp1 ?blankNode .
-        }
-        OPTIONAL {
-            ?sUp2 ?pUp2 ?sUp1 .
-        }
-    }`
-    query = `
-        PREFIX ff: <https://foerderfunke.org/default#>
-        PREFIX sh: <http://www.w3.org/ns/shacl#>
-        SELECT * WHERE {
-            ?blankNode ?pThis ?oThis .
-            ?sUp1 ?pUp1 ?blankNode .
-            ?sUp2 ?pUp2 ?sUp1 .
-            VALUES ?sUp2 { ff:kindergeld }
-            VALUES ?pUp2 { ff:hasMainPersonShape }
-            VALUES ?sUp1 { ff:kindergeldMainPersonShape }
-            VALUES ?pUp1 { sh:property }
-        }`*/
+export async function getAllTriplesContainingUri(uri, store) {
     let query = `
         SELECT * WHERE {
             <${uri}> ?p ?o .
@@ -399,4 +365,27 @@ export async function getAllTriplesContainingUri(uri, rdfStrings) {
         asPredicate: asPredicate,
         asObject: asObject
     }
+}
+
+export async function createStoreWithTempUrisForBlankNodes(rdfStrings) {
+    let store = await rdfStringsToStore(rdfStrings)
+    let query = "SELECT * WHERE { ?s ?p ?o . }"
+    const queryEngine = new QueryEngine()
+    let bindingsStream = await queryEngine.queryBindings(query, { sources: [ store ] })
+    let bindings = await bindingsStream.toArray()
+    bindings.forEach(binding => {
+        let s = binding.get("s")
+        let p = binding.get("p")
+        let o = binding.get("o")
+        if (s.termType === "BlankNode") {
+            let sTemp = namedNode("https://foerderfunke.org/temp#" + s.value)
+            store.addQuad(sTemp, p, o)
+        }
+        if (o.termType === "BlankNode") {
+            let oTemp = namedNode("https://foerderfunke.org/temp#" + o.value)
+            store.addQuad(s, p, oTemp)
+        }
+        // also delete original triples with blank nodes? or leave them and just hide them in the frontend
+    })
+    return store
 }
