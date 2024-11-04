@@ -345,6 +345,12 @@ export async function getModifiableDatafields(store) {
 }
 
 export async function getAllTriplesContainingUri(uri, store) {
+    if (uri === null) {
+        let allTriples = await runSparqlSelectQueryOnStore("SELECT * WHERE { ?s ?p ?o . }", store)
+        return {
+            allTriples: allTriples
+        }
+    }
     let query = `
         SELECT * WHERE {
             <${uri}> ?p ?o .
