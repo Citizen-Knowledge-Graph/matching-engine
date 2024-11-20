@@ -354,6 +354,31 @@ async function devGetAllTriplesContainingUri() {
     console.log(triples)
 }
 
+async function devTestSeverity() {
+    let data = `
+        @prefix ff: <https://foerderfunke.org/default#> .
+        ff:mainPerson a ff:Citizen ;
+            ff:dev 1000 .
+    `
+    let shacl = `
+        @prefix sh: <http://www.w3.org/ns/shacl#> .
+        @prefix ff: <https://foerderfunke.org/default#> .
+
+        ff:Test1Shape a sh:NodeShape ;
+        sh:targetClass ff:Citizen ;
+        sh:property [
+            sh:path ff:dev ;
+            sh:maxExclusive 100 ;
+            sh:severity sh:Info ;
+        ] .
+    `
+    let store = new Store()
+    await addRdfStringToStore(data, store)
+    await addRdfStringToStore(shacl, store)
+    let validationReport = await runValidationOnStore(store)
+    printDatasetAsTurtle(validationReport.dataset)
+}
+
 // devRunSparqlSelectQueryOnRdfString()
 // devRunSparqlConstructQueryOnRdfString()
 // devValidateAll()
@@ -371,4 +396,5 @@ async function devGetAllTriplesContainingUri() {
 // devValidateMultipleProfilesAgainstOneRP()
 // shaclSparqlTest()
 // devModifiable()
-devGetAllTriplesContainingUri()
+// devGetAllTriplesContainingUri()
+devTestSeverity()
