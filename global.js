@@ -9,7 +9,6 @@ import {
 import {
     extractRequirementProfilesMetadata,
     extractDatafieldsMetadata,
-    convertUserProfileToTurtle,
     getAllTriplesContainingUri,
     createStoreWithTempUrisForBlankNodes
 } from "./src/utils.js";
@@ -20,6 +19,10 @@ import {
     transformRulesFromRequirementProfile,
     RuleType
 } from "./src/prematch.js";
+
+import {
+    convertUserProfileToTurtle
+} from "./src/profile-conversion.js";
 
 window.MatchingEngine = {
     ValidationResult,
