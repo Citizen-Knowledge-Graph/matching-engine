@@ -7,9 +7,8 @@
   "type": "module",
   "main": "src/index.js",
   "scripts": {
-    "start": "npm run update && node dev/dev.js",
-    "update": "chmod +x dev/script.sh && ./dev/script.sh",
-    "server": "node dev/server.js",
+    "start": "node dev/dev.js",
+    "update": "rm -rf dev/requirement-profiles && git clone https://github.com/Citizen-Knowledge-Graph/requirement-profiles dev/requirement-profiles",
     "build": "webpack"
   },
   "dependencies": {
