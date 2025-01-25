@@ -181,61 +181,6 @@ export async function extractDatafieldsMetadata(datafieldsStr, lang) {
     return await getDetailsAboutDfs([], store, lang)
 }
 
-// replaced by method above that reuses helper method, but keeping this code for potential later reusage of the class-logic
-/*export async function extractDatafieldsMetadata(datafieldsStr, lang) {
-    let store = await rdfStringToStore(datafieldsStr)
-    let query = `
-        PREFIX ff: <https://foerderfunke.org/default#>
-        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-        PREFIX sh: <http://www.w3.org/ns/shacl#>
-        SELECT * WHERE {
-            ?dfUri a ff:DataField .
-            OPTIONAL {
-                ?dfUri rdfs:label ?label .
-                FILTER (lang(?label) = "${lang}")
-            } .
-            OPTIONAL {
-                ?dfUri schema:question ?question .
-                FILTER (lang(?question) = "${lang}")
-            } .
-            OPTIONAL {
-                ?dfUri rdfs:comment ?comment .
-                FILTER (lang(?comment) = "${lang}")
-            } .
-            OPTIONAL {
-                ?property sh:path ?dfUri ;
-                    sh:class ?class .
-            }
-        }`
-    let rows = await runSparqlSelectQueryOnStore(query, store)
-    let metadata = {}
-    for (let row of rows) {
-        metadata[row.dfUri] = {
-            uri: row.dfUri,
-            label: row.label ?? "",
-            question: row.question ?? "",
-            comment: row.comment ?? "",
-            objectHasClass: row.class ?? ""
-        }
-    }
-    query = `
-        PREFIX ff: <https://foerderfunke.org/default#>
-        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-        SELECT * WHERE {
-            ?classUri a ff:Class .
-            OPTIONAL { ?classUri rdfs:label ?label } .
-        }`
-    rows = await runSparqlSelectQueryOnStore(query, store)
-    for (let row of rows) {
-        metadata[row.classUri] = {
-            uri: row.classUri,
-            label: row.label ?? "",
-            isClass: true
-        }
-    }
-    return metadata
-}*/
-
 const a = namedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 
 function isObject(value) {
