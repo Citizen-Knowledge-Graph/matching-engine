@@ -8,10 +8,8 @@ import {
 
 import {
     extractRequirementProfilesMetadata,
-    extractDatafieldsMetadata,
-    getAllTriplesContainingUri,
-    createStoreWithTempUrisForBlankNodes
-} from "./src/utils.js";
+    extractDatafieldsMetadata
+} from "./src/extract-metadata.js";
 
 import {
     getBenefitCategories,
@@ -23,6 +21,12 @@ import {
 import {
     convertUserProfileToTurtle
 } from "./src/profile-conversion.js";
+
+import {
+    getAllTriplesContainingUri,
+    createStoreWithTempUrisForBlankNodes
+} from "./src/uri-resolving.js";
+
 
 window.MatchingEngine = {
     ValidationResult,
