@@ -16,15 +16,18 @@ async function testValidator() {
     console.log(await datasetToTurtle(report.dataset))
 }
 
-async function testValidators() {
+async function buildValidatorsMap() {
     let map = { "up": await promises.readFile(UP, "utf8") }
     for (let file of await promises.readdir(RPs)) {
         let rpStr = await promises.readFile(`${RPs}/${file}`, "utf8")
         let rpUri = extractRpUriFromRpStr(rpStr)
         if (rpUri) map[rpUri] = rpStr
     }
-    const validators = buildValidators(map)
-    console.log(validators)
+    return buildValidators(map)
+}
+
+async function testValidators() {
+    console.log(await buildValidatorsMap())
 }
 
 // await testValidator()
