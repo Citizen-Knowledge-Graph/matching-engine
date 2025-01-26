@@ -36,8 +36,7 @@ export function buildValidator(shaclStr) {
     return new Validator(dataset, { factory: rdf, validations })
 }
 
-export async function runValidation(validator, store) {
-    const dataset = rdf.dataset(store.getQuads())
+export async function runValidation(validator, dataset) {
     return await validator.validate({ dataset })
 }
 
@@ -45,6 +44,14 @@ export function storeFromTurtle(turtleStr) {
     const store = new Store({ factory: rdf })
     store.addQuads(parser.parse(turtleStr))
     return store
+}
+
+export function storeToDataset(store) {
+    return rdf.dataset(store.getQuads())
+}
+
+export function turtleToDataset(turtleStr) {
+    return rdf.dataset(parser.parse(turtleStr))
 }
 
 export function extractRpUriFromRpStr(rpStr) {
