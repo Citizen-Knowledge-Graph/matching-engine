@@ -1,7 +1,7 @@
 import path from "path"
 import { fileURLToPath } from "url"
 import { promises } from "fs"
-import { buildValidator, datasetToTurtle, runValidation, storeFromTurtle } from "../src/new/basics.js"
+import { buildValidator, datasetToTurtle, runValidation, storeFromTurtle, extractRpUriFromRpStr, buildValidators } from "../src/new/basics.js"
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "requirement-profiles", "sozialplattform")
 const RPs = `${ROOT}/shacl`
@@ -16,4 +16,16 @@ async function testValidator() {
     console.log(await datasetToTurtle(report.dataset))
 }
 
-await testValidator()
+async function testValidators() {
+    let map = { "up": await promises.readFile(UP, "utf8") }
+    for (let file of await promises.readdir(RPs)) {
+        let rpStr = await promises.readFile(`${RPs}/${file}`, "utf8")
+        let rpUri = extractRpUriFromRpStr(rpStr)
+        if (rpUri) map[rpUri] = rpStr
+    }
+    const validators = buildValidators(map)
+    console.log(validators)
+}
+
+// await testValidator()
+await testValidators()

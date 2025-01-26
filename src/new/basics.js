@@ -24,7 +24,7 @@ export async function datasetToTurtle(dataset) {
 }
 
 export function buildValidators(idToShaclStrMap) {
-    let validators = {}
+    const validators = {}
     for (const [id, shaclStr] of Object.entries(idToShaclStrMap)) {
         validators[id] = buildValidator(shaclStr)
     }
@@ -37,12 +37,28 @@ export function buildValidator(shaclStr) {
 }
 
 export async function runValidation(validator, store) {
-    let dataset = rdf.dataset(store.getQuads())
-    return await validator.validate({dataset})
+    const dataset = rdf.dataset(store.getQuads())
+    return await validator.validate({ dataset })
 }
 
 export function storeFromTurtle(turtleStr) {
     const store = new Store({ factory: rdf })
     store.addQuads(parser.parse(turtleStr))
     return store
+}
+
+export function extractRpUriFromRpStr(rpStr) {
+    const match = rpStr.match(/(.*?)\s+a ff:RequirementProfile/)
+    if (match) return expandPrefixedStr(match[1])
+    console.error("Could not extract identifier from requirement profile string: " + rpStr)
+    return ""
+}
+
+export function expandPrefixedStr(str) {
+    for (let prefix of Object.keys(prefixes)) {
+        if (str.startsWith(prefix + ":")) {
+            return prefixes[prefix] + str.slice(prefix.length + 1)
+        }
+    }
+    return str
 }
