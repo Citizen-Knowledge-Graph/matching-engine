@@ -177,7 +177,7 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
         printDatasetAsTurtle(validationReport.dataset)
     }
 
-    const modifiableDFs = await getModifiableDatafields(store)
+    const modifiableDFs = [] // await getModifiableDatafields(store)
     let [violations, rectifiableViolations] = collectViolations(validationReport, true, modifiableDFs)
 
     if (violations.length > 0) {
