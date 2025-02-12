@@ -10,10 +10,7 @@ import {
     validateUserProfile
 } from "../src/index.js"
 import {
-    addRdfStringToStore,
-    convertUserProfileToTurtle, createStoreWithTempUrisForBlankNodes,
-    extractDatafieldsMetadata,
-    extractRequirementProfilesMetadata, getAllTriplesContainingUri, printDatasetAsTurtle,
+    addRdfStringToStore, printDatasetAsTurtle,
     runSparqlConstructQueryOnRdfString,
     runSparqlSelectQueryOnRdfString, runValidationOnStore
 } from "../src/utils.js"
