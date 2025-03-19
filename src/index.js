@@ -99,10 +99,7 @@ export async function validateAll(userProfileStr, reqProfileStrMap, datafieldsSt
 
     for (let rpStr of Object.values(reqProfileStrMap)) {
         let rpUri = await extractRpUriFromRpString(rpStr)
-        let start = performance.now()
         let report = await validateOne(userProfileStr, rpStr, datafieldsStr, materializationStr, debug)
-        let end = performance.now()
-        console.log(`Time elapsed for running validateOne in validateAll() for ${rpUri}: ${end - start} ms`)
         report.rpUri = rpUri
         map.reports.push(report)
         for (let userInput of report.missingUserInput) {
@@ -157,7 +154,6 @@ export async function validateAllUserProfilesAgainstOneRp(userProfileStrMap, rpS
 export async function validateOne(userProfile, requirementProfile, datafieldsStr, materializationStr, debug = false) {
 
     // ----- build up store -----
-    let start = performance.now()
     let store = new Store()
     await addRdfStringToStore(userProfile, store)
     // let deferments = await getDeferments(store)
@@ -165,14 +161,9 @@ export async function validateOne(userProfile, requirementProfile, datafieldsStr
     await addRdfStringToStore(requirementProfile, store)
     await addRdfStringToStore(materializationStr, store)
     await addRdfStringToStore(datafieldsStr, store) // this is not needed anymore? could be useful for materializations using similarTo/sameAs-datafields
-    let end = performance.now()
-    console.log(`Time elapsed for building store in validateOne(): ${end - start} ms`)
 
     // ----- apply materialization rules again and again until none applies anymore -----
-    start = performance.now()
     let materializationReport = await applyMaterializationRules(store)
-    end = performance.now()
-    console.log(`Time elapsed for applying materialization rules in validateOne(): ${end - start} ms`)
 
     if (debug) {
         console.log("Store after applying materialization rules:")

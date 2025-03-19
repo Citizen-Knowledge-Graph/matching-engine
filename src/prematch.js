@@ -100,10 +100,7 @@ export async function getPrioritizedMissingDataFieldsJson(selectedBenefitCategor
         rpMapInFocus[rpId] = rpMapAll[rpId]
     }
 
-    let start = performance.now()
     let report = await validateAll(userProfileStr, rpMapInFocus, datafieldsStr, materializationStr)
-    let end = performance.now()
-    console.log(`Time it took in getPrioritizedMissingDataFieldsJson for validateAll(): ${end - start} ms`)
     let sorted = Object.entries(report.missingUserInputsAggregated).sort((a, b) => b[1].usedIn.length - a[1].usedIn.length)
     let usedInCounts = {}
     // add sort option flag: by usedIn, by score, by category (non prioritized) TODO
@@ -113,10 +110,7 @@ export async function getPrioritizedMissingDataFieldsJson(selectedBenefitCategor
     let sortedUrisShortened = sorted.map(df => shortenUri(df[1].dfUri))
 
     // ff:pensionable/ff:age are in sortedUrisShortened and get into fieldsMap, but will be filtered out by: .filter(uri => !fieldsMap[uri].materializable)
-    start = performance.now()
     let fieldsMap = await getDetailsAboutDfs(sortedUrisShortened, store, lang)
-    end = performance.now()
-    console.log(`Time it took in getPrioritizedMissingDataFieldsJson for getDetailsAboutDfs(): ${end - start} ms`)
     for (let dfUri of Object.keys(fieldsMap)) {
         fieldsMap[dfUri].usedIn = usedInCounts[dfUri]
     }

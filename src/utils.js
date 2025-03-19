@@ -6,13 +6,10 @@ import rdf from "rdf-ext"
 import { QueryEngine } from "@comunica/query-sparql-rdfjs"
 
 export async function rdfStringsToStore(rdfStrings) {
-    let start = performance.now()
     let store = new Store()
     for (let str of rdfStrings) {
         await addRdfStringToStore(str, store)
     }
-    let end = performance.now()
-    console.log(`Time elapsed in rdfStringsToStore(): ${end - start} ms`)
     return store
 }
 
@@ -60,13 +57,9 @@ function getWriter() {
 }
 
 export async function runValidationOnStore(store) {
-    let start = performance.now()
     let dataset = rdf.dataset(store.getQuads())
     let validator = new Validator(dataset, { factory: rdf, debug: false, validations: sparqlValidations })
-    let result = await validator.validate({ dataset: dataset })
-    let end = performance.now()
-    console.log(`Time elapsed in runValidationOnStore(): ${end - start} ms`)
-    return result
+    return await validator.validate({ dataset: dataset })
 }
 
 export async function runSparqlSelectQueryOnRdfString(query, rdfStr) {
@@ -80,7 +73,6 @@ export async function runSparqlAskQueryOnStore(query, store) {
 }
 
 export async function runSparqlSelectQueryOnStore(query, store) {
-    let start = performance.now()
     const queryEngine = new QueryEngine()
     let bindingsStream = await queryEngine.queryBindings(query, { sources: [ store ] })
     let bindings = await bindingsStream.toArray()
@@ -93,8 +85,6 @@ export async function runSparqlSelectQueryOnStore(query, store) {
         })
         results.push(row)
     })
-    let end = performance.now()
-    console.log(`Time elapsed in runSparqlSelectQueryOnStore(): ${end - start} ms`)
     return results
 }
 
@@ -104,13 +94,9 @@ export async function runSparqlConstructQueryOnRdfString(query, rdfStr) {
 }
 
 export async function runSparqlConstructQueryOnStore(query, store) {
-    let start = performance.now()
     const queryEngine = new QueryEngine()
     let quadsStream = await queryEngine.queryQuads(query, { sources: [ store ] })
-    let arr = await quadsStream.toArray()
-    let end = performance.now()
-    console.log(`Time elapsed in runSparqlConstructQueryOnStore(): ${end - start} ms`)
-    return arr
+    return await quadsStream.toArray()
 }
 
 export function extractRpUriFromRpString(rpStr) {
