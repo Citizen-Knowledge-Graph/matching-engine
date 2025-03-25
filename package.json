@@ -1,6 +1,6 @@
 {
   "name": "@foerderfunke/matching-engine",
-  "version": "0.7.7",
+  "version": "0.7.8",
   "description": "Checks eligibilities by validating a user profile against requirement profiles",
   "author": "@foerderfunke",
   "license": "MIT",
@@ -15,7 +15,7 @@
     "@comunica/query-sparql-rdfjs": "^4.0.2",
     "n3": "^1.23.1",
     "rdf-ext": "^2.5.2",
-    "shacl-engine": "^1.0.2"
+    "shacl-engine": "github:rdf-ext/shacl-engine#experimental"
   },
   "devDependencies": {
     "webpack": "^5.97.1",

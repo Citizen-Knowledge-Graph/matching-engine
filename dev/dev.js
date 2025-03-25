@@ -376,6 +376,39 @@ async function devTestSeverity() {
     printDatasetAsTurtle(validationReport.dataset)
 }
 
+async function devShDeactivated() {
+    let profile = `
+        @prefix ff: <https://foerderfunke.org/default#>.
+        ff:mainPerson a ff:Citizen ;
+            ff:citizenship ff:eu . # ff:de
+            # ff:steuerpflichtig true .`
+
+    let shacl = `
+        @prefix ff: <https://foerderfunke.org/default#>.
+        @prefix sh: <http://www.w3.org/ns/shacl#>.
+        @prefix shn: <https://schemas.link/shacl-next#>.
+        ff:RootShape a sh:NodeShape;
+            sh:targetClass ff:Citizen ;
+            sh:property [
+                sh:path ff:citizenship ;
+                sh:in (ff:de ff:eu) ;
+                sh:minCount 1 ;
+            ] ;
+            sh:property [
+              sh:deactivated [
+                  shn:eq ([ sh:path ff:citizenship ] ff:de )
+              ] ;
+              sh:path ff:steuerpflichtig ;
+              sh:in (true) ;
+              sh:minCount 1 ;
+            ] .`
+    let store = new Store()
+    await addRdfStringToStore(profile, store)
+    await addRdfStringToStore(shacl, store)
+    let validationReport = await runValidationOnStore(store)
+    printDatasetAsTurtle(validationReport.dataset)
+}
+
 // devRunSparqlSelectQueryOnRdfString()
 // devRunSparqlConstructQueryOnRdfString()
 // devValidateAll()
@@ -394,4 +427,5 @@ async function devTestSeverity() {
 // shaclSparqlTest()
 // devModifiable()
 // devGetAllTriplesContainingUri()
-devTestSeverity()
+// devTestSeverity()
+devShDeactivated()
