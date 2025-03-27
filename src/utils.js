@@ -102,7 +102,7 @@ export async function runSparqlConstructQueryOnStore(query, store) {
 export function extractRpUriFromRpString(rpStr) {
     const match = rpStr.match(/(.*?)\s+a ff:RequirementProfile/) // make this more robust with whitespaces/trimming TODO
     if (match) {
-        return expandPrefixedStr(match[1])
+        return expandPrefixedStr(match[1].trim())
     }
     console.error("Could not extract identifier from requirement profile string: " + rpStr)
     return "error"
