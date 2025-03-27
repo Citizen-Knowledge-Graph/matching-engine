@@ -7,9 +7,8 @@
   "type": "module",
   "main": "src/index.js",
   "scripts": {
-    "start": "node dev/dev.js",
-    "update": "rm -rf dev/requirement-profiles && git clone https://github.com/Citizen-Knowledge-Graph/requirement-profiles dev/requirement-profiles",
-    "build": "webpack"
+    "start": "node dev/new-dev.js",
+    "update": "rm -rf dev/requirement-profiles && git clone https://github.com/Citizen-Knowledge-Graph/requirement-profiles dev/requirement-profiles"
   },
   "dependencies": {
     "@comunica/query-sparql-rdfjs": "^4.0.2",
@@ -17,9 +16,5 @@
     "rdf-ext": "^2.5.2",
     "shacl-engine": "github:rdf-ext/shacl-engine#experimental",
     "sem-ops-utils": "file:../sem-ops-utils"
-  },
-  "devDependencies": {
-    "webpack": "^5.97.1",
-    "webpack-cli": "^6.0.1"
   }
 }

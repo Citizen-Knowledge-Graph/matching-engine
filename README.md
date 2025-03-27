@@ -14,31 +14,13 @@ In use in the [FörderFunke Web App](https://github.com/Citizen-Knowledge-Graph/
 npm start
 
 # after bumping the version
-npm run build
 npm publish
 ```
 
-## Using this library as dependency
+## Usage
 
 ```shell
 npm install --save @foerderfunke/matching-engine
 
 import { ValidationResult } from "@foerderfunke/matching-engine"
-```
-or:
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>dev</title>
-</head>
-<body>
-    <script src="./dist/bundle.js"></script>
-    <script>
-        MatchingEngine.validateAll() // ...
-    </script>
-</body>
-</html>
 ```
