@@ -440,6 +440,9 @@ async function devQualifiedValueShape() {
             ] .`
     let report = await validateAll(userProfile, requirementProfiles, datafieldsStr, materializationStr, false)
     console.log(util.inspect(report, { showHidden: false, depth: null, colors: true }))
+    console.log("----------------")
+    let result = await getPrioritizedMissingDataFieldsJson([], [], userProfile, datafieldsStr, [requirementProfiles["devQualifiedValueShape"]], materializationStr, "de")
+    console.log(util.inspect(result, false, null, true))
 }
 
 // devRunSparqlSelectQueryOnRdfString()
