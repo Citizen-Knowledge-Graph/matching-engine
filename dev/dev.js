@@ -409,6 +409,39 @@ async function devShDeactivated() {
     printDatasetAsTurtle(validationReport.dataset)
 }
 
+async function devQualifiedValueShape() {
+    let userProfile = `
+        @prefix ff: <https://foerderfunke.org/default#> .
+        ff:mainPerson a ff:Citizen ;
+            ff:hasChild ff:child0, ff:child1 .
+        ff:child0 a ff:Child ;
+            ff:hasAge 28 .
+        ff:child1 a ff:child ;
+            ff:hasAge 34 .`
+    let datafieldsStr = await fsPromise.readFile(`${DB_DIR}/sozialplattform/datafields.ttl`, "utf8")
+    let materializationStr = await fsPromise.readFile(`${DB_DIR}/sozialplattform/materialization.ttl`, "utf8")
+    let requirementProfiles = {}
+    requirementProfiles["devQualifiedValueShape"] = `
+        @prefix ff: <https://foerderfunke.org/default#> .
+        @prefix sh: <http://www.w3.org/ns/shacl#> .
+        ff:devQualifiedValueShape a ff:RequirementProfile .
+        ff:MainShape a sh:NodeShape ;
+            sh:targetClass ff:Citizen ;
+            sh:property [
+                sh:path ff:hasChild ;
+                sh:qualifiedValueShape ff:ChildShape ;
+                sh:qualifiedMinCount 1 ;
+            ] .
+        ff:ChildShape a sh:NodeShape ;
+            sh:property [
+                sh:path ff:hasAge ;
+                sh:maxExclusive 25 ;
+                sh:minCount 1 ;
+            ] .`
+    let report = await validateAll(userProfile, requirementProfiles, datafieldsStr, materializationStr, false)
+    console.log(util.inspect(report, { showHidden: false, depth: null, colors: true }))
+}
+
 // devRunSparqlSelectQueryOnRdfString()
 // devRunSparqlConstructQueryOnRdfString()
 // devValidateAll()
@@ -428,4 +461,5 @@ async function devShDeactivated() {
 // devModifiable()
 // devGetAllTriplesContainingUri()
 // devTestSeverity()
-devShDeactivated()
+// devShDeactivated()
+devQualifiedValueShape()
