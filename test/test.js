@@ -9,8 +9,8 @@ describe("all matching-engine tests", function () {
     let matchingEngine
 
     before(async function () {
-        const repoDir = "test/requirement-profiles"
-        const repoUrl = "https://github.com/Citizen-Knowledge-Graph/requirement-profiles"
+        const repoDir = "test/knowledge-base"
+        const repoUrl = "https://github.com/Citizen-Knowledge-Graph/knowledge-base"
         if (existsSync(repoDir)) {
             await simpleGit(repoDir).pull()
         } else {
