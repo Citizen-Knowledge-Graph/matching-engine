@@ -1,4 +1,4 @@
-import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, datasetToTurtle } from "sem-ops-utils"
+import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset } from "sem-ops-utils"
 
 export class MatchingEngine {
 
@@ -26,7 +26,6 @@ export class MatchingEngine {
 
     async validateOne(up, rp) {
         let dataset = turtleToDataset(up)
-        let report = await this.validators[rp].validate({ dataset })
-        return datasetToTurtle(report.dataset)
+        return await this.validators[rp].validate({ dataset })
     }
 }
