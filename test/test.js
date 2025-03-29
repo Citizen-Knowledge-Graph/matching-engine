@@ -6,7 +6,6 @@ import { MatchingEngine } from "../src/new/MatchingEngine.js"
 import { expandShortenedUri } from "sem-ops-utils"
 
 describe("all matching-engine tests", function () {
-
     let matchingEngine
 
     before(async function () {
@@ -35,12 +34,13 @@ describe("all matching-engine tests", function () {
     })
 
     describe("testing functions on the matchingEngine object", function () {
+        const SIMPLE_RP = "ff:devRp"
 
         before(async function () {
             let shacl = `
                 @prefix sh: <http://www.w3.org/ns/shacl#> .
                 @prefix ff: <https://foerderfunke.org/default#> .
-                ff:devRp a ff:RequirementProfile .
+                ${SIMPLE_RP} a ff:RequirementProfile .
                 ff:devRpShape a sh:NodeShape ;
                     sh:targetNode ff:mainPerson ;
                     sh:property [
@@ -54,7 +54,7 @@ describe("all matching-engine tests", function () {
             let user = `
                 @prefix ff: <https://foerderfunke.org/default#> .
                 ff:mainPerson a ff:Citizen ; ff:hasAge 20 .`
-            let report = await matchingEngine.validateOne(user, expandShortenedUri("ff:devRp"))
+            let report = await matchingEngine.validateOne(user, expandShortenedUri(SIMPLE_RP))
             strictEqual(report.conforms, true, "The validation report does not conform, even so it should")
         })
 
@@ -62,7 +62,7 @@ describe("all matching-engine tests", function () {
             let user = `
                 @prefix ff: <https://foerderfunke.org/default#> .
                 ff:mainPerson a ff:Citizen ; ff:hasAge 16 .`
-            let report = await matchingEngine.validateOne(user, expandShortenedUri("ff:devRp"))
+            let report = await matchingEngine.validateOne(user, expandShortenedUri(SIMPLE_RP))
             strictEqual(report.conforms, false, "The validation report conforms, even so it shouldn't")
         })
     })
