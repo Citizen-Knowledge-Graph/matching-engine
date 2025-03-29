@@ -35,11 +35,34 @@ describe("all matching-engine tests", function () {
     })
 
     describe("testing functions on the matchingEngine object", function () {
-        it("should validate non-conforming for simple profile", async function () {
-            let userProfile = `
+
+        before(async function () {
+            let shacl = `
+                @prefix sh: <http://www.w3.org/ns/shacl#> .
                 @prefix ff: <https://foerderfunke.org/default#> .
-                ff:mainPerson a ff:Citizen ; ff:hasAge 50 .`
-            let report = await matchingEngine.validateOne(userProfile, expandShortenedUri("ff:kinderzuschlag"))
+                ff:devRp a ff:RequirementProfile .
+                ff:devRpShape a sh:NodeShape ;
+                    sh:targetNode ff:mainPerson ;
+                    sh:property [
+                        sh:path ff:hasAge ;
+                        sh:minInclusive 18 ;
+                    ] .`
+            matchingEngine.addValidator(shacl)
+        })
+
+        it("should validate conforming for simple case", async function () {
+            let user = `
+                @prefix ff: <https://foerderfunke.org/default#> .
+                ff:mainPerson a ff:Citizen ; ff:hasAge 20 .`
+            let report = await matchingEngine.validateOne(user, expandShortenedUri("ff:devRp"))
+            strictEqual(report.conforms, true, "The validation report does not conform, even so it should")
+        })
+
+        it("should validate non-conforming for simple case", async function () {
+            let user = `
+                @prefix ff: <https://foerderfunke.org/default#> .
+                ff:mainPerson a ff:Citizen ; ff:hasAge 16 .`
+            let report = await matchingEngine.validateOne(user, expandShortenedUri("ff:devRp"))
             strictEqual(report.conforms, false, "The validation report conforms, even so it shouldn't")
         })
     })
