@@ -34,18 +34,32 @@ describe("all matching-engine tests", function () {
     })
 
     describe("testing functions on the matchingEngine object", function () {
-        const SIMPLE_RP = "ff:devRp"
+        const SIMPLE_RP1 = "ff:devRp1"
+        const SIMPLE_RP2 = "ff:devRp2"
 
         before(async function () {
             let shacl = `
                 @prefix sh: <http://www.w3.org/ns/shacl#> .
                 @prefix ff: <https://foerderfunke.org/default#> .
-                ${SIMPLE_RP} a ff:RequirementProfile .
-                ff:devRpShape a sh:NodeShape ;
+                ${SIMPLE_RP1} a ff:RequirementProfile .
+                ${SIMPLE_RP1}Shape a sh:NodeShape ;
                     sh:targetNode ff:mainPerson ;
                     sh:property [
                         sh:path ff:hasAge ;
                         sh:minInclusive 18 ;
+                        sh:minCount 1 ;
+                    ] .`
+            matchingEngine.addValidator(shacl)
+            shacl = `
+                @prefix sh: <http://www.w3.org/ns/shacl#> .
+                @prefix ff: <https://foerderfunke.org/default#> .
+                ${SIMPLE_RP2} a ff:RequirementProfile .
+                ${SIMPLE_RP2}Shape a sh:NodeShape ;
+                    sh:targetNode ff:mainPerson ;
+                    sh:property [
+                        sh:path ff:hasIncome ;
+                        sh:maxInclusive 3000 ;
+                        sh:minCount 1 ;
                     ] .`
             matchingEngine.addValidator(shacl)
         })
@@ -54,7 +68,7 @@ describe("all matching-engine tests", function () {
             let user = `
                 @prefix ff: <https://foerderfunke.org/default#> .
                 ff:mainPerson a ff:Citizen ; ff:hasAge 20 .`
-            let report = await matchingEngine.basicValidation(user, expandShortenedUri(SIMPLE_RP))
+            let report = await matchingEngine.basicValidation(user, expandShortenedUri(SIMPLE_RP1))
             strictEqual(report.conforms, true, "The validation report does not conform, even so it should")
         })
 
@@ -62,8 +76,16 @@ describe("all matching-engine tests", function () {
             let user = `
                 @prefix ff: <https://foerderfunke.org/default#> .
                 ff:mainPerson a ff:Citizen ; ff:hasAge 16 .`
-            let report = await matchingEngine.basicValidation(user, expandShortenedUri(SIMPLE_RP))
+            let report = await matchingEngine.basicValidation(user, expandShortenedUri(SIMPLE_RP1))
             strictEqual(report.conforms, false, "The validation report conforms, even so it shouldn't")
+        })
+
+        it("should generate correct matching report", async function () {
+            let user = `
+                @prefix ff: <https://foerderfunke.org/default#> .
+                ff:mainPerson a ff:Citizen ; ff:hasAge 16 .`
+            await matchingEngine.matching(user, [expandShortenedUri(SIMPLE_RP1), expandShortenedUri(SIMPLE_RP2)])
+            // TODO
         })
     })
 })
