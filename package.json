@@ -8,14 +8,17 @@
   "type": "module",
   "main": "src/index.js",
   "scripts": {
-    "start": "node dev/new-dev.js",
-    "update": "rm -rf dev/requirement-profiles && git clone https://github.com/Citizen-Knowledge-Graph/requirement-profiles dev/requirement-profiles"
+    "test": "mocha"
   },
   "dependencies": {
     "@comunica/query-sparql-rdfjs": "^4.0.2",
     "n3": "^1.23.1",
     "rdf-ext": "^2.5.2",
-    "shacl-engine": "github:rdf-ext/shacl-engine#experimental",
-    "sem-ops-utils": "file:../sem-ops-utils"
+    "sem-ops-utils": "file:../sem-ops-utils",
+    "shacl-engine": "github:rdf-ext/shacl-engine#experimental"
+  },
+  "devDependencies": {
+    "mocha": "^11.1.0",
+    "simple-git": "^3.27.0"
   }
 }
