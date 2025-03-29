@@ -50,19 +50,19 @@ describe("all matching-engine tests", function () {
             matchingEngine.addValidator(shacl)
         })
 
-        it("should validate conforming for simple case", async function () {
+        it("should validate conforming for basic case", async function () {
             let user = `
                 @prefix ff: <https://foerderfunke.org/default#> .
                 ff:mainPerson a ff:Citizen ; ff:hasAge 20 .`
-            let report = await matchingEngine.validateOne(user, expandShortenedUri(SIMPLE_RP))
+            let report = await matchingEngine.basicValidation(user, expandShortenedUri(SIMPLE_RP))
             strictEqual(report.conforms, true, "The validation report does not conform, even so it should")
         })
 
-        it("should validate non-conforming for simple case", async function () {
+        it("should validate non-conforming for basic case", async function () {
             let user = `
                 @prefix ff: <https://foerderfunke.org/default#> .
                 ff:mainPerson a ff:Citizen ; ff:hasAge 16 .`
-            let report = await matchingEngine.validateOne(user, expandShortenedUri(SIMPLE_RP))
+            let report = await matchingEngine.basicValidation(user, expandShortenedUri(SIMPLE_RP))
             strictEqual(report.conforms, false, "The validation report conforms, even so it shouldn't")
         })
     })
