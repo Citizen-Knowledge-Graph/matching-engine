@@ -5,6 +5,7 @@ export class MatchingEngine {
 
     constructor(datafieldsTurtle, materializationTurtle, requirementProfilesTurtles) {
         this.knowledgeBaseStore = storeFromTurtles([datafieldsTurtle, materializationTurtle])
+        this.datafieldsValidator = buildValidator(datafieldsTurtle)
         this.requirementProfilesStore = newStore()
         this.validators = {}
         for (let rpTurtle of requirementProfilesTurtles) this.addValidator(rpTurtle)
