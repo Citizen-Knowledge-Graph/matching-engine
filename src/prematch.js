@@ -143,11 +143,9 @@ export async function getDetailsAboutDfs(shortenedDfUris = [], store, lang = "en
                 FILTER (lang(?comment) = "${lang}")
             } .
             ?df ff:hasShaclShape ?shaclShape .
-            OPTIONAL { ?shaclShape sh:datatype ?datatype . }
-            OPTIONAL {
-                ?shaclShape sh:property ?property .
-                ?property sh:maxCount ?maxCount .
-            }
+            ?shaclShape sh:property ?propertyShape .
+            OPTIONAL { ?propertyShape sh:datatype ?datatype . }
+            OPTIONAL { ?propertyShape sh:maxCount ?maxCount . }
         }`
     let rows = await runSparqlSelectQueryOnStore(query, store)
     for (let row of rows) {
