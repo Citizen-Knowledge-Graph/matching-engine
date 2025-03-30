@@ -174,7 +174,8 @@ export async function getDetailsAboutDfs(shortenedDfUris = [], store, lang = "en
             ?df a ff:DataField .
             ${shortenedDfUris.length === 0 ? "" : "VALUES ?df { " + shortenedDfUris.join(" ") + " }" }
             ?df ff:hasShaclShape ?shaclShape .
-            ?shaclShape sh:in/rdf:rest*/rdf:first ?option .
+            ?shaclShape sh:property ?propertyShape .
+            ?propertyShape sh:in/rdf:rest*/rdf:first ?option .
             ?option rdfs:label ?label .
             FILTER (lang(?label) = "${lang}")
         }`
