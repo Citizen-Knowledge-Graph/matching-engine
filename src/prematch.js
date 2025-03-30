@@ -142,11 +142,10 @@ export async function getDetailsAboutDfs(shortenedDfUris = [], store, lang = "en
                 ?df rdfs:comment ?comment .
                 FILTER (lang(?comment) = "${lang}")
             } .
-            ?df ff:objectConstraints ?oConstraints .
-            OPTIONAL { ?oConstraints sh:datatype ?datatype . }
-            OPTIONAL { 
-                ?df ff:usageConstraints ?uConstraints .
-                ?uConstraints sh:property ?property .
+            ?df ff:hasShaclShape ?shaclShape .
+            OPTIONAL { ?shaclShape sh:datatype ?datatype . }
+            OPTIONAL {
+                ?shaclShape sh:property ?property .
                 ?property sh:maxCount ?maxCount .
             }
         }`
@@ -174,8 +173,8 @@ export async function getDetailsAboutDfs(shortenedDfUris = [], store, lang = "en
         SELECT * WHERE {
             ?df a ff:DataField .
             ${shortenedDfUris.length === 0 ? "" : "VALUES ?df { " + shortenedDfUris.join(" ") + " }" }
-            ?df ff:objectConstraints ?constraints .
-            ?constraints sh:in/rdf:rest*/rdf:first ?option .
+            ?df ff:hasShaclShape ?shaclShape .
+            ?shaclShape sh:in/rdf:rest*/rdf:first ?option .
             ?option rdfs:label ?label .
             FILTER (lang(?label) = "${lang}")
         }`
