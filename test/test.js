@@ -33,7 +33,19 @@ describe("all matching-engine tests", function () {
             "The matchingEngine object does not have the expected keys")
     })
 
-    describe("testing functions on the matchingEngine object", function () {
+    describe("testing profile validation and materialization functions on the matchingEngine object", function () {
+        const SIMPLE_UP = `
+            @prefix ff: <https://foerderfunke.org/default#> .
+            ff:mainPerson a ff:Citizen ;
+                ff:staatsbuergerschaft ff:staatsbuergerschaft-ao-eu .`
+
+        it("should validate simple profile against datafield shapes", async function () {
+            let report = await matchingEngine.validateAgainstDatafieldShapes(SIMPLE_UP)
+            strictEqual(report.conforms, true, "Simple profile did not pass datafields validation")
+        })
+    })
+
+    describe("testing validation functions on the matchingEngine object", function () {
         const SIMPLE_RP1 = "ff:devRp1"
         const SIMPLE_RP2 = "ff:devRp2"
 

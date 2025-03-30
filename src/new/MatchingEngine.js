@@ -18,8 +18,11 @@ export class MatchingEngine {
     }
 
     async basicValidation(upTurtle, rpUri) {
-        let dataset = turtleToDataset(upTurtle)
-        return await this.validators[rpUri].validate({ dataset })
+        return await this.validators[rpUri].validate({ dataset: turtleToDataset(upTurtle) })
+    }
+
+    async validateAgainstDatafieldShapes(upTurtle) {
+        return await this.datafieldsValidator.validate({ dataset: turtleToDataset(upTurtle) })
     }
 
     async quizMatching(upTurtle, rpUris) {
