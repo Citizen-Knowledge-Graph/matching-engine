@@ -84,7 +84,9 @@ describe("all matching-engine tests", function () {
             let user = `
                 @prefix ff: <https://foerderfunke.org/default#> .
                 ff:mainPerson a ff:Citizen ; ff:hasAge 16 .`
-            await matchingEngine.matching(user, [expandShortenedUri(SIMPLE_RP1), expandShortenedUri(SIMPLE_RP2)])
+            let quizReport = await matchingEngine.quizMatching(user, [expandShortenedUri(SIMPLE_RP1), expandShortenedUri(SIMPLE_RP2)])
+            console.log(quizReport)
+
             // TODO
         })
     })
