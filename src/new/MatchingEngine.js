@@ -1,5 +1,5 @@
 import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, newStore, addTurtleToStore, storeFromDataset, sparqlConstruct, storeToTurtle } from "sem-ops-utils"
-import { QUERY_ELIGIBILITY_STATUS } from "./queries.js"
+import { QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_VIOLATING_DATAFIELDS } from "./queries.js"
 
 export class MatchingEngine {
 
@@ -27,8 +27,10 @@ export class MatchingEngine {
 
         for (let rpUri of rpUris) {
             let report = await this.validators[rpUri].validate({ dataset: upDataset })
-            let sourceStore = storeFromDataset(report.dataset)
+            let sourceStore = storeFromDataset(report.dataset) // store this in class object for reuse until overwritten again?
             await sparqlConstruct(QUERY_ELIGIBILITY_STATUS(rpUri), sourceStore, targetStore)
+            await sparqlConstruct(QUERY_MISSING_DATAFIELDS(rpUri), sourceStore, targetStore)
+            await sparqlConstruct(QUERY_VIOLATING_DATAFIELDS(rpUri), sourceStore, targetStore) // only do this in detailed validation for one?
 
             // TODO
         }
