@@ -3,7 +3,7 @@ import { strictEqual, deepStrictEqual } from "node:assert"
 import { existsSync, promises } from "fs"
 import simpleGit from "simple-git"
 import { MatchingEngine } from "../src/new/MatchingEngine.js"
-import { expandShortenedUri } from "sem-ops-utils"
+import { expandShortenedUri, isomorphicTurtles } from "sem-ops-utils"
 
 describe("all matching-engine tests", function () {
     let matchingEngine
@@ -80,14 +80,20 @@ describe("all matching-engine tests", function () {
             strictEqual(report.conforms, false, "The validation report conforms, even so it shouldn't")
         })
 
-        it("should generate correct matching report", async function () {
+        it("should generate correct quiz-matching report", async function () {
             let user = `
                 @prefix ff: <https://foerderfunke.org/default#> .
                 ff:mainPerson a ff:Citizen ; ff:hasAge 16 .`
             let quizReport = await matchingEngine.quizMatching(user, [expandShortenedUri(SIMPLE_RP1), expandShortenedUri(SIMPLE_RP2)])
-            console.log(quizReport)
-
-            // TODO
+            const expected = `
+                @prefix ff: <https://foerderfunke.org/default#>.
+                ff:devRp1 ff:hasEligibilityStatus ff:ineligible .
+                ff:devRp2 ff:hasEligibilityStatus ff:missingData .
+                ff:mainPerson_hasIncome
+                  ff:hasDatafield ff:hasIncome ;
+                  ff:hasIndividual ff:mainPerson ;
+                  ff:isMissedBy ff:devRp2 .`
+            strictEqual(isomorphicTurtles(quizReport, expected), true, "The report does not match the expected one")
         })
     })
 })
