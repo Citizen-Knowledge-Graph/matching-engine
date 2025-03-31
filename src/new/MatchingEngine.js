@@ -26,26 +26,31 @@ export class MatchingEngine {
     }
 
     async quizMatching(upTurtle, rpUris) {
-        let targetStore = await this.matching(upTurtle, rpUris, false)
+        let targetStore = await this.matching(upTurtle, rpUris, [
+            QUERY_ELIGIBILITY_STATUS,
+            QUERY_MISSING_DATAFIELDS
+        ])
         return await storeToTurtle(targetStore)
     }
 
     async detailedMatching(upTurtle, rpUris) {
-        let targetStore = await this.matching(upTurtle, rpUris, true)
+        let targetStore = await this.matching(upTurtle, rpUris, [
+            QUERY_ELIGIBILITY_STATUS,
+            QUERY_MISSING_DATAFIELDS,
+            QUERY_VIOLATING_DATAFIELDS
+        ])
         return await storeToTurtle(targetStore)
     }
 
-    async matching(upTurtle, rpUris, detailed) {
+    async matching(upTurtle, rpUris, queries) {
+        // enrich & validate user profile TODO
         let upDataset = turtleToDataset(upTurtle)
         let targetStore = newStore()
-
         for (let rpUri of rpUris) {
             let report = await this.validators[rpUri].validate({ dataset: upDataset })
             let sourceStore = storeFromDataset(report.dataset) // store this in class object for reuse until overwritten again?
-            await sparqlConstruct(QUERY_ELIGIBILITY_STATUS(rpUri), sourceStore, targetStore)
-            await sparqlConstruct(QUERY_MISSING_DATAFIELDS(rpUri), sourceStore, targetStore)
-            if (detailed) {
-                await sparqlConstruct(QUERY_VIOLATING_DATAFIELDS(rpUri), sourceStore, targetStore)
+            for (let query of queries) {
+                await sparqlConstruct(query(rpUri), sourceStore, targetStore)
             }
         }
         return targetStore
