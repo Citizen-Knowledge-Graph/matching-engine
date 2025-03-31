@@ -4,7 +4,7 @@ import { QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_VIOLATING_DAT
 export class MatchingEngine {
 
     constructor(datafieldsTurtle, materializationTurtle, requirementProfilesTurtles) {
-        this.knowledgeBaseStore = storeFromTurtles([datafieldsTurtle, materializationTurtle])
+        this.dfMatStore = storeFromTurtles([datafieldsTurtle, materializationTurtle])
         this.datafieldsValidator = buildValidator(datafieldsTurtle)
         this.requirementProfilesStore = newStore()
         this.validators = {}

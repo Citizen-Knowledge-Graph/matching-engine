@@ -29,7 +29,7 @@ describe("all matching-engine tests", function () {
 
     it("matchingEngine object should have correct keys", function () {
         deepStrictEqual(
-            Object.keys(matchingEngine), ["knowledgeBaseStore", "datafieldsValidator", "requirementProfilesStore", "validators"],
+            Object.keys(matchingEngine), ["dfMatStore", "datafieldsValidator", "requirementProfilesStore", "validators"],
             "The matchingEngine object does not have the expected keys")
     })
 
