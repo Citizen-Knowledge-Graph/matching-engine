@@ -29,7 +29,7 @@ describe("all matching-engine tests", function () {
 
     it("matchingEngine object should have correct keys", function () {
         deepStrictEqual(
-            Object.keys(matchingEngine), ["dfMatStore", "datafieldsValidator", "requirementProfilesStore", "validators"],
+            Object.keys(matchingEngine), ["dfMatStore", "datafieldsValidator", "requirementProfilesStore", "validators", "matQueries"],
             "The matchingEngine object does not have the expected keys")
     })
 
@@ -98,7 +98,13 @@ describe("all matching-engine tests", function () {
                 ff:mainPerson a ff:Citizen ; ff:hasAge 16 .`
             let quizReport = await matchingEngine.quizMatching(user, [expandShortenedUri(SIMPLE_RP1), expandShortenedUri(SIMPLE_RP2)])
             const expected = `
-                @prefix ff: <https://foerderfunke.org/default#>.
+                @prefix ff: <https://foerderfunke.org/default#> .
+                @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+                ff:constructedTriple_0 a ff:ConstructedTriple;
+                  ff:fromMaterializationRule ff:InterestedInBuildingActivatorRule;
+                  ff:hasObject "false";
+                  ff:hasPredicate ff:interested_in_building_renovation_FLAG;
+                  ff:hasSubject ff:mainPerson.
                 ff:devRp1 ff:hasEligibilityStatus ff:ineligible .
                 ff:devRp2 ff:hasEligibilityStatus ff:missingData .
                 ff:mainPerson_hasIncome
