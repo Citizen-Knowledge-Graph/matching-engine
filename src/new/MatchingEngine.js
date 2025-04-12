@@ -59,11 +59,11 @@ export class MatchingEngine {
         for (let [ matUri, query ] of Object.entries(this.matQueries)) {
             // do we need an exhausting approach instead until nothing is materialized anymore instead of a one-time for loop?
             // also filling the upStore while also using it as source can create build-ups
-            let constructedQuads = await sparqlConstruct(query, [upStore, this.dfMatStore], upStore)
-            for (let quad of constructedQuads) {
-                let constructUri = expandShortenedUri("ff:constructedTriple") + "_" + (count ++)
+            let materializedQuads = await sparqlConstruct(query, [upStore, this.dfMatStore], upStore)
+            for (let quad of materializedQuads) {
+                let constructUri = expandShortenedUri("ff:materializedTriple") + "_" + (count ++)
                 let triple = quadToTriple(quad)
-                addTripleToStore(reportStore, constructUri, a, expandShortenedUri("ff:ConstructedTriple"))
+                addTripleToStore(reportStore, constructUri, a, expandShortenedUri("ff:MaterializedTriple"))
                 addTripleToStore(reportStore, constructUri, expandShortenedUri("ff:fromMaterializationRule"), matUri)
                 addTripleToStore(reportStore, constructUri, expandShortenedUri("ff:hasSubject"), triple.s)
                 addTripleToStore(reportStore, constructUri, expandShortenedUri("ff:hasPredicate"), triple.p)
@@ -72,7 +72,9 @@ export class MatchingEngine {
 
         }
         let upDataset = datasetFromStore(upStore)
-        // validate user profile TODO
+
+        let dfReport = await this.datafieldsValidator.validate({ dataset: upDataset })
+        // TODO
 
         for (let rpUri of rpUris) {
             let report = await this.validators[rpUri].validate({ dataset: upDataset })
