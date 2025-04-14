@@ -12,6 +12,8 @@ In use in the [FörderFunke Web App](https://github.com/Citizen-Knowledge-Graph/
 ```shell
 npm install
 npm test
+# example for running a specific test:
+npm test -- --grep "full matching"
 
 # after bumping the version
 npm publish

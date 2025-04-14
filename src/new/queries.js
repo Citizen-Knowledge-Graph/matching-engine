@@ -1,7 +1,6 @@
 export const MATCHING_MODE = {
     QUIZ: 1,
-    QUIZ_DETAILED: 2,
-    FULL: 3
+    FULL: 2
 }
 
 export const FORMAT = {
@@ -36,13 +35,14 @@ export const QUERY_ELIGIBILITY_STATUS = (rpUri) => { return `
 }
 
 export const QUERY_MISSING_DATAFIELDS = (rpUri) => { return `
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     PREFIX ff: <https://foerderfunke.org/default#>
     PREFIX sh: <http://www.w3.org/ns/shacl#>
     
     CONSTRUCT {
         ?indivDfId ff:isMissedBy <${rpUri}> ;
-            ff:hasIndividual ?individual ;
-            ff:hasDatafield ?df .
+            rdf:subject ?individual ;
+            rdf:predicate ?df .
     } WHERE {
         ?result a sh:ValidationResult ;
             sh:sourceConstraintComponent ?type ;
@@ -60,17 +60,52 @@ export const QUERY_MISSING_DATAFIELDS = (rpUri) => { return `
     }`
 }
 
+export const QUERY_TOP_MISSING_DATAFIELD = `
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX ff: <https://foerderfunke.org/default#>
+    
+    CONSTRUCT {
+        ff:mostMissedDatafield rdf:subject ?subject ;
+            rdf:predicate ?datafield .
+    } WHERE {
+        {
+            SELECT ?subject ?datafield (COUNT(?rp) AS ?missedByCount) WHERE {
+                ?dfId ff:isMissedBy ?rp ;
+                    rdf:subject ?subject ;
+                    rdf:predicate ?datafield .
+            }
+            GROUP BY ?subject ?datafield
+            ORDER BY DESC(?missedByCount)
+            LIMIT 1
+        }
+    }`
+
+export const QUERY_NUMBER_OF_MISSING_DATAFIELDS = `
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX ff: <https://foerderfunke.org/default#>
+    
+    CONSTRUCT {
+        ff:this ff:numberOfMissingDatafields ?missingDfs .
+    } WHERE {
+        {
+            SELECT (COUNT(DISTINCT ?dfId) AS ?missingDfs) WHERE {
+                ?dfId ff:isMissedBy ?rp .
+            }
+        }
+    }`
+
 export const QUERY_VIOLATING_DATAFIELDS = (rpUri) => { return `
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     PREFIX ff: <https://foerderfunke.org/default#>
     PREFIX sh: <http://www.w3.org/ns/shacl#>
     CONSTRUCT {
-        <${rpUri}> ff:hasViolatingDatafield [
-            ff:hasIndividual ?individual ;
-            ff:hasDatafield ?df ;
+        <${rpUri}> ff:hasViolatingDatafield ?violationId .
+        ?violationId
+            rdf:subject ?individual ;
+            rdf:predicate ?df ;
             ff:hasViolationType ?type ;
             ff:hasMessage ?message ;
-            ff:hasValue ?value ;
-        ] .
+            ff:hasValue ?value .
     } WHERE {
         ?result a sh:ValidationResult ;
             sh:sourceConstraintComponent ?type ;
@@ -79,5 +114,7 @@ export const QUERY_VIOLATING_DATAFIELDS = (rpUri) => { return `
         OPTIONAL { ?result sh:resultMessage ?message . }
         OPTIONAL { ?result sh:value ?value . }
         FILTER(?type != sh:MinCountConstraintComponent && ?type != sh:QualifiedMinCountConstraintComponent)
+        
+        BIND(IRI(CONCAT(STR(<${rpUri}>), "_", REPLACE(STR(?individual), "^.*[#/]", ""), "_", REPLACE(STR(?df), "^.*[#/]", ""))) AS ?violationId)
     }`
 }

@@ -1,5 +1,5 @@
-import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, newStore, addTurtleToStore, storeFromDataset, sparqlConstruct, storeToTurtle, sparqlSelectOnStore, quadToTriple, addTripleToStore, expandShortenedUri, a, datasetFromStore, storeToJsonLdObj } from "sem-ops-utils"
-import { FORMAT, MATCHING_MODE, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_VIOLATING_DATAFIELDS } from "./queries.js"
+import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, newStore, addTurtleToStore, storeFromDataset, sparqlConstruct, storeToTurtle, sparqlSelectOnStore, addTripleToStore, expandShortenedUri, a, datasetFromStore, storeToJsonLdObj } from "sem-ops-utils"
+import { FORMAT, MATCHING_MODE, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_VIOLATING_DATAFIELDS } from "./queries.js"
 
 export class MatchingEngine {
 
@@ -69,18 +69,22 @@ export class MatchingEngine {
             // TODO
         }
 
-        let semOpsQueries = [ QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS ]
-        if (matchingMode === MATCHING_MODE.FULL) {
-            semOpsQueries.push(QUERY_VIOLATING_DATAFIELDS)
-        }
-
+        let missingDfStore
         for (let rpUri of rpUris) {
             let report = await this.validators[rpUri].validate({ dataset: upDataset })
             let sourceStore = storeFromDataset(report.dataset) // store this in class object for reuse until overwritten again?
-            for (let query of semOpsQueries) {
-                await sparqlConstruct(query(rpUri), [sourceStore], reportStore)
+
+            await sparqlConstruct(QUERY_ELIGIBILITY_STATUS(rpUri), [sourceStore], reportStore)
+
+            missingDfStore = matchingMode === MATCHING_MODE.QUIZ ? newStore() : reportStore
+            await sparqlConstruct(QUERY_MISSING_DATAFIELDS(rpUri), [sourceStore], missingDfStore)
+
+            if (matchingMode === MATCHING_MODE.FULL) {
+                await sparqlConstruct(QUERY_VIOLATING_DATAFIELDS(rpUri), [sourceStore], reportStore)
             }
         }
+        await sparqlConstruct(QUERY_TOP_MISSING_DATAFIELD, [missingDfStore], reportStore)
+        await sparqlConstruct(QUERY_NUMBER_OF_MISSING_DATAFIELDS, [missingDfStore], reportStore)
 
         if (format === FORMAT.JSON_LD) return await storeToJsonLdObj(reportStore)
         return await storeToTurtle(reportStore)

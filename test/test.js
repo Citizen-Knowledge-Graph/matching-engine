@@ -94,69 +94,112 @@ describe("all matching-engine tests", function () {
             strictEqual(report.conforms, false, "The validation report conforms, even so it shouldn't")
         })
 
-        it("should generate correct quiz-matching report", async function () {
+        it("should generate correct full matching report", async function () {
             let user = `
                 @prefix ff: <https://foerderfunke.org/default#> .
                 ff:mainPerson a ff:Citizen ; ff:hasAge 16 .`
+
             // Turtle
-            let quizReportTurtle = await matchingEngine.matching(user, [expandShortenedUri(SIMPLE_RP1), expandShortenedUri(SIMPLE_RP2)], MATCHING_MODE.QUIZ_DETAILED, FORMAT.TURTLE)
+            let quizReportTurtle = await matchingEngine.matching(user, [expandShortenedUri(SIMPLE_RP1), expandShortenedUri(SIMPLE_RP2)], MATCHING_MODE.FULL, FORMAT.TURTLE)
             const expectedTurtle = `
-                @prefix ff: <https://foerderfunke.org/default#> .
-                @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-                @prefix sh: <http://www.w3.org/ns/shacl#> .
-                ff:UserProfile sh:conforms "true".
-                ff:materializationQueryResult_0 a ff:MaterializationQueryResult ;
-                  ff:fromMaterializationRule ff:InterestedInBuildingActivatorRule ;
-                  ff:hasTriple ff:materializedTriple_0 .
-                ff:materializedTriple_0 a rdf:Statement ;
-                  rdf:object false ;
-                  rdf:predicate ff:interested_in_building_renovation_FLAG ;
-                  rdf:subject ff:mainPerson .
-                ff:devRp1 ff:hasEligibilityStatus ff:ineligible .
-                ff:devRp2 ff:hasEligibilityStatus ff:missingData .
+                @prefix ff: <https://foerderfunke.org/default#>.
+                @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+                @prefix sh: <http://www.w3.org/ns/shacl#>.
+                
+                ff:devRp1
+                  ff:hasEligibilityStatus ff:ineligible;
+                  ff:hasViolatingDatafield ff:devRp1_mainPerson_hasAge.
+                
+                ff:devRp1_mainPerson_hasAge
+                  rdf:predicate ff:hasAge;
+                  rdf:subject ff:mainPerson;
+                  ff:hasMessage 'Value is not greater than or equal to "18"^^<http://www.w3.org/2001/XMLSchema#integer>';
+                  ff:hasValue 16;
+                  ff:hasViolationType sh:MinInclusiveConstraintComponent.
+                
+                ff:devRp2
+                  ff:hasEligibilityStatus ff:missingData.
+                
                 ff:mainPerson_hasIncome
-                  ff:hasDatafield ff:hasIncome ;
-                  ff:hasIndividual ff:mainPerson ;
-                  ff:isMissedBy ff:devRp2 .`
+                  rdf:predicate ff:hasIncome;
+                  rdf:subject ff:mainPerson;
+                  ff:isMissedBy ff:devRp2.
+                
+                ff:materializationQueryResult_0 a ff:MaterializationQueryResult;
+                  ff:fromMaterializationRule ff:InterestedInBuildingActivatorRule;
+                  ff:hasTriple ff:materializedTriple_0.
+                
+                ff:materializedTriple_0 a rdf:Statement;
+                  rdf:object false;
+                  rdf:predicate ff:interested_in_building_renovation_FLAG;
+                  rdf:subject ff:mainPerson.
+                
+                ff:mostMissedDatafield
+                  rdf:predicate ff:hasIncome;
+                  rdf:subject ff:mainPerson.
+                
+                ff:this
+                  ff:numberOfMissingDatafields 1.
+                
+                ff:UserProfile
+                  sh:conforms "true".`
             strictEqual(isomorphicTurtles(quizReportTurtle, expectedTurtle), true, "The report in Turtle format does not match the expected one")
 
             // JSON-lD
-            let quizReportJsonLd = await matchingEngine.matching(user, [expandShortenedUri(SIMPLE_RP1), expandShortenedUri(SIMPLE_RP2)], MATCHING_MODE.QUIZ_DETAILED, FORMAT.JSON_LD)
+            let quizReportJsonLd = await matchingEngine.matching(user, [expandShortenedUri(SIMPLE_RP1), expandShortenedUri(SIMPLE_RP2)], MATCHING_MODE.FULL, FORMAT.JSON_LD)
             const expectedJsonLd = {
-                "@context": {
-                    ff: "https://foerderfunke.org/default#",
-                    sh: "http://www.w3.org/ns/shacl#",
-                    xsd: "http://www.w3.org/2001/XMLSchema#",
-                    rdf: "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+                '@context': {
+                    ff: 'https://foerderfunke.org/default#',
+                    sh: 'http://www.w3.org/ns/shacl#',
+                    xsd: 'http://www.w3.org/2001/XMLSchema#',
+                    rdf: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
                 },
-                "@graph": [
-                    { "@id": "ff:UserProfile", "sh:conforms": "true" },
+                '@graph': [
+                    { '@id': 'ff:UserProfile', 'sh:conforms': 'true' },
                     {
-                        "@id": "ff:devRp1",
-                        "ff:hasEligibilityStatus": { "@id": "ff:ineligible" }
+                        '@id': 'ff:devRp1',
+                        'ff:hasEligibilityStatus': { '@id': 'ff:ineligible' },
+                        'ff:hasViolatingDatafield': { '@id': 'ff:devRp1_mainPerson_hasAge' }
                     },
                     {
-                        "@id": "ff:devRp2",
-                        "ff:hasEligibilityStatus": { "@id": "ff:missingData" }
+                        '@id': 'ff:devRp1_mainPerson_hasAge',
+                        'rdf:predicate': { '@id': 'ff:hasAge' },
+                        'rdf:subject': { '@id': 'ff:mainPerson' },
+                        'ff:hasMessage': 'Value is not greater than or equal to "18"^^<http://www.w3.org/2001/XMLSchema#integer>',
+                        'ff:hasValue': { '@type': 'xsd:integer', '@value': '16' },
+                        'ff:hasViolationType': { '@id': 'sh:MinInclusiveConstraintComponent' }
                     },
                     {
-                        "@id": "ff:mainPerson_hasIncome",
-                        "ff:hasDatafield": { "@id": "ff:hasIncome" },
-                        "ff:hasIndividual": { "@id": "ff:mainPerson" },
-                        "ff:isMissedBy": { "@id": "ff:devRp2" }
+                        '@id': 'ff:devRp2',
+                        'ff:hasEligibilityStatus': { '@id': 'ff:missingData' }
                     },
                     {
-                        "@id": "ff:materializationQueryResult_0",
-                        "@type": "ff:MaterializationQueryResult",
-                        "ff:fromMaterializationRule": { "@id": "ff:InterestedInBuildingActivatorRule" },
-                        "ff:hasTriple": { "@id": "ff:materializedTriple_0" }
+                        '@id': 'ff:mainPerson_hasIncome',
+                        'rdf:predicate': { '@id': 'ff:hasIncome' },
+                        'rdf:subject': { '@id': 'ff:mainPerson' },
+                        'ff:isMissedBy': { '@id': 'ff:devRp2' }
                     },
                     {
-                        "@id": "ff:materializedTriple_0",
-                        "@type": "rdf:Statement",
-                        "rdf:object": { "@type": "xsd:boolean", "@value": "false" },
-                        "rdf:predicate": { "@id": "ff:interested_in_building_renovation_FLAG" },
-                        "rdf:subject": { "@id": "ff:mainPerson" }
+                        '@id': 'ff:materializationQueryResult_0',
+                        '@type': 'ff:MaterializationQueryResult',
+                        'ff:fromMaterializationRule': { '@id': 'ff:InterestedInBuildingActivatorRule' },
+                        'ff:hasTriple': { '@id': 'ff:materializedTriple_0' }
+                    },
+                    {
+                        '@id': 'ff:materializedTriple_0',
+                        '@type': 'rdf:Statement',
+                        'rdf:object': { '@type': 'xsd:boolean', '@value': 'false' },
+                        'rdf:predicate': { '@id': 'ff:interested_in_building_renovation_FLAG' },
+                        'rdf:subject': { '@id': 'ff:mainPerson' }
+                    },
+                    {
+                        '@id': 'ff:mostMissedDatafield',
+                        'rdf:predicate': { '@id': 'ff:hasIncome' },
+                        'rdf:subject': { '@id': 'ff:mainPerson' }
+                    },
+                    {
+                        '@id': 'ff:this',
+                        'ff:numberOfMissingDatafields': { '@type': 'xsd:integer', '@value': '1' }
                     }
                 ]
             }
