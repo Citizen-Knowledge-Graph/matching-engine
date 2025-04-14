@@ -1,5 +1,6 @@
 import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, newStore, addTurtleToStore, storeFromDataset, sparqlConstruct, storeToTurtle, sparqlSelectOnStore, addTripleToStore, expandShortenedUri, a, datasetFromStore, storeToJsonLdObj } from "sem-ops-utils"
 import { FORMAT, MATCHING_MODE, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_VIOLATING_DATAFIELDS, QUERY_BUILD_INDIVIDUALS_TREE, QUERY_EXTRACT_INVALID_INDIVIDUALS } from "./queries.js"
+import { Graph } from "./Graph.js"
 
 export class MatchingEngine {
 
@@ -72,13 +73,13 @@ export class MatchingEngine {
         // if subindividuals exist, we built the individuals-tree
         // regex on " a " is a quick and dirty solution to detect individuals for now
         const matches = upTurtle.match(/ a /g)
-        let individualsTreeStore
+        let individualsTree
         if (matches && matches.length > 1) {
-            individualsTreeStore = newStore()
-            await sparqlConstruct(QUERY_BUILD_INDIVIDUALS_TREE, [upStore], individualsTreeStore)
-
+            individualsTree = new Graph()
+            let constructedQuads = await sparqlConstruct(QUERY_BUILD_INDIVIDUALS_TREE, [upStore])
+            for (let quad of constructedQuads) individualsTree.processQuad(quad)
+            console.log(individualsTree)
             // TODO
-            console.log(await storeToTurtle(individualsTreeStore))
         }
 
         let missingDfStore
@@ -95,7 +96,7 @@ export class MatchingEngine {
                 await sparqlConstruct(QUERY_VIOLATING_DATAFIELDS(rpUri), [sourceStore], reportStore)
             }
 
-            if (individualsTreeStore) {
+            if (individualsTree) {
                 let constructedQuads = await sparqlConstruct(QUERY_EXTRACT_INVALID_INDIVIDUALS, [sourceStore])
                 // TODO
             }
