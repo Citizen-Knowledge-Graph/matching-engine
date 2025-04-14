@@ -118,3 +118,47 @@ export const QUERY_VIOLATING_DATAFIELDS = (rpUri) => { return `
         BIND(IRI(CONCAT(STR(<${rpUri}>), "_", REPLACE(STR(?individual), "^.*[#/]", ""), "_", REPLACE(STR(?df), "^.*[#/]", ""))) AS ?violationId)
     }`
 }
+
+export const QUERY_BUILD_INDIVIDUALS_TREE = `
+    PREFIX ff: <https://foerderfunke.org/default#>
+    PREFIX sh: <http://www.w3.org/ns/shacl#>
+    
+    CONSTRUCT {
+        ?parentIndividual ff:hasSubindividualClass ?subindividualClass ;
+            ff:conformanceMode ?conformanceModeIndividualLevelFinal .
+        ?subindividualClass ff:hasSubindividual ?individual ;
+            ff:conformanceMode ?conformanceModeClassLevelFinal .
+    } WHERE {
+        ?parentIndividual a ?parentClass .
+        ?individual a ?class .
+        ?parentIndividual ?relationship ?individual .
+      
+        BIND(IRI(CONCAT(STR(?parentIndividual), "_", REPLACE(STR(?class), "^.*[#/]", ""))) AS ?subindividualClass)
+    
+        OPTIONAL {
+            ?parentNodeShape sh:targetClass ?parentClass ;
+                sh:property ?ps1 .
+            ?ps1 sh:node ?childNodeShape ;
+                 ff:conformanceMode ?conformanceModeClassLevel .
+            ?childNodeShape sh:targetClass ?class ;
+        }
+        BIND(COALESCE(?conformanceModeClassLevel, ff:cmAtLeastOne) AS ?conformanceModeClassLevelFinal)
+    
+        OPTIONAL {
+            ?parentNodeShape sh:targetClass ?parentClass ;
+                ff:conformanceMode ?conformanceModeIndividualLevel .
+        }
+        BIND(COALESCE(?conformanceModeIndividualLevel, ff:cmAll) AS ?conformanceModeIndividualLevelFinal)
+    }`
+
+export const QUERY_EXTRACT_INVALID_INDIVIDUALS = `
+    PREFIX ff: <https://foerderfunke.org/default#>
+    PREFIX sh: <http://www.w3.org/ns/shacl#>
+    
+    CONSTRUCT {
+        ff:validationReport ff:containsInvalidIndividual ?individual .
+    } WHERE {
+        ?result sh:focusNode ?individual ;
+            sh:sourceConstraintComponent ?type .
+        FILTER(?type NOT IN (sh:MinCountConstraintComponent, sh:NodeConstraintComponent))
+    }`

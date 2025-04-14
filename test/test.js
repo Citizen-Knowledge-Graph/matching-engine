@@ -50,6 +50,7 @@ describe("all matching-engine tests", function () {
     describe("testing validation functions on the matchingEngine object", function () {
         const SIMPLE_RP1 = "ff:devRp1"
         const SIMPLE_RP2 = "ff:devRp2"
+        const SUBINDIV_RP3 = "ff:devRp3"
 
         before(async function () {
             let shacl = `
@@ -74,6 +75,57 @@ describe("all matching-engine tests", function () {
                         sh:path ff:hasIncome ;
                         sh:maxInclusive 3000 ;
                         sh:minCount 1 ;
+                    ] .`
+            matchingEngine.addValidator(shacl)
+            shacl = `
+                @prefix ff: <https://foerderfunke.org/default#> .
+                @prefix sh: <http://www.w3.org/ns/shacl#> .
+                
+                ${SUBINDIV_RP3} a ff:RequirementProfile .
+                ff:${SUBINDIV_RP3}Shape a sh:NodeShape ;
+                    sh:targetClass ff:Citizen ;
+                    ff:conformanceMode ff:cmAtLeastOne ;
+                    sh:property [
+                        sh:path ff:hasChild ;
+                        sh:node ff:ChildShape ;
+                        # ff:conformanceMode ff:cmAtLeastOne ;
+                        sh:minCount 1 ;
+                    ] ;
+                    sh:property [
+                        sh:path ff:hasCar ;
+                        sh:node ff:CarShape ;
+                        ff:conformanceMode ff:cmAll ;
+                        sh:minCount 1 ;
+                    ] .
+
+                ff:ChildShape a sh:NodeShape ;
+                    sh:targetClass ff:Child ;
+                    sh:property [
+                        sh:path ff:hasAge ;
+                        sh:maxInclusive 18 ;
+                        sh:minCount 1 ;
+                    ] ;
+                    sh:property [
+                        sh:path ff:hasToy ;
+                        sh:node ff:ToyShape ;
+                        ff:conformanceMode ff:cmAll ;
+                        sh:minCount 1 ;
+                    ] .
+                
+                ff:ToyShape a sh:NodeShape ;
+                    sh:targetClass ff:Toy ;
+                    sh:property [
+                        sh:path ff:costed ;
+                        sh:maxExclusive 50 ;
+                        sh:minCount 1 ;     
+                    ] .
+
+                ff:CarShape a sh:NodeShape ;
+                    sh:targetClass ff:Car ;
+                    sh:property [
+                        sh:path ff:engineType ;
+                        sh:in (ff:electrical) ;
+                        sh:minCount 1 ;     
                     ] .`
             matchingEngine.addValidator(shacl)
         })
@@ -266,6 +318,38 @@ describe("all matching-engine tests", function () {
                 ]
             }
             strictEqual(lodash.isEqual(quizReportJsonLd, expectedJsonLd), true, "The report in JSON-LD format does not match the expected one")
+        })
+
+        it("should generate correct matching report with ineligible subindividuals", async function () {
+            let user = `
+                @prefix ff: <https://foerderfunke.org/default#> .
+                @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+                
+                ff:mainPerson a ff:Citizen ;
+                    ff:hasChild ff:child0, ff:child1 ;
+                    ff:hasCar ff:car0 .
+                
+                ff:child0 a ff:Child ;
+                    ff:hasAge 7 ;
+                    ff:hasToy ff:toy0 .
+                
+                ff:child1 a ff:Child ;
+                    ff:hasAge 20 ;
+                    ff:hasToy ff:toy1 , ff:toy2, ff:toy3 .
+                
+                ff:toy0 a ff:Toy ; ff:costed 30 .
+                ff:toy1 a ff:Toy ; ff:costed 40 .
+                ff:toy2 a ff:Toy ; ff:costed 70 .
+                ff:toy3 a ff:Toy .
+                
+                ff:car0 a ff:Car ; ff:engineType ff:diesel .`
+
+            // Turtle
+            let quizReportTurtle = await matchingEngine.matching(user, [expandShortenedUri(SUBINDIV_RP3)], MATCHING_MODE.FULL, FORMAT.TURTLE)
+            // console.log(quizReportTurtle)
+
+            // const expectedTurtle = ``
+            // strictEqual(isomorphicTurtles(quizReportTurtle, expectedTurtle), true, "The report in Turtle format does not match the expected one")
         })
     })
 })
