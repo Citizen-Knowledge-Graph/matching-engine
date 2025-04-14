@@ -1,4 +1,4 @@
-import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, newStore, addTurtleToStore, storeFromDataset, sparqlConstruct, storeToTurtle, sparqlSelectOnStore, quadToTriple, addTripleToStore, expandShortenedUri, a, datasetFromStore } from "sem-ops-utils"
+import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, newStore, addTurtleToStore, storeFromDataset, sparqlConstruct, storeToTurtle, sparqlSelectOnStore, quadToTriple, addTripleToStore, expandShortenedUri, a, datasetFromStore, storeToJsonLdObj } from "sem-ops-utils"
 import { QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_VIOLATING_DATAFIELDS } from "./queries.js"
 
 export class MatchingEngine {
@@ -34,11 +34,12 @@ export class MatchingEngine {
         return await this.datafieldsValidator.validate({ dataset: turtleToDataset(upTurtle) })
     }
 
-    async quizMatching(upTurtle, rpUris) {
+    async quizMatching(upTurtle, rpUris, asJsonLd = true) {
         let targetStore = await this.matching(upTurtle, rpUris, [
             QUERY_ELIGIBILITY_STATUS,
             QUERY_MISSING_DATAFIELDS
         ])
+        if (asJsonLd) return await storeToJsonLdObj(targetStore)
         return await storeToTurtle(targetStore)
     }
 
