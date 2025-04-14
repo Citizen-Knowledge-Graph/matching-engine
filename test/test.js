@@ -5,6 +5,7 @@ import simpleGit from "simple-git"
 import { MatchingEngine } from "../src/new/MatchingEngine.js"
 import { expandShortenedUri, isomorphicTurtles } from "sem-ops-utils"
 import lodash from "lodash"
+import { FORMAT, MATCHING_MODE } from "../src/new/queries.js"
 
 describe("all matching-engine tests", function () {
     let matchingEngine
@@ -98,7 +99,7 @@ describe("all matching-engine tests", function () {
                 @prefix ff: <https://foerderfunke.org/default#> .
                 ff:mainPerson a ff:Citizen ; ff:hasAge 16 .`
             // Turtle
-            let quizReportTurtle = await matchingEngine.quizMatching(user, [expandShortenedUri(SIMPLE_RP1), expandShortenedUri(SIMPLE_RP2)], false)
+            let quizReportTurtle = await matchingEngine.matching(user, [expandShortenedUri(SIMPLE_RP1), expandShortenedUri(SIMPLE_RP2)], MATCHING_MODE.QUIZ_DETAILED, FORMAT.TURTLE)
             const expectedTurtle = `
                 @prefix ff: <https://foerderfunke.org/default#> .
                 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
@@ -120,7 +121,7 @@ describe("all matching-engine tests", function () {
             strictEqual(isomorphicTurtles(quizReportTurtle, expectedTurtle), true, "The report in Turtle format does not match the expected one")
 
             // JSON-lD
-            let quizReportJsonLd = await matchingEngine.quizMatching(user, [expandShortenedUri(SIMPLE_RP1), expandShortenedUri(SIMPLE_RP2)], true)
+            let quizReportJsonLd = await matchingEngine.matching(user, [expandShortenedUri(SIMPLE_RP1), expandShortenedUri(SIMPLE_RP2)], MATCHING_MODE.QUIZ_DETAILED, FORMAT.JSON_LD)
             const expectedJsonLd = {
                 "@context": {
                     ff: "https://foerderfunke.org/default#",

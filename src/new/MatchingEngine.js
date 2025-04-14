@@ -1,5 +1,5 @@
 import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, newStore, addTurtleToStore, storeFromDataset, sparqlConstruct, storeToTurtle, sparqlSelectOnStore, quadToTriple, addTripleToStore, expandShortenedUri, a, datasetFromStore, storeToJsonLdObj } from "sem-ops-utils"
-import { QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_VIOLATING_DATAFIELDS } from "./queries.js"
+import { FORMAT, MATCHING_MODE, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_VIOLATING_DATAFIELDS } from "./queries.js"
 
 export class MatchingEngine {
 
@@ -38,25 +38,7 @@ export class MatchingEngine {
         return await this.datafieldsValidator.validate({ dataset: turtleToDataset(upTurtle) })
     }
 
-    async quizMatching(upTurtle, rpUris, asJsonLd = true) {
-        let targetStore = await this.matching(upTurtle, rpUris, [
-            QUERY_ELIGIBILITY_STATUS,
-            QUERY_MISSING_DATAFIELDS
-        ])
-        if (asJsonLd) return await storeToJsonLdObj(targetStore)
-        return await storeToTurtle(targetStore)
-    }
-
-    async detailedMatching(upTurtle, rpUris) {
-        let targetStore = await this.matching(upTurtle, rpUris, [
-            QUERY_ELIGIBILITY_STATUS,
-            QUERY_MISSING_DATAFIELDS,
-            QUERY_VIOLATING_DATAFIELDS
-        ])
-        return await storeToTurtle(targetStore)
-    }
-
-    async matching(upTurtle, rpUris, semOpsQueries) {
+    async matching(upTurtle, rpUris, matchingMode, format) {
         let reportStore = newStore()
 
         let upStore = storeFromTurtles([upTurtle])
@@ -87,6 +69,11 @@ export class MatchingEngine {
             // TODO
         }
 
+        let semOpsQueries = [ QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS ]
+        if (matchingMode === MATCHING_MODE.FULL) {
+            semOpsQueries.push(QUERY_VIOLATING_DATAFIELDS)
+        }
+
         for (let rpUri of rpUris) {
             let report = await this.validators[rpUri].validate({ dataset: upDataset })
             let sourceStore = storeFromDataset(report.dataset) // store this in class object for reuse until overwritten again?
@@ -94,6 +81,8 @@ export class MatchingEngine {
                 await sparqlConstruct(query(rpUri), [sourceStore], reportStore)
             }
         }
-        return reportStore
+
+        if (format === FORMAT.JSON_LD) return await storeToJsonLdObj(reportStore)
+        return await storeToTurtle(reportStore)
     }
 }

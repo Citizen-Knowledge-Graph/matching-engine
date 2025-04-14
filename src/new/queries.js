@@ -1,3 +1,14 @@
+export const MATCHING_MODE = {
+    QUIZ: 1,
+    QUIZ_DETAILED: 2,
+    FULL: 3
+}
+
+export const FORMAT = {
+    TURTLE: 1,
+    JSON_LD: 2
+}
+
 // to be used on one SHACL validation report at a time
 
 export const QUERY_ELIGIBILITY_STATUS = (rpUri) => { return `
