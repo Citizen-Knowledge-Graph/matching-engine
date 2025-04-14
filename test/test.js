@@ -100,6 +100,8 @@ describe("all matching-engine tests", function () {
             const expected = `
                 @prefix ff: <https://foerderfunke.org/default#> .
                 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+                @prefix sh: <http://www.w3.org/ns/shacl#> .
+                ff:UserProfile sh:conforms "true".
                 ff:materializationQueryResult_0 a ff:MaterializationQueryResult ;
                   ff:fromMaterializationRule ff:InterestedInBuildingActivatorRule ;
                   ff:hasTriple ff:materializedTriple_0 .
