@@ -94,6 +94,68 @@ describe("all matching-engine tests", function () {
             strictEqual(report.conforms, false, "The validation report conforms, even so it shouldn't")
         })
 
+        it("should generate correct quiz matching report", async function () {
+            let user = `
+                @prefix ff: <https://foerderfunke.org/default#> .
+                ff:mainPerson a ff:Citizen ; ff:hasAge 16 .`
+
+            // Turtle
+            let quizReportTurtle = await matchingEngine.matching(user, [expandShortenedUri(SIMPLE_RP1), expandShortenedUri(SIMPLE_RP2)], MATCHING_MODE.QUIZ, FORMAT.TURTLE)
+            const expectedTurtle = `
+                @prefix ff: <https://foerderfunke.org/default#>.
+                @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+                @prefix sh: <http://www.w3.org/ns/shacl#>.
+                
+                ff:devRp1
+                  ff:hasEligibilityStatus ff:ineligible.
+                
+                ff:devRp2
+                  ff:hasEligibilityStatus ff:missingData.
+                
+                ff:mostMissedDatafield
+                  rdf:predicate ff:hasIncome;
+                  rdf:subject ff:mainPerson.
+                
+                ff:this
+                  ff:numberOfMissingDatafields 1.
+                
+                ff:UserProfile
+                  sh:conforms "true".`
+            strictEqual(isomorphicTurtles(quizReportTurtle, expectedTurtle), true, "The report in Turtle format does not match the expected one")
+
+            // JSON-lD
+            let quizReportJsonLd = await matchingEngine.matching(user, [expandShortenedUri(SIMPLE_RP1), expandShortenedUri(SIMPLE_RP2)], MATCHING_MODE.QUIZ, FORMAT.JSON_LD)
+            const expectedJsonLd = {
+                '@context': {
+                    ff: 'https://foerderfunke.org/default#',
+                    sh: 'http://www.w3.org/ns/shacl#',
+                    xsd: 'http://www.w3.org/2001/XMLSchema#',
+                    rdf: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
+                },
+                '@graph': [
+                    { '@id': 'ff:UserProfile', 'sh:conforms': 'true' },
+                    {
+                        '@id': 'ff:devRp1',
+                        'ff:hasEligibilityStatus': { '@id': 'ff:ineligible' }
+                    },
+                    {
+                        '@id': 'ff:devRp2',
+                        'ff:hasEligibilityStatus': { '@id': 'ff:missingData' }
+                    },
+                    {
+                        '@id': 'ff:mostMissedDatafield',
+                        'rdf:predicate': { '@id': 'ff:hasIncome' },
+                        'rdf:subject': { '@id': 'ff:mainPerson' }
+                    },
+                    {
+                        '@id': 'ff:this',
+                        'ff:numberOfMissingDatafields': { '@type': 'xsd:integer', '@value': '1' }
+                    }
+                ]
+            }
+            strictEqual(lodash.isEqual(quizReportJsonLd, expectedJsonLd), true, "The report in JSON-LD format does not match the expected one")
+        })
+
         it("should generate correct full matching report", async function () {
             let user = `
                 @prefix ff: <https://foerderfunke.org/default#> .
