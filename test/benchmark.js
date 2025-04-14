@@ -1,9 +1,9 @@
 import path from "path"
 import { fileURLToPath } from "url"
 import { promises } from "fs"
-import { MatchingEngine } from "../src/new/MatchingEngine.js"
-import { validateAll } from "../src/index.js"
 import Table from "cli-table3"
+import { MatchingEngine } from "../src/new/MatchingEngine.js"
+import { getPrioritizedMissingDataFieldsJson } from "../src/prematch.js"
 
 // requires the knowledge-base to be cloned into this directory ("npm test" will do that automatically)
 const repoDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "knowledge-base")
@@ -21,7 +21,7 @@ async function benchmarkOldMatchingWithoutFetching() {
 
 async function benchmarkOldSetup(fetchFromGitHub) {
     let start = Date.now()
-    let rps = {}
+    let rps = []
     if (fetchFromGitHub) {
         let filenames = [
             "01-hilfe-zum-lebensunterhalt.ttl",
@@ -37,18 +37,22 @@ async function benchmarkOldSetup(fetchFromGitHub) {
         ]
         for (let file of filenames) {
             const response = await fetch("https://raw.githubusercontent.com/Citizen-Knowledge-Graph/knowledge-base/main/shacl/" + file)
-            rps[file] = await response.text()
+            rps.push(await response.text())
         }
     } else {
         for (let file of await promises.readdir(`${repoDir}/shacl`)) {
-            rps[file] = await promises.readFile(`${repoDir}/shacl/${file}`, "utf8")
+            rps.push(await promises.readFile(`${repoDir}/shacl/${file}`, "utf8"))
         }
     }
-    let report = await validateAll(
-        user, rps,
+    let report = await getPrioritizedMissingDataFieldsJson(
+        [],
+        [],
+        user,
         await promises.readFile(`${repoDir}/datafields.ttl`, "utf8"),
+        rps,
         await promises.readFile(`${repoDir}/materialization.ttl`, "utf8"),
-        false)
+        "de"
+    )
     let end = Date.now()
     return end - start
 }
@@ -84,7 +88,7 @@ async function benchmarkNewMatching() {
 }
 
 const table = new Table({ head: ["method", "runs", "average", "slowest", "fastest"] })
-let n = 2
+let n = 10
 
 async function run(func, iterations) {
     let time = 0, slowest = 0, fastest = Infinity
