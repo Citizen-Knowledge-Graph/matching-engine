@@ -9,13 +9,13 @@ import Table from "cli-table3"
 const repoDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "knowledge-base")
 const user = "@prefix ff: <https://foerderfunke.org/default#> . ff:mainPerson a ff:Citizen ."
 
-async function benchmarkOldSetupWithFetching() {
-    console.log("running benchmark on old setup with fetching")
+async function benchmarkOldMatchingWithFetching() {
+    console.log("running benchmark on old matching with fetching")
     return await benchmarkOldSetup(true)
 }
 
-async function benchmarkOldSetupWithoutFetching() {
-    console.log("running benchmark on old setup without fetching")
+async function benchmarkOldMatchingWithoutFetching() {
+    console.log("running benchmark on old matching without fetching")
     return await benchmarkOldSetup(false)
 }
 
@@ -53,41 +53,54 @@ async function benchmarkOldSetup(fetchFromGitHub) {
     return end - start
 }
 
-async function benchmarkNewSetup() {
-    console.log("running benchmark on new setup")
-    // these setup-steps are now done once initially and then kept in memory, that's we don't measure them
+async function newInitialSetup() {
     let rps = []
     for (let file of await promises.readdir(`${repoDir}/shacl`)) {
         rps.push(await promises.readFile(`${repoDir}/shacl/${file}`, "utf8"))
     }
-    let matchingEngine = new MatchingEngine(
+    return new MatchingEngine(
         await promises.readFile(`${repoDir}/datafields.ttl`, "utf8"),
         await promises.readFile(`${repoDir}/materialization.ttl`, "utf8"),
         rps
     )
+}
+
+async function benchmarkNewInitialSetup() {
+    console.log("running benchmark on new initial setup")
+    let start = Date.now()
+    let matchingEngine = await newInitialSetup()
+    let end = Date.now()
+    return end - start
+}
+
+async function benchmarkNewMatching() {
+    console.log("running benchmark on new matching")
+    // the initial setup is done once and then kept in memory, that's we don't measure it here
+    let matchingEngine= await newInitialSetup()
     let start = Date.now()
     let quizReport = await matchingEngine.quizMatching(user, matchingEngine.getAllRpUris(), false)
     let end = Date.now()
     return end - start
 }
 
-const table = new Table({ head: ["method", "average", "slowest", "fastest"] })
+const table = new Table({ head: ["method", "runs", "average", "slowest", "fastest"] })
 let n = 2
 
-async function run(func) {
+async function run(func, iterations) {
     let time = 0, slowest = 0, fastest = Infinity
-    for (let i = 0; i < n; i++) {
+    for (let i = 0; i < iterations; i++) {
         let t = await func()
         time += t
         if (t > slowest) slowest = t
         if (t < fastest) fastest = t
     }
-    table.push([func.name, Math.round(time / n), slowest, fastest])
+    table.push([func.name, iterations, Math.round(time / iterations), slowest, fastest])
 }
 
-await run(benchmarkOldSetupWithFetching)
-await run(benchmarkOldSetupWithoutFetching)
-await run(benchmarkNewSetup)
+await run(benchmarkOldMatchingWithFetching, n)
+await run(benchmarkOldMatchingWithoutFetching, n)
+await run(benchmarkNewInitialSetup, n)
+await run(benchmarkNewMatching, n)
 
 console.log(`Results of running benchmark with ${n} iterations each:`)
 console.log(table.toString())
