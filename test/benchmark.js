@@ -77,12 +77,20 @@ async function benchmarkNewInitialSetup() {
     return end - start
 }
 
-async function benchmarkNewMatching() {
+async function benchmarkNewMatchingToTurtle() {
+    return await newMatching(false)
+}
+
+async function benchmarkNewMatchingToJsonLd() {
+    return await newMatching(true)
+}
+
+async function newMatching(asJsonLd) {
     console.log("running benchmark on new matching")
     // the initial setup is done once and then kept in memory, that's we don't measure it here
     let matchingEngine= await newInitialSetup()
     let start = Date.now()
-    let quizReport = await matchingEngine.quizMatching(user, matchingEngine.getAllRpUris(), false)
+    let quizReport = await matchingEngine.quizMatching(user, matchingEngine.getAllRpUris(), asJsonLd)
     let end = Date.now()
     return end - start
 }
@@ -104,7 +112,8 @@ async function run(func, iterations) {
 await run(benchmarkOldMatchingWithFetching, n)
 await run(benchmarkOldMatchingWithoutFetching, n)
 await run(benchmarkNewInitialSetup, n)
-await run(benchmarkNewMatching, n)
+await run(benchmarkNewMatchingToTurtle, n)
+await run(benchmarkNewMatchingToJsonLd, n)
 
 console.log(`Results of running benchmark with ${n} iterations each:`)
 console.log(table.toString())
