@@ -19,6 +19,7 @@
   },
   "devDependencies": {
     "cli-table3": "^0.6.5",
+    "lodash": "^4.17.21",
     "mocha": "^11.1.0",
     "simple-git": "^3.27.0"
   }

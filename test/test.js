@@ -4,6 +4,7 @@ import { existsSync, promises } from "fs"
 import simpleGit from "simple-git"
 import { MatchingEngine } from "../src/new/MatchingEngine.js"
 import { expandShortenedUri, isomorphicTurtles } from "sem-ops-utils"
+import lodash from "lodash"
 
 describe("all matching-engine tests", function () {
     let matchingEngine
@@ -96,8 +97,9 @@ describe("all matching-engine tests", function () {
             let user = `
                 @prefix ff: <https://foerderfunke.org/default#> .
                 ff:mainPerson a ff:Citizen ; ff:hasAge 16 .`
-            let quizReport = await matchingEngine.quizMatching(user, [expandShortenedUri(SIMPLE_RP1), expandShortenedUri(SIMPLE_RP2)], false)
-            const expected = `
+            // Turtle
+            let quizReportTurtle = await matchingEngine.quizMatching(user, [expandShortenedUri(SIMPLE_RP1), expandShortenedUri(SIMPLE_RP2)], false)
+            const expectedTurtle = `
                 @prefix ff: <https://foerderfunke.org/default#> .
                 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
                 @prefix sh: <http://www.w3.org/ns/shacl#> .
@@ -115,7 +117,49 @@ describe("all matching-engine tests", function () {
                   ff:hasDatafield ff:hasIncome ;
                   ff:hasIndividual ff:mainPerson ;
                   ff:isMissedBy ff:devRp2 .`
-            strictEqual(isomorphicTurtles(quizReport, expected), true, "The report does not match the expected one")
+            strictEqual(isomorphicTurtles(quizReportTurtle, expectedTurtle), true, "The report in Turtle format does not match the expected one")
+
+            // JSON-lD
+            let quizReportJsonLd = await matchingEngine.quizMatching(user, [expandShortenedUri(SIMPLE_RP1), expandShortenedUri(SIMPLE_RP2)], true)
+            const expectedJsonLd = {
+                "@context": {
+                    ff: "https://foerderfunke.org/default#",
+                    sh: "http://www.w3.org/ns/shacl#",
+                    xsd: "http://www.w3.org/2001/XMLSchema#",
+                    rdf: "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+                },
+                "@graph": [
+                    { "@id": "ff:UserProfile", "sh:conforms": "true" },
+                    {
+                        "@id": "ff:devRp1",
+                        "ff:hasEligibilityStatus": { "@id": "ff:ineligible" }
+                    },
+                    {
+                        "@id": "ff:devRp2",
+                        "ff:hasEligibilityStatus": { "@id": "ff:missingData" }
+                    },
+                    {
+                        "@id": "ff:mainPerson_hasIncome",
+                        "ff:hasDatafield": { "@id": "ff:hasIncome" },
+                        "ff:hasIndividual": { "@id": "ff:mainPerson" },
+                        "ff:isMissedBy": { "@id": "ff:devRp2" }
+                    },
+                    {
+                        "@id": "ff:materializationQueryResult_0",
+                        "@type": "ff:MaterializationQueryResult",
+                        "ff:fromMaterializationRule": { "@id": "ff:InterestedInBuildingActivatorRule" },
+                        "ff:hasTriple": { "@id": "ff:materializedTriple_0" }
+                    },
+                    {
+                        "@id": "ff:materializedTriple_0",
+                        "@type": "rdf:Statement",
+                        "rdf:object": { "@type": "xsd:boolean", "@value": "false" },
+                        "rdf:predicate": { "@id": "ff:interested_in_building_renovation_FLAG" },
+                        "rdf:subject": { "@id": "ff:mainPerson" }
+                    }
+                ]
+            }
+            strictEqual(lodash.isEqual(quizReportJsonLd, expectedJsonLd), true, "The report in JSON-LD format does not match the expected one")
         })
     })
 })
