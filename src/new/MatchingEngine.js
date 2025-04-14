@@ -26,6 +26,10 @@ export class MatchingEngine {
         if (rpUri) this.validators[rpUri] = buildValidator(rpTurtle)
     }
 
+    getAllRpUris() {
+        return Object.keys(this.validators)
+    }
+
     async basicValidation(upTurtle, rpUri) {
         return await this.validators[rpUri].validate({ dataset: turtleToDataset(upTurtle) })
     }
