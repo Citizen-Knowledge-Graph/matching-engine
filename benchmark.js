@@ -4,6 +4,7 @@ import { promises } from "fs"
 import Table from "cli-table3"
 import { MatchingEngine } from "./src/new/MatchingEngine.js"
 import { getPrioritizedMissingDataFieldsJson } from "./src/prematch.js"
+import { FORMAT, MATCHING_MODE } from "./src/new/queries.js"
 
 // requires the knowledge-base in the test-directory ("npm test" will clone it there automatically)
 const repoDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "test", "knowledge-base")
@@ -77,43 +78,53 @@ async function benchmarkNewInitialSetup() {
     return end - start
 }
 
-async function benchmarkNewMatchingToTurtle() {
-    return await newMatching(false)
+async function benchmarkNewQuizMatchingToTurtle() {
+    return await newMatching(MATCHING_MODE.QUIZ, FORMAT.TURTLE)
 }
 
-async function benchmarkNewMatchingToJsonLd() {
-    return await newMatching(true)
+async function benchmarkNewQuizMatchingToJsonLd() {
+    return await newMatching(MATCHING_MODE.QUIZ, FORMAT.JSON_LD)
 }
 
-async function newMatching(asJsonLd) {
+async function benchmarkNewFullMatchingToTurtle() {
+    return await newMatching(MATCHING_MODE.FULL, FORMAT.TURTLE)
+}
+
+async function benchmarkNewFullMatchingToJsonLd() {
+    return await newMatching(MATCHING_MODE.FULL, FORMAT.JSON_LD)
+}
+
+async function newMatching(mode, format) {
     console.log("running benchmark on new matching")
     // the initial setup is done once and then kept in memory, that's we don't measure it here
     let matchingEngine= await newInitialSetup()
     let start = Date.now()
-    let quizReport = await matchingEngine.quizMatching(user, matchingEngine.getAllRpUris(), asJsonLd)
+    let quizReport = await matchingEngine.matching(user, matchingEngine.getAllRpUris(), mode, format)
     let end = Date.now()
     return end - start
 }
 
-const table = new Table({ head: ["method", "runs", "average", "slowest", "fastest"] })
+const table = new Table({ head: ["method", "average", "slowest", "fastest"] })
 let n = 10
 
-async function run(func, iterations) {
+async function run(func) {
     let time = 0, slowest = 0, fastest = Infinity
-    for (let i = 0; i < iterations; i++) {
+    for (let i = 0; i < n; i++) {
         let t = await func()
         time += t
         if (t > slowest) slowest = t
         if (t < fastest) fastest = t
     }
-    table.push([func.name, iterations, Math.round(time / iterations), slowest, fastest])
+    table.push([func.name, Math.round(time / n), slowest, fastest])
 }
 
-await run(benchmarkOldMatchingWithFetching, n)
-await run(benchmarkOldMatchingWithoutFetching, n)
-await run(benchmarkNewInitialSetup, n)
-await run(benchmarkNewMatchingToTurtle, n)
-await run(benchmarkNewMatchingToJsonLd, n)
+await run(benchmarkOldMatchingWithFetching)
+await run(benchmarkOldMatchingWithoutFetching)
+await run(benchmarkNewInitialSetup)
+await run(benchmarkNewQuizMatchingToTurtle)
+await run(benchmarkNewQuizMatchingToJsonLd)
+await run(benchmarkNewFullMatchingToTurtle)
+await run(benchmarkNewFullMatchingToJsonLd)
 
 console.log(`Results of running benchmark with ${n} iterations each:`)
 console.log(table.toString())
