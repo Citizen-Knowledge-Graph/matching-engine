@@ -58,18 +58,21 @@ export class MatchingEngine {
         let count = 0
         for (let [ matUri, query ] of Object.entries(this.matQueries)) {
             // do we need an exhausting approach instead until nothing is materialized anymore instead of a one-time for loop?
-            // also filling the upStore while also using it as source can create build-ups
+            // also filling the upStore while also using it as source could create build-ups with side effects?
             let materializedQuads = await sparqlConstruct(query, [upStore, this.dfMatStore], upStore)
+            if (materializedQuads.length === 0) continue
+            let matQueryResultUri = expandShortenedUri("ff:materializationQueryResult") + "_" + (count ++)
+            addTripleToStore(reportStore, matQueryResultUri, a, expandShortenedUri("ff:MaterializationQueryResult"))
+            addTripleToStore(reportStore, matQueryResultUri, expandShortenedUri("ff:fromMaterializationRule"), matUri)
+            let c = 0
             for (let quad of materializedQuads) {
-                let constructUri = expandShortenedUri("ff:materializedTriple") + "_" + (count ++)
-                let triple = quadToTriple(quad)
-                addTripleToStore(reportStore, constructUri, a, expandShortenedUri("ff:MaterializedTriple"))
-                addTripleToStore(reportStore, constructUri, expandShortenedUri("ff:fromMaterializationRule"), matUri)
-                addTripleToStore(reportStore, constructUri, expandShortenedUri("ff:hasSubject"), triple.s)
-                addTripleToStore(reportStore, constructUri, expandShortenedUri("ff:hasPredicate"), triple.p)
-                addTripleToStore(reportStore, constructUri, expandShortenedUri("ff:hasObject"), triple.o)
+                let matTripleUri = expandShortenedUri("ff:materializedTriple") + "_" + (c ++)
+                addTripleToStore(reportStore, matQueryResultUri, expandShortenedUri("ff:hasTriple"), matTripleUri)
+                addTripleToStore(reportStore, matTripleUri, a, expandShortenedUri("rdf:Statement"))
+                addTripleToStore(reportStore, matTripleUri, expandShortenedUri("rdf:subject"), quad.subject)
+                addTripleToStore(reportStore, matTripleUri, expandShortenedUri("rdf:predicate"), quad.predicate)
+                addTripleToStore(reportStore, matTripleUri, expandShortenedUri("rdf:object"), quad.object)
             }
-
         }
         let upDataset = datasetFromStore(upStore)
 

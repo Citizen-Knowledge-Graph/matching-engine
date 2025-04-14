@@ -100,11 +100,13 @@ describe("all matching-engine tests", function () {
             const expected = `
                 @prefix ff: <https://foerderfunke.org/default#> .
                 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-                ff:constructedTriple_0 a ff:ConstructedTriple;
-                  ff:fromMaterializationRule ff:InterestedInBuildingActivatorRule;
-                  ff:hasObject "false";
-                  ff:hasPredicate ff:interested_in_building_renovation_FLAG;
-                  ff:hasSubject ff:mainPerson.
+                ff:materializationQueryResult_0 a ff:MaterializationQueryResult ;
+                  ff:fromMaterializationRule ff:InterestedInBuildingActivatorRule ;
+                  ff:hasTriple ff:materializedTriple_0 .
+                ff:materializedTriple_0 a rdf:Statement ;
+                  rdf:object false ;
+                  rdf:predicate ff:interested_in_building_renovation_FLAG ;
+                  rdf:subject ff:mainPerson .
                 ff:devRp1 ff:hasEligibilityStatus ff:ineligible .
                 ff:devRp2 ff:hasEligibilityStatus ff:missingData .
                 ff:mainPerson_hasIncome
