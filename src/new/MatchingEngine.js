@@ -51,7 +51,7 @@ export class MatchingEngine {
         return await storeToTurtle(targetStore)
     }
 
-    async matching(upTurtle, rpUris, queries) {
+    async matching(upTurtle, rpUris, semOpsQueries) {
         let reportStore = newStore()
 
         let upStore = storeFromTurtles([upTurtle])
@@ -82,7 +82,7 @@ export class MatchingEngine {
         for (let rpUri of rpUris) {
             let report = await this.validators[rpUri].validate({ dataset: upDataset })
             let sourceStore = storeFromDataset(report.dataset) // store this in class object for reuse until overwritten again?
-            for (let query of queries) {
+            for (let query of semOpsQueries) {
                 await sparqlConstruct(query(rpUri), [sourceStore], reportStore)
             }
         }
