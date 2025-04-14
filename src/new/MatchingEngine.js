@@ -77,7 +77,10 @@ export class MatchingEngine {
         let upDataset = datasetFromStore(upStore)
 
         let dfReport = await this.datafieldsValidator.validate({ dataset: upDataset })
-        // TODO
+        addTripleToStore(reportStore, expandShortenedUri("ff:UserProfile"), expandShortenedUri("sh:conforms"), dfReport.conforms)
+        if (!dfReport.conforms) {
+            // TODO
+        }
 
         for (let rpUri of rpUris) {
             let report = await this.validators[rpUri].validate({ dataset: upDataset })
