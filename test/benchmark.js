@@ -3,12 +3,23 @@ import { fileURLToPath } from "url"
 import { promises } from "fs"
 import { MatchingEngine } from "../src/new/MatchingEngine.js"
 import { validateAll } from "../src/index.js"
+import Table from "cli-table3"
 
+// requires the knowledge-base to be cloned into this directory ("npm test" will do that automatically)
 const repoDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "knowledge-base")
 const user = "@prefix ff: <https://foerderfunke.org/default#> . ff:mainPerson a ff:Citizen ."
 
-async function benchmarkOldSetup(fetchFromGitHub = false) {
-    console.log("running benchmark on old setup", fetchFromGitHub)
+async function benchmarkOldSetupWithFetching() {
+    console.log("running benchmark on old setup with fetching")
+    return await benchmarkOldSetup(true)
+}
+
+async function benchmarkOldSetupWithoutFetching() {
+    console.log("running benchmark on old setup without fetching")
+    return await benchmarkOldSetup(false)
+}
+
+async function benchmarkOldSetup(fetchFromGitHub) {
     let start = Date.now()
     let rps = {}
     if (fetchFromGitHub) {
@@ -60,39 +71,23 @@ async function benchmarkNewSetup() {
     return end - start
 }
 
-let n = 50
-let time = 0, slowest = 0, fastest = Infinity
+const table = new Table({ head: ["method", "average", "slowest", "fastest"] })
+let n = 2
 
-for (let i = 0; i < n; i ++) {
-    let t = await benchmarkOldSetup(true)
-    time += t
-    if (t > slowest) slowest = t
-    if (t < fastest) fastest = t
+async function run(func) {
+    let time = 0, slowest = 0, fastest = Infinity
+    for (let i = 0; i < n; i++) {
+        let t = await func()
+        time += t
+        if (t > slowest) slowest = t
+        if (t < fastest) fastest = t
+    }
+    table.push([func.name, Math.round(time / n), slowest, fastest])
 }
-let result1 = `Old setup with fetching from GitHub, average over ${n} runs: ` + (time / n) + " ms. Slowest: " + slowest + " ms. Fastest: " + fastest + " ms."
-time = 0
-slowest = 0
-fastest = Infinity
 
-for (let i = 0; i < n; i ++) {
-    let t = await benchmarkOldSetup(false)
-    time += t
-    if (t > slowest) slowest = t
-    if (t < fastest) fastest = t
-}
-let result2 = `Old setup without fetching from GitHub (local instead), average over ${n} runs: ` + (time / n) + " ms. Slowest: " + slowest + " ms. Fastest: " + fastest + " ms."
-time = 0
-slowest = 0
-fastest = Infinity
+await run(benchmarkOldSetupWithFetching)
+await run(benchmarkOldSetupWithoutFetching)
+await run(benchmarkNewSetup)
 
-for (let i = 0; i < n; i ++) {
-    let t = await benchmarkNewSetup()
-    time += t
-    if (t > slowest) slowest = t
-    if (t < fastest) fastest = t
-}
-let result3 = `New setup without the one-time initial setup, average over ${n} runs: ` + (time / n) + " ms. Slowest: " + slowest + " ms. Fastest: " + fastest + " ms."
-
-console.log(result1)
-console.log(result2)
-console.log(result3)
+console.log(`Results of running benchmark with ${n} iterations each:`)
+console.log(table.toString())

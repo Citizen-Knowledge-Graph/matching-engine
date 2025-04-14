@@ -18,6 +18,7 @@
     "shacl-engine": "github:rdf-ext/shacl-engine#experimental"
   },
   "devDependencies": {
+    "cli-table3": "^0.6.5",
     "mocha": "^11.1.0",
     "simple-git": "^3.27.0"
   }
