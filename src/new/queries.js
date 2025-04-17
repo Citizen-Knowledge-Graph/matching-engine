@@ -1,6 +1,6 @@
 export const MATCHING_MODE = {
-    QUIZ: 1,
-    FULL: 2
+    QUIZ: "ff:quiz",
+    FULL: "ff:full"
 }
 
 export const FORMAT = {
