@@ -146,6 +146,9 @@ describe("all matching-engine tests", function () {
             strictEqual(report.conforms, false, "The validation report conforms, even so it shouldn't")
         })
 
+        // test hasValue fix TODO
+        // test sh:deactivated TODO
+
         it("should generate correct quiz matching report", async function () {
             let user = `
                 @prefix ff: <https://foerderfunke.org/default#> .

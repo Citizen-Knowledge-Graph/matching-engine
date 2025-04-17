@@ -10,6 +10,28 @@ export const FORMAT = {
 
 // to be used on one SHACL validation report at a time
 
+export const QUERY_HASVALUE_FIX = `
+    PREFIX ff: <https://foerderfunke.org/default#>
+    PREFIX sh: <http://www.w3.org/ns/shacl#>
+    DELETE {
+        ?report sh:result ?result2 .
+        ?result2 ?p ?o .
+    } WHERE {
+        ?report sh:result ?result1, ?result2 .
+      
+        ?result1 
+            sh:focusNode ?focusNode ;
+            sh:resultPath ?path ;
+            sh:sourceConstraintComponent ?type .
+        FILTER(?type IN (sh:MinCountConstraintComponent, sh:QualifiedMinCountConstraintComponent))
+                 
+        ?result2 
+            sh:focusNode ?focusNode ;
+            sh:resultPath ?path ;
+            sh:sourceConstraintComponent sh:HasValueConstraintComponent ;
+            ?p ?o .
+}`
+
 export const QUERY_ELIGIBILITY_STATUS = (rpUri) => { return `
     PREFIX ff: <https://foerderfunke.org/default#>
     PREFIX sh: <http://www.w3.org/ns/shacl#>

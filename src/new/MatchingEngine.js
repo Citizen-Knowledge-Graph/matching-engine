@@ -1,5 +1,5 @@
-import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, newStore, addTurtleToStore, storeFromDataset, sparqlConstruct, storeToTurtle, sparqlSelectOnStore, addTripleToStore, expandShortenedUri, a, datasetFromStore, storeToJsonLdObj } from "sem-ops-utils"
-import { FORMAT, MATCHING_MODE, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_VIOLATING_DATAFIELDS, QUERY_BUILD_INDIVIDUALS_TREE, QUERY_EXTRACT_INVALID_INDIVIDUALS } from "./queries.js"
+import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, newStore, addTurtleToStore, storeFromDataset, sparqlConstruct, storeToTurtle, sparqlSelect, addTripleToStore, expandShortenedUri, a, datasetFromStore, storeToJsonLdObj, sparqlInsertDelete } from "sem-ops-utils"
+import { FORMAT, MATCHING_MODE, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_VIOLATING_DATAFIELDS, QUERY_BUILD_INDIVIDUALS_TREE, QUERY_EXTRACT_INVALID_INDIVIDUALS, QUERY_HASVALUE_FIX } from "./queries.js"
 import { Graph } from "./Graph.js"
 
 export class MatchingEngine {
@@ -14,7 +14,7 @@ export class MatchingEngine {
         let query = `
             PREFIX ff: <https://foerderfunke.org/default#>
             SELECT * WHERE { ?uri ff:sparqlConstructQuery ?query . }`
-        sparqlSelectOnStore(query, this.dfMatStore).then(rows => {
+        sparqlSelect(query, this.dfMatStore).then(rows => {
             for (let row of rows) {
                 this.matQueries[row.uri] = row.query
             }
@@ -87,6 +87,7 @@ export class MatchingEngine {
             let report = await this.validators[rpUri].validate({ dataset: upDataset })
             let sourceStore = storeFromDataset(report.dataset) // store this in class object for reuse until overwritten again?
 
+            await sparqlInsertDelete(QUERY_HASVALUE_FIX, sourceStore)
             await sparqlConstruct(QUERY_ELIGIBILITY_STATUS(rpUri), [sourceStore], reportStore)
 
             missingDfStore = matchingMode === MATCHING_MODE.QUIZ ? newStore() : reportStore
