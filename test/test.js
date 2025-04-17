@@ -31,7 +31,7 @@ describe("all matching-engine tests", function () {
 
     it("matchingEngine object should have correct keys", function () {
         deepStrictEqual(
-            Object.keys(matchingEngine), ["dfMatStore", "datafieldsValidator", "requirementProfilesStore", "validators", "matQueries"],
+            Object.keys(matchingEngine), ["datafieldsTurtle", "dfMatStore", "datafieldsValidator", "requirementProfilesStore", "validators", "matQueries"],
             "The matchingEngine object does not have the expected keys")
     })
 
@@ -353,6 +353,10 @@ describe("all matching-engine tests", function () {
 
             // const expectedTurtle = ``
             // strictEqual(isomorphicTurtles(quizReportTurtle, expectedTurtle), true, "The report in Turtle format does not match the expected one")
+        })
+
+        it("dummy-test to just have a quick execution thingy", async function () {
+            // ...
         })
     })
 })

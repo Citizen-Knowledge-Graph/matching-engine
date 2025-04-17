@@ -1,10 +1,11 @@
-import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, newStore, addTurtleToStore, storeFromDataset, sparqlConstruct, storeToTurtle, sparqlSelect, addTripleToStore, expandShortenedUri, a, datasetFromStore, storeToJsonLdObj, sparqlInsertDelete } from "sem-ops-utils"
+import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, newStore, addTurtleToStore, storeFromDataset, sparqlConstruct, storeToTurtle, sparqlSelect, addTripleToStore, expandShortenedUri, a, datasetFromStore, storeToJsonLdObj, sparqlInsertDelete, turtleToJsonLdObj } from "sem-ops-utils"
 import { FORMAT, MATCHING_MODE, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_VIOLATING_DATAFIELDS, QUERY_BUILD_INDIVIDUALS_TREE, QUERY_EXTRACT_INVALID_INDIVIDUALS, QUERY_HASVALUE_FIX } from "./queries.js"
 import { Graph } from "./Graph.js"
 
 export class MatchingEngine {
 
     constructor(datafieldsTurtle, materializationTurtle, requirementProfilesTurtles) {
+        this.datafieldsTurtle = datafieldsTurtle
         this.dfMatStore = storeFromTurtles([datafieldsTurtle, materializationTurtle])
         this.datafieldsValidator = buildValidator(datafieldsTurtle)
         this.requirementProfilesStore = newStore()
@@ -29,6 +30,13 @@ export class MatchingEngine {
 
     getAllRpUris() {
         return Object.keys(this.validators)
+    }
+
+    async getDatafieldDefinitions() {
+        if (!this.dfJsonld) {
+            this.dfJsonld = await turtleToJsonLdObj(this.datafieldsTurtle)
+        }
+        return this.dfJsonld
     }
 
     async basicValidation(upTurtle, rpUri) {
