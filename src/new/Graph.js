@@ -1,4 +1,4 @@
-import { shrinkUri } from "sem-ops-utils"
+import { shrink } from "sem-ops-utils"
 
 export class Graph {
     constructor() {
@@ -7,9 +7,9 @@ export class Graph {
     }
 
     processQuad(quad) {
-        let s = shrinkUri(quad.subject.value)
-        let p = shrinkUri(quad.predicate.value)
-        let o = shrinkUri(quad.object.value)
+        let s = shrink(quad.subject.value)
+        let p = shrink(quad.predicate.value)
+        let o = shrink(quad.object.value)
         if (!this.nodes[s]) this.nodes[s] = new Node(s)
         if (!this.nodes[o]) this.nodes[o] = new Node(o)
         this.edges.push(new Edge(p, s, o))

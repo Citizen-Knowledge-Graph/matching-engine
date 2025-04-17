@@ -3,7 +3,7 @@ import { strictEqual, deepStrictEqual } from "node:assert"
 import { existsSync, promises } from "fs"
 import simpleGit from "simple-git"
 import { MatchingEngine } from "../src/new/MatchingEngine.js"
-import { expandShortenedUri, isomorphicTurtles } from "sem-ops-utils"
+import { expand, isomorphicTurtles } from "sem-ops-utils"
 import lodash from "lodash"
 import { FORMAT, MATCHING_MODE } from "../src/new/queries.js"
 
@@ -134,7 +134,7 @@ describe("all matching-engine tests", function () {
             let user = `
                 @prefix ff: <https://foerderfunke.org/default#> .
                 ff:mainPerson a ff:Citizen ; ff:hasAge 20 .`
-            let report = await matchingEngine.basicValidation(user, expandShortenedUri(SIMPLE_RP1))
+            let report = await matchingEngine.basicValidation(user, expand(SIMPLE_RP1))
             strictEqual(report.conforms, true, "The validation report does not conform, even so it should")
         })
 
@@ -142,7 +142,7 @@ describe("all matching-engine tests", function () {
             let user = `
                 @prefix ff: <https://foerderfunke.org/default#> .
                 ff:mainPerson a ff:Citizen ; ff:hasAge 16 .`
-            let report = await matchingEngine.basicValidation(user, expandShortenedUri(SIMPLE_RP1))
+            let report = await matchingEngine.basicValidation(user, expand(SIMPLE_RP1))
             strictEqual(report.conforms, false, "The validation report conforms, even so it shouldn't")
         })
 
@@ -155,7 +155,7 @@ describe("all matching-engine tests", function () {
                 ff:mainPerson a ff:Citizen ; ff:hasAge 16 .`
 
             // Turtle
-            let quizReportTurtle = await matchingEngine.matching(user, [expandShortenedUri(SIMPLE_RP1), expandShortenedUri(SIMPLE_RP2)], MATCHING_MODE.QUIZ, FORMAT.TURTLE)
+            let quizReportTurtle = await matchingEngine.matching(user, [expand(SIMPLE_RP1), expand(SIMPLE_RP2)], MATCHING_MODE.QUIZ, FORMAT.TURTLE)
             const expectedTurtle = `
                 @prefix ff: <https://foerderfunke.org/default#>.
                 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
@@ -179,7 +179,7 @@ describe("all matching-engine tests", function () {
             strictEqual(isomorphicTurtles(quizReportTurtle, expectedTurtle), true, "The report in Turtle format does not match the expected one")
 
             // JSON-lD
-            let quizReportJsonLd = await matchingEngine.matching(user, [expandShortenedUri(SIMPLE_RP1), expandShortenedUri(SIMPLE_RP2)], MATCHING_MODE.QUIZ, FORMAT.JSON_LD)
+            let quizReportJsonLd = await matchingEngine.matching(user, [expand(SIMPLE_RP1), expand(SIMPLE_RP2)], MATCHING_MODE.QUIZ, FORMAT.JSON_LD)
             const expectedJsonLd = {
                 '@context': {
                     ff: 'https://foerderfunke.org/default#',
@@ -217,7 +217,7 @@ describe("all matching-engine tests", function () {
                 ff:mainPerson a ff:Citizen ; ff:hasAge 16 .`
 
             // Turtle
-            let quizReportTurtle = await matchingEngine.matching(user, [expandShortenedUri(SIMPLE_RP1), expandShortenedUri(SIMPLE_RP2)], MATCHING_MODE.FULL, FORMAT.TURTLE)
+            let quizReportTurtle = await matchingEngine.matching(user, [expand(SIMPLE_RP1), expand(SIMPLE_RP2)], MATCHING_MODE.FULL, FORMAT.TURTLE)
             const expectedTurtle = `
                 @prefix ff: <https://foerderfunke.org/default#>.
                 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
@@ -263,7 +263,7 @@ describe("all matching-engine tests", function () {
             strictEqual(isomorphicTurtles(quizReportTurtle, expectedTurtle), true, "The report in Turtle format does not match the expected one")
 
             // JSON-lD
-            let quizReportJsonLd = await matchingEngine.matching(user, [expandShortenedUri(SIMPLE_RP1), expandShortenedUri(SIMPLE_RP2)], MATCHING_MODE.FULL, FORMAT.JSON_LD)
+            let quizReportJsonLd = await matchingEngine.matching(user, [expand(SIMPLE_RP1), expand(SIMPLE_RP2)], MATCHING_MODE.FULL, FORMAT.JSON_LD)
             const expectedJsonLd = {
                 '@context': {
                     ff: 'https://foerderfunke.org/default#',
@@ -348,7 +348,7 @@ describe("all matching-engine tests", function () {
                 ff:car0 a ff:Car ; ff:engineType ff:diesel .`
 
             // Turtle
-            let quizReportTurtle = await matchingEngine.matching(user, [expandShortenedUri(SUBINDIV_RP3)], MATCHING_MODE.FULL, FORMAT.TURTLE)
+            let quizReportTurtle = await matchingEngine.matching(user, [expand(SUBINDIV_RP3)], MATCHING_MODE.FULL, FORMAT.TURTLE)
             // console.log(quizReportTurtle)
 
             // const expectedTurtle = ``

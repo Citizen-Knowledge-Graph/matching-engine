@@ -1,4 +1,4 @@
-import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, newStore, addTurtleToStore, storeFromDataset, sparqlConstruct, storeToTurtle, sparqlSelect, addTripleToStore, expandShortenedUri, a, datasetFromStore, storeToJsonLdObj, sparqlInsertDelete, turtleToJsonLdObj } from "sem-ops-utils"
+import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, newStore, addTurtleToStore, storeFromDataset, sparqlConstruct, storeToTurtle, sparqlSelect, addTripleToStore, expand, a, datasetFromStore, storeToJsonLdObj, sparqlInsertDelete, turtleToJsonLdObj } from "sem-ops-utils"
 import { FORMAT, MATCHING_MODE, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_VIOLATING_DATAFIELDS, QUERY_BUILD_INDIVIDUALS_TREE, QUERY_EXTRACT_INVALID_INDIVIDUALS, QUERY_HASVALUE_FIX } from "./queries.js"
 import { Graph } from "./Graph.js"
 
@@ -57,23 +57,23 @@ export class MatchingEngine {
             // also filling the upStore while also using it as source could create build-ups with side effects?
             let materializedQuads = await sparqlConstruct(query, [upStore, this.dfMatStore], upStore)
             if (matchingMode !== MATCHING_MODE.FULL || materializedQuads.length === 0) continue
-            let matQueryResultUri = expandShortenedUri("ff:materializationQueryResult") + "_" + (count ++)
-            addTripleToStore(reportStore, matQueryResultUri, a, expandShortenedUri("ff:MaterializationQueryResult"))
-            addTripleToStore(reportStore, matQueryResultUri, expandShortenedUri("ff:fromMaterializationRule"), matUri)
+            let matQueryResultUri = expand("ff:materializationQueryResult") + "_" + (count ++)
+            addTripleToStore(reportStore, matQueryResultUri, a, expand("ff:MaterializationQueryResult"))
+            addTripleToStore(reportStore, matQueryResultUri, expand("ff:fromMaterializationRule"), matUri)
             let c = 0
             for (let quad of materializedQuads) {
-                let matTripleUri = expandShortenedUri("ff:materializedTriple") + "_" + (c ++)
-                addTripleToStore(reportStore, matQueryResultUri, expandShortenedUri("ff:hasTriple"), matTripleUri)
-                addTripleToStore(reportStore, matTripleUri, a, expandShortenedUri("rdf:Statement"))
-                addTripleToStore(reportStore, matTripleUri, expandShortenedUri("rdf:subject"), quad.subject)
-                addTripleToStore(reportStore, matTripleUri, expandShortenedUri("rdf:predicate"), quad.predicate)
-                addTripleToStore(reportStore, matTripleUri, expandShortenedUri("rdf:object"), quad.object)
+                let matTripleUri = expand("ff:materializedTriple") + "_" + (c ++)
+                addTripleToStore(reportStore, matQueryResultUri, expand("ff:hasTriple"), matTripleUri)
+                addTripleToStore(reportStore, matTripleUri, a, expand("rdf:Statement"))
+                addTripleToStore(reportStore, matTripleUri, expand("rdf:subject"), quad.subject)
+                addTripleToStore(reportStore, matTripleUri, expand("rdf:predicate"), quad.predicate)
+                addTripleToStore(reportStore, matTripleUri, expand("rdf:object"), quad.object)
             }
         }
         let upDataset = datasetFromStore(upStore)
 
         let dfReport = await this.datafieldsValidator.validate({ dataset: upDataset })
-        addTripleToStore(reportStore, expandShortenedUri("ff:UserProfile"), expandShortenedUri("sh:conforms"), dfReport.conforms)
+        addTripleToStore(reportStore, expand("ff:UserProfile"), expand("sh:conforms"), dfReport.conforms)
         if (!dfReport.conforms) {
             // TODO
         }
