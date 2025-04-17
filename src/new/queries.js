@@ -32,11 +32,11 @@ export const QUERY_HASVALUE_FIX = `
             ?p ?o .
 }`
 
-export const QUERY_ELIGIBILITY_STATUS = (rpUri) => { return `
+export const QUERY_ELIGIBILITY_STATUS = (rpEvalUri) => { return `
     PREFIX ff: <https://foerderfunke.org/default#>
     PREFIX sh: <http://www.w3.org/ns/shacl#>
     CONSTRUCT {
-        <${rpUri}> ff:hasEligibilityStatus ?status .
+        <${rpEvalUri}> ff:hasEligibilityStatus ?status .
     } WHERE {
         ?report sh:conforms ?conforms .
         BIND(
@@ -56,13 +56,14 @@ export const QUERY_ELIGIBILITY_STATUS = (rpUri) => { return `
     }`
 }
 
-export const QUERY_MISSING_DATAFIELDS = (rpUri) => { return `
+export const QUERY_MISSING_DATAFIELDS = (rpEvalUri) => { return `
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     PREFIX ff: <https://foerderfunke.org/default#>
     PREFIX sh: <http://www.w3.org/ns/shacl#>
     
     CONSTRUCT {
-        ?indivDfId ff:isMissedBy <${rpUri}> ;
+        <${rpEvalUri}> ff:hasMissingDatafield ?indivDfId .
+        ?indivDfId ff:isMissedBy <${rpEvalUri}> ;
             rdf:subject ?individual ;
             rdf:predicate ?df .
     } WHERE {
@@ -82,32 +83,34 @@ export const QUERY_MISSING_DATAFIELDS = (rpUri) => { return `
     }`
 }
 
-export const QUERY_TOP_MISSING_DATAFIELD = `
+export const QUERY_TOP_MISSING_DATAFIELD = (reportUri) => { return `
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     PREFIX ff: <https://foerderfunke.org/default#>
     
     CONSTRUCT {
-        ff:mostMissedDatafield rdf:subject ?subject ;
+        <${reportUri}> ff:hasMostMissedDatafield ?dfId .
+        ?dfId rdf:subject ?subject ;
             rdf:predicate ?datafield .
     } WHERE {
         {
-            SELECT ?subject ?datafield (COUNT(?rp) AS ?missedByCount) WHERE {
+            SELECT ?dfId ?subject ?datafield (COUNT(?rp) AS ?missedByCount) WHERE {
                 ?dfId ff:isMissedBy ?rp ;
                     rdf:subject ?subject ;
                     rdf:predicate ?datafield .
             }
-            GROUP BY ?subject ?datafield
+            GROUP BY ?dfId ?subject ?datafield
             ORDER BY DESC(?missedByCount)
             LIMIT 1
         }
     }`
+}
 
-export const QUERY_NUMBER_OF_MISSING_DATAFIELDS = `
+export const QUERY_NUMBER_OF_MISSING_DATAFIELDS = (reportUri) => { return `
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     PREFIX ff: <https://foerderfunke.org/default#>
     
     CONSTRUCT {
-        ff:this ff:numberOfMissingDatafields ?missingDfs .
+        <${reportUri}> ff:hasNumberOfMissingDatafields ?missingDfs .
     } WHERE {
         {
             SELECT (COUNT(DISTINCT ?dfId) AS ?missingDfs) WHERE {
@@ -115,13 +118,14 @@ export const QUERY_NUMBER_OF_MISSING_DATAFIELDS = `
             }
         }
     }`
+}
 
-export const QUERY_VIOLATING_DATAFIELDS = (rpUri) => { return `
+export const QUERY_VIOLATING_DATAFIELDS = (rpEvalUri) => { return `
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     PREFIX ff: <https://foerderfunke.org/default#>
     PREFIX sh: <http://www.w3.org/ns/shacl#>
     CONSTRUCT {
-        <${rpUri}> ff:hasViolatingDatafield ?violationId .
+        <${rpEvalUri}> ff:hasViolatingDatafield ?violationId .
         ?violationId
             rdf:subject ?individual ;
             rdf:predicate ?df ;
@@ -137,7 +141,7 @@ export const QUERY_VIOLATING_DATAFIELDS = (rpUri) => { return `
         OPTIONAL { ?result sh:value ?value . }
         FILTER(?type != sh:MinCountConstraintComponent && ?type != sh:QualifiedMinCountConstraintComponent)
         
-        BIND(IRI(CONCAT(STR(<${rpUri}>), "_", REPLACE(STR(?individual), "^.*[#/]", ""), "_", REPLACE(STR(?df), "^.*[#/]", ""))) AS ?violationId)
+        BIND(IRI(CONCAT(STR(<${rpEvalUri}>), "_", REPLACE(STR(?individual), "^.*[#/]", ""), "_", REPLACE(STR(?df), "^.*[#/]", ""))) AS ?violationId)
     }`
 }
 

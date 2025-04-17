@@ -54,7 +54,6 @@ export class MatchingEngine {
         addTriple(reportStore, reportUri, a, expand("ff:MatchingReport"))
         addTriple(reportStore, reportUri, expand("ff:hasMode"), expand(matchingMode))
         addTriple(reportStore, reportUri, expand("ff:hasTimestamp"), getTimestampAsLiteral())
-        addTriple(reportStore, reportUri, expand("ff:hasNumberOfRPs"), rpUris.length)
 
         let upStore = storeFromTurtles([upTurtle])
         let count = 0
@@ -63,14 +62,15 @@ export class MatchingEngine {
             // also filling the upStore while also using it as source could create build-ups with side effects?
             let materializedQuads = await sparqlConstruct(query, [upStore, this.dfMatStore], upStore)
             if (matchingMode !== MATCHING_MODE.FULL || materializedQuads.length === 0) continue
-            let matQueryResultUri = expand("ff:materializationQueryResult") + "_" + (count ++)
-            addTriple(reportStore, matQueryResultUri, a, expand("ff:MaterializationQueryResult"))
-            addTriple(reportStore, matQueryResultUri, expand("ff:fromMaterializationRule"), matUri)
+            let matResultUri = expand("ff:matRes") + "_" + (count ++)
+            addTriple(reportStore, reportUri, expand("ff:hasMaterializationResult"), matResultUri)
+            addTriple(reportStore, matResultUri, a, expand("ff:MaterializationResult"))
+            addTriple(reportStore, matResultUri, expand("ff:fromRule"), matUri)
             let c = 0
             for (let quad of materializedQuads) {
-                let matTripleUri = expand("ff:materializedTriple") + "_" + (c ++)
-                addTriple(reportStore, matQueryResultUri, expand("ff:hasTriple"), matTripleUri)
-                addTriple(reportStore, matTripleUri, a, expand("rdf:Statement"))
+                let matTripleUri = expand("ff:matTriple") + "_" + (c ++)
+                addTriple(reportStore, matResultUri, expand("ff:hasTriple"), matTripleUri)
+                addTriple(reportStore, matTripleUri, a, expand("ff:MaterializedTriple"))
                 addTriple(reportStore, matTripleUri, expand("rdf:subject"), quad.subject)
                 addTriple(reportStore, matTripleUri, expand("rdf:predicate"), quad.predicate)
                 addTriple(reportStore, matTripleUri, expand("rdf:object"), quad.object)
@@ -79,7 +79,7 @@ export class MatchingEngine {
         let upDataset = datasetFromStore(upStore)
 
         let dfReport = await this.datafieldsValidator.validate({ dataset: upDataset })
-        addTriple(reportStore, expand("ff:UserProfile"), expand("sh:conforms"), dfReport.conforms)
+        addTriple(reportStore, reportUri, expand("ff:hasConformingUserProfile"), dfReport.conforms)
         if (!dfReport.conforms) {
             // TODO
         }
@@ -98,17 +98,22 @@ export class MatchingEngine {
 
         let missingDfStore
         for (let rpUri of rpUris) {
-            let report = await this.validators[rpUri].validate({ dataset: upDataset })
-            let sourceStore = storeFromDataset(report.dataset) // store this in class object for reuse until overwritten again?
+            let rpEvalUri = expand("ff:rpEvalRes") + "_" + rpUri.split("#").pop()
+            addTriple(reportStore, reportUri, expand("ff:hasEvaluatedRequirementProfile"), rpEvalUri)
+            addTriple(reportStore, rpEvalUri, a, expand("ff:RequirementProfileEvaluationResult"))
+            addTriple(reportStore, rpEvalUri, expand("ff:hasRpUri"), rpUri)
+
+            let shaclReport = await this.validators[rpUri].validate({ dataset: upDataset })
+            let sourceStore = storeFromDataset(shaclReport.dataset) // store this in class object for reuse until overwritten again?
 
             await sparqlInsertDelete(QUERY_HASVALUE_FIX, sourceStore)
-            await sparqlConstruct(QUERY_ELIGIBILITY_STATUS(rpUri), [sourceStore], reportStore)
+            await sparqlConstruct(QUERY_ELIGIBILITY_STATUS(rpEvalUri), [sourceStore], reportStore)
 
             missingDfStore = matchingMode === MATCHING_MODE.QUIZ ? newStore() : reportStore
-            await sparqlConstruct(QUERY_MISSING_DATAFIELDS(rpUri), [sourceStore], missingDfStore)
+            await sparqlConstruct(QUERY_MISSING_DATAFIELDS(rpEvalUri), [sourceStore], missingDfStore)
 
             if (matchingMode === MATCHING_MODE.FULL) {
-                await sparqlConstruct(QUERY_VIOLATING_DATAFIELDS(rpUri), [sourceStore], reportStore)
+                await sparqlConstruct(QUERY_VIOLATING_DATAFIELDS(rpEvalUri), [sourceStore], reportStore)
             }
 
             if (individualsTree) {
@@ -116,8 +121,9 @@ export class MatchingEngine {
                 // TODO
             }
         }
-        await sparqlConstruct(QUERY_TOP_MISSING_DATAFIELD, [missingDfStore], reportStore)
-        await sparqlConstruct(QUERY_NUMBER_OF_MISSING_DATAFIELDS, [missingDfStore], reportStore)
+
+        await sparqlConstruct(QUERY_TOP_MISSING_DATAFIELD(reportUri), [missingDfStore], reportStore)
+        await sparqlConstruct(QUERY_NUMBER_OF_MISSING_DATAFIELDS(reportUri), [missingDfStore], reportStore)
 
         if (format === FORMAT.JSON_LD) return await storeToJsonLdObj(reportStore)
         return await storeToTurtle(reportStore)
