@@ -228,53 +228,59 @@ describe("all matching-engine tests", function () {
                 ff:mainPerson a ff:Citizen ; ff:hasAge 16 .`
 
             // Turtle
-            let fullReportTurtle = await matchingEngine.matching(user, [expand(SIMPLE_RP1), expand(SIMPLE_RP2)], MATCHING_MODE.FULL, FORMAT.TURTLE)
+            let fullReportTurtle = await matchingEngine.matching(user, [expand(SIMPLE_RP1), expand(SIMPLE_RP2)], MATCHING_MODE.FULL, FORMAT.TURTLE, true)
+            // console.log(fullReportTurtle)
             const expectedTurtle = `
                 @prefix ff: <https://foerderfunke.org/default#>.
                 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
                 @prefix sh: <http://www.w3.org/ns/shacl#>.
                 
-                ff:devRp1
-                  ff:hasEligibilityStatus ff:ineligible;
-                  ff:hasViolatingDatafield ff:devRp1_mainPerson_hasAge.
-                
-                ff:devRp1_mainPerson_hasAge
-                  rdf:predicate ff:hasAge;
-                  rdf:subject ff:mainPerson;
-                  ff:hasMessage 'Value is not greater than or equal to "18"^^<http://www.w3.org/2001/XMLSchema#integer>';
-                  ff:hasValue 16;
-                  ff:hasViolationType sh:MinInclusiveConstraintComponent.
-                
-                ff:devRp2
-                  ff:hasEligibilityStatus ff:missingData.
-                
                 ff:mainPerson_hasIncome
-                  rdf:predicate ff:hasIncome;
-                  rdf:subject ff:mainPerson;
-                  ff:isMissedBy ff:devRp2.
+                    rdf:predicate ff:hasIncome;
+                    rdf:subject ff:mainPerson;
+                    ff:isMissedBy ff:rpEvalRes_devRp2.
                 
-                ff:materializationQueryResult_0 a ff:MaterializationQueryResult;
-                  ff:fromMaterializationRule ff:InterestedInBuildingActivatorRule;
-                  ff:hasTriple ff:materializedTriple_0.
+                ff:matchingReport_STATIC_TEST_URI a ff:MatchingReport;
+                    ff:hasConformingUserProfile true;
+                    ff:hasEvaluatedRequirementProfile
+                        ff:rpEvalRes_devRp1,
+                        ff:rpEvalRes_devRp2;
+                    ff:hasMaterializationResult ff:matRes_0;
+                    ff:hasMissingDatafield ff:mainPerson_hasIncome;
+                    ff:hasMode ff:full;
+                    ff:hasMostMissedDatafield ff:mainPerson_hasIncome;
+                    ff:hasNumberOfMissingDatafields 1;
+                    ff:hasTimestamp "STATIC_TEST_VALUE".
                 
-                ff:materializedTriple_0 a rdf:Statement;
-                  rdf:object false;
-                  rdf:predicate ff:interested_in_building_renovation_FLAG;
-                  rdf:subject ff:mainPerson.
+                ff:matRes_0
+                    ff:fromRule ff:InterestedInBuildingActivatorRule;
+                    ff:hasTriple ff:matTriple_0.
                 
-                ff:mostMissedDatafield
-                  rdf:predicate ff:hasIncome;
-                  rdf:subject ff:mainPerson.
+                ff:matTriple_0
+                    rdf:object false;
+                    rdf:predicate ff:interested_in_building_renovation_FLAG;
+                    rdf:subject ff:mainPerson.
                 
-                ff:this
-                  ff:numberOfMissingDatafields 1.
+                ff:rpEvalRes_devRp1
+                    ff:hasEligibilityStatus ff:ineligible;
+                    ff:hasRpUri ff:devRp1;
+                    ff:hasViolatingDatafield ff:rpEvalRes_devRp1_mainPerson_hasAge.
                 
-                ff:UserProfile
-                  sh:conforms "true".`
+                ff:rpEvalRes_devRp1_mainPerson_hasAge
+                    rdf:predicate ff:hasAge;
+                    rdf:subject ff:mainPerson;
+                    ff:hasMessage "Value is not greater than or equal to \\"18\\"^^<http://www.w3.org/2001/XMLSchema#integer>";
+                    ff:hasValue 16;
+                    ff:hasViolationType sh:MinInclusiveConstraintComponent.
+                
+                ff:rpEvalRes_devRp2
+                    ff:hasEligibilityStatus ff:missingData;
+                    ff:hasRpUri ff:devRp2.`
             strictEqual(isomorphicTurtles(fullReportTurtle, expectedTurtle), true, "The report in Turtle format does not match the expected one")
 
             // JSON-lD
-            let fullReportJsonLd = await matchingEngine.matching(user, [expand(SIMPLE_RP1), expand(SIMPLE_RP2)], MATCHING_MODE.FULL, FORMAT.JSON_LD)
+            let fullReportJsonLd = await matchingEngine.matching(user, [expand(SIMPLE_RP1), expand(SIMPLE_RP2)], MATCHING_MODE.FULL, FORMAT.JSON_LD, true)
+            // console.log(util.inspect(fullReportJsonLd, false, null, true))
             const expectedJsonLd = {
                 '@context': {
                     ff: 'https://foerderfunke.org/default#',
@@ -282,54 +288,49 @@ describe("all matching-engine tests", function () {
                     xsd: 'http://www.w3.org/2001/XMLSchema#',
                     rdf: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
                 },
-                '@graph': [
-                    { '@id': 'ff:UserProfile', 'sh:conforms': 'true' },
+                '@id': 'ff:matchingReport_STATIC_TEST_URI',
+                '@type': 'ff:MatchingReport',
+                'ff:hasConformingUserProfile': { '@type': 'xsd:boolean', '@value': 'true' },
+                'ff:hasEvaluatedRequirementProfile': [
                     {
-                        '@id': 'ff:devRp1',
+                        '@id': 'ff:rpEvalRes_devRp1',
                         'ff:hasEligibilityStatus': { '@id': 'ff:ineligible' },
-                        'ff:hasViolatingDatafield': { '@id': 'ff:devRp1_mainPerson_hasAge' }
+                        'ff:hasRpUri': { '@id': 'ff:devRp1' },
+                        'ff:hasViolatingDatafield': {
+                            '@id': 'ff:rpEvalRes_devRp1_mainPerson_hasAge',
+                            'rdf:predicate': { '@id': 'ff:hasAge' },
+                            'rdf:subject': { '@id': 'ff:mainPerson' },
+                            'ff:hasMessage': 'Value is not greater than or equal to "18"^^<http://www.w3.org/2001/XMLSchema#integer>',
+                            'ff:hasValue': { '@type': 'xsd:integer', '@value': '16' },
+                            'ff:hasViolationType': { '@id': 'sh:MinInclusiveConstraintComponent' }
+                        }
                     },
                     {
-                        '@id': 'ff:devRp1_mainPerson_hasAge',
-                        'rdf:predicate': { '@id': 'ff:hasAge' },
-                        'rdf:subject': { '@id': 'ff:mainPerson' },
-                        'ff:hasMessage': 'Value is not greater than or equal to "18"^^<http://www.w3.org/2001/XMLSchema#integer>',
-                        'ff:hasValue': { '@type': 'xsd:integer', '@value': '16' },
-                        'ff:hasViolationType': { '@id': 'sh:MinInclusiveConstraintComponent' }
-                    },
-                    {
-                        '@id': 'ff:devRp2',
-                        'ff:hasEligibilityStatus': { '@id': 'ff:missingData' }
-                    },
-                    {
-                        '@id': 'ff:mainPerson_hasIncome',
-                        'rdf:predicate': { '@id': 'ff:hasIncome' },
-                        'rdf:subject': { '@id': 'ff:mainPerson' },
-                        'ff:isMissedBy': { '@id': 'ff:devRp2' }
-                    },
-                    {
-                        '@id': 'ff:materializationQueryResult_0',
-                        '@type': 'ff:MaterializationQueryResult',
-                        'ff:fromMaterializationRule': { '@id': 'ff:InterestedInBuildingActivatorRule' },
-                        'ff:hasTriple': { '@id': 'ff:materializedTriple_0' }
-                    },
-                    {
-                        '@id': 'ff:materializedTriple_0',
-                        '@type': 'rdf:Statement',
+                        '@id': 'ff:rpEvalRes_devRp2',
+                        'ff:hasEligibilityStatus': { '@id': 'ff:missingData' },
+                        'ff:hasRpUri': { '@id': 'ff:devRp2' }
+                    }
+                ],
+                'ff:hasMaterializationResult': {
+                    '@id': 'ff:matRes_0',
+                    'ff:fromRule': { '@id': 'ff:InterestedInBuildingActivatorRule' },
+                    'ff:hasTriple': {
+                        '@id': 'ff:matTriple_0',
                         'rdf:object': { '@type': 'xsd:boolean', '@value': 'false' },
                         'rdf:predicate': { '@id': 'ff:interested_in_building_renovation_FLAG' },
                         'rdf:subject': { '@id': 'ff:mainPerson' }
-                    },
-                    {
-                        '@id': 'ff:mostMissedDatafield',
-                        'rdf:predicate': { '@id': 'ff:hasIncome' },
-                        'rdf:subject': { '@id': 'ff:mainPerson' }
-                    },
-                    {
-                        '@id': 'ff:this',
-                        'ff:numberOfMissingDatafields': { '@type': 'xsd:integer', '@value': '1' }
                     }
-                ]
+                },
+                'ff:hasMissingDatafield': {
+                    '@id': 'ff:mainPerson_hasIncome',
+                    'rdf:predicate': { '@id': 'ff:hasIncome' },
+                    'rdf:subject': { '@id': 'ff:mainPerson' },
+                    'ff:isMissedBy': { '@id': 'ff:rpEvalRes_devRp2' }
+                },
+                'ff:hasMode': { '@id': 'ff:full' },
+                'ff:hasMostMissedDatafield': { '@id': 'ff:mainPerson_hasIncome' },
+                'ff:hasNumberOfMissingDatafields': { '@type': 'xsd:integer', '@value': '1' },
+                'ff:hasTimestamp': 'STATIC_TEST_VALUE'
             }
             strictEqual(lodash.isEqual(fullReportJsonLd, expectedJsonLd), true, "The report in JSON-LD format does not match the expected one")
         })
