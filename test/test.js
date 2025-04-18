@@ -6,6 +6,7 @@ import { MatchingEngine } from "../src/new/MatchingEngine.js"
 import { expand, isomorphicTurtles } from "sem-ops-utils"
 import lodash from "lodash"
 import { FORMAT, MATCHING_MODE } from "../src/new/queries.js"
+// import util from "util"
 
 describe("all matching-engine tests", function () {
     let matchingEngine
@@ -156,6 +157,7 @@ describe("all matching-engine tests", function () {
 
             // Turtle
             let quizReportTurtle = await matchingEngine.matching(user, [expand(SIMPLE_RP1), expand(SIMPLE_RP2)], MATCHING_MODE.QUIZ, FORMAT.TURTLE, true)
+            // console.log(quizReportTurtle)
             const expectedTurtle = `
                 @prefix ff: <https://foerderfunke.org/default#>.
                 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
@@ -174,17 +176,18 @@ describe("all matching-engine tests", function () {
                     ff:hasNumberOfMissingDatafields 1;
                     ff:hasTimestamp "STATIC_TEST_VALUE".
 
-                ff:rpEvalRes_devRp1 a ff:RequirementProfileEvaluationResult;
+                ff:rpEvalRes_devRp1
                     ff:hasEligibilityStatus ff:ineligible;
                     ff:hasRpUri ff:devRp1.
 
-                ff:rpEvalRes_devRp2 a ff:RequirementProfileEvaluationResult;
+                ff:rpEvalRes_devRp2
                     ff:hasEligibilityStatus ff:missingData;
                     ff:hasRpUri ff:devRp2.`
             strictEqual(isomorphicTurtles(quizReportTurtle, expectedTurtle), true, "The report in Turtle format does not match the expected one")
 
             // JSON-lD
             let quizReportJsonLd = await matchingEngine.matching(user, [expand(SIMPLE_RP1), expand(SIMPLE_RP2)], MATCHING_MODE.QUIZ, FORMAT.JSON_LD, true)
+            // console.log(util.inspect(quizReportJsonLd, false, null, true))
             const expectedJsonLd = {
                 '@context': {
                     ff: 'https://foerderfunke.org/default#',
@@ -192,38 +195,29 @@ describe("all matching-engine tests", function () {
                     xsd: 'http://www.w3.org/2001/XMLSchema#',
                     rdf: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
                 },
-                '@graph': [
-                    {
-                        '@id': 'ff:mainPerson_hasIncome',
-                        'rdf:predicate': { '@id': 'ff:hasIncome' },
-                        'rdf:subject': { '@id': 'ff:mainPerson' }
-                    },
-                    {
-                        '@id': 'ff:matchingReport_STATIC_TEST_URI',
-                        '@type': 'ff:MatchingReport',
-                        'ff:hasConformingUserProfile': { '@type': 'xsd:boolean', '@value': 'true' },
-                        'ff:hasEvaluatedRequirementProfile': [
-                            { '@id': 'ff:rpEvalRes_devRp1' },
-                            { '@id': 'ff:rpEvalRes_devRp2' }
-                        ],
-                        'ff:hasMode': { '@id': 'ff:quiz' },
-                        'ff:hasMostMissedDatafield': { '@id': 'ff:mainPerson_hasIncome' },
-                        'ff:hasNumberOfMissingDatafields': { '@type': 'xsd:integer', '@value': '1' },
-                        'ff:hasTimestamp': 'STATIC_TEST_VALUE'
-                    },
+                '@id': 'ff:matchingReport_STATIC_TEST_URI',
+                '@type': 'ff:MatchingReport',
+                'ff:hasConformingUserProfile': { '@type': 'xsd:boolean', '@value': 'true' },
+                'ff:hasEvaluatedRequirementProfile': [
                     {
                         '@id': 'ff:rpEvalRes_devRp1',
-                        '@type': 'ff:RequirementProfileEvaluationResult',
                         'ff:hasEligibilityStatus': { '@id': 'ff:ineligible' },
                         'ff:hasRpUri': { '@id': 'ff:devRp1' }
                     },
                     {
                         '@id': 'ff:rpEvalRes_devRp2',
-                        '@type': 'ff:RequirementProfileEvaluationResult',
                         'ff:hasEligibilityStatus': { '@id': 'ff:missingData' },
                         'ff:hasRpUri': { '@id': 'ff:devRp2' }
                     }
-                ]
+                ],
+                'ff:hasMode': { '@id': 'ff:quiz' },
+                'ff:hasMostMissedDatafield': {
+                    '@id': 'ff:mainPerson_hasIncome',
+                    'rdf:predicate': { '@id': 'ff:hasIncome' },
+                    'rdf:subject': { '@id': 'ff:mainPerson' }
+                },
+                'ff:hasNumberOfMissingDatafields': { '@type': 'xsd:integer', '@value': '1' },
+                'ff:hasTimestamp': 'STATIC_TEST_VALUE'
             }
             strictEqual(lodash.isEqual(quizReportJsonLd, expectedJsonLd), true, "The report in JSON-LD format does not match the expected one")
         })

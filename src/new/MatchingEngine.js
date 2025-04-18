@@ -101,7 +101,7 @@ export class MatchingEngine {
         for (let rpUri of rpUris) {
             let rpEvalUri = expand("ff:rpEvalRes") + "_" + rpUri.split("#").pop()
             addTriple(reportStore, reportUri, expand("ff:hasEvaluatedRequirementProfile"), rpEvalUri)
-            addTriple(reportStore, rpEvalUri, a, expand("ff:RequirementProfileEvaluationResult"))
+            // addTriple(reportStore, rpEvalUri, a, expand("ff:RequirementProfileEvaluationResult"))
             addTriple(reportStore, rpEvalUri, expand("ff:hasRpUri"), rpUri)
 
             let shaclReport = await this.validators[rpUri].validate({ dataset: upDataset })
@@ -126,7 +126,7 @@ export class MatchingEngine {
         await sparqlConstruct(QUERY_TOP_MISSING_DATAFIELD(reportUri), [missingDfStore], reportStore)
         await sparqlConstruct(QUERY_NUMBER_OF_MISSING_DATAFIELDS(reportUri), [missingDfStore], reportStore)
 
-        if (format === FORMAT.JSON_LD) return await storeToJsonLdObj(reportStore)
+        if (format === FORMAT.JSON_LD) return await storeToJsonLdObj(reportStore, ["ff:MatchingReport"])
         return await storeToTurtle(reportStore)
     }
 }
