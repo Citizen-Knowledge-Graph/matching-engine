@@ -1,4 +1,4 @@
-import { shrink } from "sem-ops-utils"
+import { shrink } from "@foerderfunke/sem-ops-utils"
 
 export class Graph {
     constructor() {
