@@ -234,7 +234,7 @@ describe("all matching-engine tests", function () {
                 ff:mainPerson a ff:Citizen ; ff:hasAge 16 .`
 
             // Turtle
-            let quizReportTurtle = await matchingEngine.matching(user, [expand(SIMPLE_RP1), expand(SIMPLE_RP2)], MATCHING_MODE.FULL, FORMAT.TURTLE)
+            let fullReportTurtle = await matchingEngine.matching(user, [expand(SIMPLE_RP1), expand(SIMPLE_RP2)], MATCHING_MODE.FULL, FORMAT.TURTLE)
             const expectedTurtle = `
                 @prefix ff: <https://foerderfunke.org/default#>.
                 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
@@ -277,10 +277,10 @@ describe("all matching-engine tests", function () {
                 
                 ff:UserProfile
                   sh:conforms "true".`
-            strictEqual(isomorphicTurtles(quizReportTurtle, expectedTurtle), true, "The report in Turtle format does not match the expected one")
+            strictEqual(isomorphicTurtles(fullReportTurtle, expectedTurtle), true, "The report in Turtle format does not match the expected one")
 
             // JSON-lD
-            let quizReportJsonLd = await matchingEngine.matching(user, [expand(SIMPLE_RP1), expand(SIMPLE_RP2)], MATCHING_MODE.FULL, FORMAT.JSON_LD)
+            let fullReportJsonLd = await matchingEngine.matching(user, [expand(SIMPLE_RP1), expand(SIMPLE_RP2)], MATCHING_MODE.FULL, FORMAT.JSON_LD)
             const expectedJsonLd = {
                 '@context': {
                     ff: 'https://foerderfunke.org/default#',
@@ -337,7 +337,7 @@ describe("all matching-engine tests", function () {
                     }
                 ]
             }
-            strictEqual(lodash.isEqual(quizReportJsonLd, expectedJsonLd), true, "The report in JSON-LD format does not match the expected one")
+            strictEqual(lodash.isEqual(fullReportJsonLd, expectedJsonLd), true, "The report in JSON-LD format does not match the expected one")
         })
 
         it("should generate correct matching report with ineligible subindividuals", async function () {
