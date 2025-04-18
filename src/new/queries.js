@@ -56,13 +56,13 @@ export const QUERY_ELIGIBILITY_STATUS = (rpEvalUri) => { return `
     }`
 }
 
-export const QUERY_MISSING_DATAFIELDS = (rpEvalUri) => { return `
+export const QUERY_MISSING_DATAFIELDS = (reportUri, rpEvalUri) => { return `
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     PREFIX ff: <https://foerderfunke.org/default#>
     PREFIX sh: <http://www.w3.org/ns/shacl#>
     
     CONSTRUCT {
-        <${rpEvalUri}> ff:hasMissingDatafield ?indivDfId .
+        <${reportUri}> ff:hasMissingDatafield ?indivDfId .
         ?indivDfId ff:isMissedBy <${rpEvalUri}> ;
             rdf:subject ?individual ;
             rdf:predicate ?df .

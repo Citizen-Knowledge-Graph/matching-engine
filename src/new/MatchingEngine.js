@@ -111,7 +111,7 @@ export class MatchingEngine {
             await sparqlConstruct(QUERY_ELIGIBILITY_STATUS(rpEvalUri), [sourceStore], reportStore)
 
             missingDfStore = matchingMode === MATCHING_MODE.QUIZ ? newStore() : reportStore
-            await sparqlConstruct(QUERY_MISSING_DATAFIELDS(rpEvalUri), [sourceStore], missingDfStore)
+            await sparqlConstruct(QUERY_MISSING_DATAFIELDS(reportUri, rpEvalUri), [sourceStore], missingDfStore)
 
             if (matchingMode === MATCHING_MODE.FULL) {
                 await sparqlConstruct(QUERY_VIOLATING_DATAFIELDS(rpEvalUri), [sourceStore], reportStore)
