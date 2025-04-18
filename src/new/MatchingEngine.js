@@ -47,14 +47,14 @@ export class MatchingEngine {
         return await this.datafieldsValidator.validate({ dataset: turtleToDataset(upTurtle) })
     }
 
-    async matching(upTurtle, rpUris, matchingMode, format) {
+    async matching(upTurtle, rpUris, matchingMode, format, testMode = false) {
         let reportStore = newStore()
 
         const now = new Date()
-        let reportUri = expand("ff:matchingReport") + formatTimestamp(now, true)
+        let reportUri = expand("ff:matchingReport") + (testMode ? "_STATIC_TEST_URI" : formatTimestamp(now, true))
         addTriple(reportStore, reportUri, a, expand("ff:MatchingReport"))
         addTriple(reportStore, reportUri, expand("ff:hasMode"), expand(matchingMode))
-        addTriple(reportStore, reportUri, expand("ff:hasTimestamp"), formatTimestampAsLiteral(now))
+        addTriple(reportStore, reportUri, expand("ff:hasTimestamp"), (testMode ? "STATIC_TEST_VALUE" : formatTimestampAsLiteral(now)))
 
         let upStore = storeFromTurtles([upTurtle])
         let count = 0

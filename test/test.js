@@ -155,31 +155,36 @@ describe("all matching-engine tests", function () {
                 ff:mainPerson a ff:Citizen ; ff:hasAge 16 .`
 
             // Turtle
-            let quizReportTurtle = await matchingEngine.matching(user, [expand(SIMPLE_RP1), expand(SIMPLE_RP2)], MATCHING_MODE.QUIZ, FORMAT.TURTLE)
+            let quizReportTurtle = await matchingEngine.matching(user, [expand(SIMPLE_RP1), expand(SIMPLE_RP2)], MATCHING_MODE.QUIZ, FORMAT.TURTLE, true)
             const expectedTurtle = `
                 @prefix ff: <https://foerderfunke.org/default#>.
                 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
-                @prefix sh: <http://www.w3.org/ns/shacl#>.
-                
-                ff:devRp1
-                  ff:hasEligibilityStatus ff:ineligible.
-                
-                ff:devRp2
-                  ff:hasEligibilityStatus ff:missingData.
-                
-                ff:mostMissedDatafield
-                  rdf:predicate ff:hasIncome;
-                  rdf:subject ff:mainPerson.
-                
-                ff:this
-                  ff:numberOfMissingDatafields 1.
-                
-                ff:UserProfile
-                  sh:conforms "true".`
+
+                ff:mainPerson_hasIncome
+                    rdf:predicate ff:hasIncome;
+                    rdf:subject ff:mainPerson.
+
+                ff:matchingReport_STATIC_TEST_URI a ff:MatchingReport;
+                    ff:hasConformingUserProfile true;
+                    ff:hasEvaluatedRequirementProfile
+                        ff:rpEvalRes_devRp1,
+                        ff:rpEvalRes_devRp2;
+                    ff:hasMode ff:quiz;
+                    ff:hasMostMissedDatafield ff:mainPerson_hasIncome;
+                    ff:hasNumberOfMissingDatafields 1;
+                    ff:hasTimestamp "STATIC_TEST_VALUE".
+
+                ff:rpEvalRes_devRp1 a ff:RequirementProfileEvaluationResult;
+                    ff:hasEligibilityStatus ff:ineligible;
+                    ff:hasRpUri ff:devRp1.
+
+                ff:rpEvalRes_devRp2 a ff:RequirementProfileEvaluationResult;
+                    ff:hasEligibilityStatus ff:missingData;
+                    ff:hasRpUri ff:devRp2.`
             strictEqual(isomorphicTurtles(quizReportTurtle, expectedTurtle), true, "The report in Turtle format does not match the expected one")
 
             // JSON-lD
-            let quizReportJsonLd = await matchingEngine.matching(user, [expand(SIMPLE_RP1), expand(SIMPLE_RP2)], MATCHING_MODE.QUIZ, FORMAT.JSON_LD)
+            let quizReportJsonLd = await matchingEngine.matching(user, [expand(SIMPLE_RP1), expand(SIMPLE_RP2)], MATCHING_MODE.QUIZ, FORMAT.JSON_LD, true)
             const expectedJsonLd = {
                 '@context': {
                     ff: 'https://foerderfunke.org/default#',
@@ -188,23 +193,35 @@ describe("all matching-engine tests", function () {
                     rdf: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
                 },
                 '@graph': [
-                    { '@id': 'ff:UserProfile', 'sh:conforms': 'true' },
                     {
-                        '@id': 'ff:devRp1',
-                        'ff:hasEligibilityStatus': { '@id': 'ff:ineligible' }
-                    },
-                    {
-                        '@id': 'ff:devRp2',
-                        'ff:hasEligibilityStatus': { '@id': 'ff:missingData' }
-                    },
-                    {
-                        '@id': 'ff:mostMissedDatafield',
+                        '@id': 'ff:mainPerson_hasIncome',
                         'rdf:predicate': { '@id': 'ff:hasIncome' },
                         'rdf:subject': { '@id': 'ff:mainPerson' }
                     },
                     {
-                        '@id': 'ff:this',
-                        'ff:numberOfMissingDatafields': { '@type': 'xsd:integer', '@value': '1' }
+                        '@id': 'ff:matchingReport_STATIC_TEST_URI',
+                        '@type': 'ff:MatchingReport',
+                        'ff:hasConformingUserProfile': { '@type': 'xsd:boolean', '@value': 'true' },
+                        'ff:hasEvaluatedRequirementProfile': [
+                            { '@id': 'ff:rpEvalRes_devRp1' },
+                            { '@id': 'ff:rpEvalRes_devRp2' }
+                        ],
+                        'ff:hasMode': { '@id': 'ff:quiz' },
+                        'ff:hasMostMissedDatafield': { '@id': 'ff:mainPerson_hasIncome' },
+                        'ff:hasNumberOfMissingDatafields': { '@type': 'xsd:integer', '@value': '1' },
+                        'ff:hasTimestamp': 'STATIC_TEST_VALUE'
+                    },
+                    {
+                        '@id': 'ff:rpEvalRes_devRp1',
+                        '@type': 'ff:RequirementProfileEvaluationResult',
+                        'ff:hasEligibilityStatus': { '@id': 'ff:ineligible' },
+                        'ff:hasRpUri': { '@id': 'ff:devRp1' }
+                    },
+                    {
+                        '@id': 'ff:rpEvalRes_devRp2',
+                        '@type': 'ff:RequirementProfileEvaluationResult',
+                        'ff:hasEligibilityStatus': { '@id': 'ff:missingData' },
+                        'ff:hasRpUri': { '@id': 'ff:devRp2' }
                     }
                 ]
             }
@@ -356,7 +373,12 @@ describe("all matching-engine tests", function () {
         })
 
         it("dummy-test to just have a quick execution thingy", async function () {
-            // ...
+            let user = `
+                @prefix ff: <https://foerderfunke.org/default#> .
+                ff:mainPerson a ff:Citizen ; ff:hasAge 16 .`
+            let report = await matchingEngine.matching(user, [expand(SIMPLE_RP1), expand(SIMPLE_RP2)], MATCHING_MODE.QUIZ, FORMAT.JSON_LD)
+            console.log(util.inspect(report, false, null, true))
+
         })
     })
 })
