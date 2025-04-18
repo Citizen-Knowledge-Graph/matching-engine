@@ -1,4 +1,4 @@
-import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, newStore, addTurtleToStore, storeFromDataset, sparqlConstruct, storeToTurtle, sparqlSelect, addTriple, expand, a, datasetFromStore, storeToJsonLdObj, sparqlInsertDelete, turtleToJsonLdObj, getTimestamp, getTimestampAsLiteral } from "sem-ops-utils"
+import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, newStore, addTurtleToStore, storeFromDataset, sparqlConstruct, storeToTurtle, sparqlSelect, addTriple, expand, a, datasetFromStore, storeToJsonLdObj, sparqlInsertDelete, turtleToJsonLdObj, formatTimestamp, formatTimestampAsLiteral } from "sem-ops-utils"
 import { FORMAT, MATCHING_MODE, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_VIOLATING_DATAFIELDS, QUERY_BUILD_INDIVIDUALS_TREE, QUERY_EXTRACT_INVALID_INDIVIDUALS, QUERY_HASVALUE_FIX } from "./queries.js"
 import { Graph } from "./Graph.js"
 
@@ -50,10 +50,11 @@ export class MatchingEngine {
     async matching(upTurtle, rpUris, matchingMode, format) {
         let reportStore = newStore()
 
-        let reportUri = expand("ff:matchingReport") + getTimestamp(true)
+        const now = new Date()
+        let reportUri = expand("ff:matchingReport") + formatTimestamp(now, true)
         addTriple(reportStore, reportUri, a, expand("ff:MatchingReport"))
         addTriple(reportStore, reportUri, expand("ff:hasMode"), expand(matchingMode))
-        addTriple(reportStore, reportUri, expand("ff:hasTimestamp"), getTimestampAsLiteral())
+        addTriple(reportStore, reportUri, expand("ff:hasTimestamp"), formatTimestampAsLiteral(now))
 
         let upStore = storeFromTurtles([upTurtle])
         let count = 0
