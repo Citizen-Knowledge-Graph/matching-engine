@@ -368,12 +368,7 @@ describe("all matching-engine tests", function () {
         })
 
         it("dummy-test to just have a quick execution thingy", async function () {
-            let user = `
-                @prefix ff: <https://foerderfunke.org/default#> .
-                ff:mainPerson a ff:Citizen ; ff:hasAge 16 .`
-            let report = await matchingEngine.matching(user, [expand(SIMPLE_RP1), expand(SIMPLE_RP2)], MATCHING_MODE.QUIZ, FORMAT.JSON_LD)
-            console.log(util.inspect(report, false, null, true))
-
+            // ...
         })
     })
 })
