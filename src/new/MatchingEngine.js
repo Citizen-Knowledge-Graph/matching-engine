@@ -12,14 +12,17 @@ export class MatchingEngine {
         this.validators = {}
         for (let rpTurtle of requirementProfilesTurtles) this.addValidator(rpTurtle)
         this.matQueries = {}
+    }
+
+    async init() {
         let query = `
             PREFIX ff: <https://foerderfunke.org/default#>
             SELECT * WHERE { ?uri ff:sparqlConstructQuery ?query . }`
-        sparqlSelect(query, this.dfMatStore).then(rows => {
-            for (let row of rows) {
-                this.matQueries[row.uri] = row.query
-            }
-        })
+        let rows = await sparqlSelect(query, this.dfMatStore)
+        for (let row of rows) {
+            this.matQueries[row.uri] = row.query
+        }
+        return this
     }
 
     addValidator(rpTurtle) {

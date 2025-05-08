@@ -23,11 +23,11 @@ describe("all matching-engine tests", function () {
         for (let file of await promises.readdir(`${repoDir}/shacl`)) {
             rps.push(await promises.readFile(`${repoDir}/shacl/${file}`, "utf8"))
         }
-        matchingEngine = new MatchingEngine(
+        matchingEngine = await new MatchingEngine(
             await promises.readFile(`${repoDir}/datafields.ttl`, "utf8"),
             await promises.readFile(`${repoDir}/materialization.ttl`, "utf8"),
             rps
-        )
+        ).init()
     })
 
     it("matchingEngine object should have correct keys", function () {
