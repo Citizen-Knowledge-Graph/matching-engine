@@ -6,7 +6,7 @@ import { MatchingEngine } from "../src/new/MatchingEngine.js"
 import { expand, isomorphicTurtles } from "@foerderfunke/sem-ops-utils"
 import lodash from "lodash"
 import { FORMAT, MATCHING_MODE } from "../src/new/queries.js"
-// import util from "util"
+import util from "util"
 
 describe("all matching-engine tests", function () {
     let matchingEngine
@@ -26,13 +26,15 @@ describe("all matching-engine tests", function () {
         matchingEngine = await new MatchingEngine(
             await promises.readFile(`${repoDir}/datafields.ttl`, "utf8"),
             await promises.readFile(`${repoDir}/materialization.ttl`, "utf8"),
-            rps
+            rps,
+            "en",
+            FORMAT.JSON_LD
         ).init()
     })
 
     it("matchingEngine object should have correct keys", function () {
         deepStrictEqual(
-            Object.keys(matchingEngine), ["datafieldsTurtle", "dfMatStore", "datafieldsValidator", "requirementProfilesStore", "validators", "matQueries"],
+            Object.keys(matchingEngine), ["datafieldsTurtle", "dfMatStore", "datafieldsValidator", "requirementProfilesStore", "validators", "matQueries", "metadata", "lang", "metadataFormat"],
             "The matchingEngine object does not have the expected keys")
     })
 
@@ -369,6 +371,18 @@ describe("all matching-engine tests", function () {
 
         it("dummy-test to just have a quick execution thingy", async function () {
             // ...
+        })
+    })
+
+    describe("testing metadata functions on the matchingEngine object", function () {
+        it("should generate the correct requirement profiles metadata", async function () {
+
+            console.log(util.inspect(matchingEngine.metadata, false, null, true))
+
+        })
+
+        it("should generate the correct datafields metadata", async function () {
+
         })
     })
 })

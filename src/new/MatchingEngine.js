@@ -1,10 +1,10 @@
 import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, newStore, addTurtleToStore, storeFromDataset, sparqlConstruct, storeToTurtle, sparqlSelect, addTriple, expand, a, datasetFromStore, storeToJsonLdObj, sparqlInsertDelete, turtleToJsonLdObj, formatTimestamp, formatTimestampAsLiteral } from "@foerderfunke/sem-ops-utils"
-import { FORMAT, MATCHING_MODE, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_VIOLATING_DATAFIELDS, QUERY_BUILD_INDIVIDUALS_TREE, QUERY_EXTRACT_INVALID_INDIVIDUALS, QUERY_HASVALUE_FIX } from "./queries.js"
+import { FORMAT, MATCHING_MODE, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_VIOLATING_DATAFIELDS, QUERY_BUILD_INDIVIDUALS_TREE, QUERY_EXTRACT_INVALID_INDIVIDUALS, QUERY_HASVALUE_FIX, QUERY_METADATA_RPS } from "./queries.js"
 import { Graph } from "./Graph.js"
 
 export class MatchingEngine {
 
-    constructor(datafieldsTurtle, materializationTurtle, requirementProfilesTurtles) {
+    constructor(datafieldsTurtle, materializationTurtle, requirementProfilesTurtles, lang, metadataFormat) {
         this.datafieldsTurtle = datafieldsTurtle
         this.dfMatStore = storeFromTurtles([datafieldsTurtle, materializationTurtle])
         this.datafieldsValidator = buildValidator(datafieldsTurtle)
@@ -12,9 +12,13 @@ export class MatchingEngine {
         this.validators = {}
         for (let rpTurtle of requirementProfilesTurtles) this.addValidator(rpTurtle)
         this.matQueries = {}
+        this.metadata = {}
+        this.lang = lang
+        this.metadataFormat = metadataFormat
     }
 
     async init() {
+        // materialization queries
         let query = `
             PREFIX ff: <https://foerderfunke.org/default#>
             SELECT * WHERE { ?uri ff:sparqlConstructQuery ?query . }`
@@ -22,6 +26,13 @@ export class MatchingEngine {
         for (let row of rows) {
             this.matQueries[row.uri] = row.query
         }
+        // metadata TODO: outsource and offer rebuild() method for changing lang
+        // rps
+        let store = newStore()
+        await sparqlConstruct(QUERY_METADATA_RPS(this.lang), [this.requirementProfilesStore], store)
+        this.metadata.rps = this.metadataFormat === FORMAT.JSON_LD ? await storeToJsonLdObj(store) : await storeToTurtle(store)
+        // datafields
+        // TODO
         return this
     }
 

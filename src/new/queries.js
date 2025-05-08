@@ -188,3 +188,37 @@ export const QUERY_EXTRACT_INVALID_INDIVIDUALS = `
             sh:sourceConstraintComponent ?type .
         FILTER(?type NOT IN (sh:MinCountConstraintComponent, sh:NodeConstraintComponent))
     }`
+
+// metadata
+
+export const QUERY_METADATA_RPS = (lang) => { return `
+    PREFIX ff: <https://foerderfunke.org/default#>
+    CONSTRUCT {
+        ?rpUri a ff:RequirementProfile ;
+            ff:title ?title ;
+            ff:leikaId ?leikaId ;
+            ff:category ?category ;
+            rdfs:seeAlso ?seeAlso ;
+            ff:validationStage ?validationStage ;
+            ff:benefitInfo ?benefitInfo ;
+            ff:ineligibleGeneralExplanation ?ineligibleGeneralExplanation .
+    } WHERE {
+        ?rpUri a ff:RequirementProfile .
+        OPTIONAL { 
+            ?rpUri ff:title ?title  .
+            FILTER (lang(?title) = "${lang}")
+        } .
+        OPTIONAL { ?rpUri ff:leikaId ?leikaId } .
+        OPTIONAL { ?rpUri ff:category ?category } .
+        OPTIONAL { ?rpUri rdfs:seeAlso ?seeAlso } .
+        OPTIONAL { ?rpUri ff:validationStage ?validationStage } .
+        OPTIONAL { 
+            ?rpUri ff:benefitInfo ?benefitInfo  .
+            FILTER (lang(?benefitInfo) = "${lang}")
+        } .
+        OPTIONAL { 
+            ?rpUri ff:ineligibleGeneralExplanation ?ineligibleGeneralExplanation  .
+            FILTER (lang(?ineligibleGeneralExplanation) = "${lang}")
+        } .
+    }`
+}
