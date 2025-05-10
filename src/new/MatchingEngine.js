@@ -48,13 +48,6 @@ export class MatchingEngine {
         return Object.keys(this.validators)
     }
 
-    async getDatafieldDefinitions() {
-        if (!this.dfJsonld) {
-            this.dfJsonld = await turtleToJsonLdObj(this.datafieldsTurtle)
-        }
-        return this.dfJsonld
-    }
-
     async basicValidation(upTurtle, rpUri) {
         return await this.validators[rpUri].validate({ dataset: turtleToDataset(upTurtle) })
     }
