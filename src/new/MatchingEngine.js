@@ -26,18 +26,14 @@ export class MatchingEngine {
         for (let row of rows) {
             this.matQueries[row.uri] = row.query
         }
-        // metadata TODO: outsource and offer rebuild() method for changing lang
-        const serialize = async (store) => {
-            return this.metadataFormat === FORMAT.JSON_LD ? await storeToJsonLdObj(store) : await storeToTurtle(store)
-        }
-        // rps
-        let store = newStore()
-        await sparqlConstruct(QUERY_METADATA_RPS(this.lang), [this.requirementProfilesStore], store)
-        this.metadata.rps = await serialize(store)
-        // datafields
-        store = newStore()
-        await sparqlConstruct(QUERY_METADATA_DFS(this.lang), [this.dfMatStore], store)
-        this.metadata.dfs = await serialize(store)
+        // metadata
+        let metadataStore = newStore()
+        let rootUri = expand("ff:metadata")
+        addTriple(metadataStore, rootUri, a, expand("ff:MetadataExtraction"))
+        addTriple(metadataStore, rootUri, expand("ff:hasLanguage"), this.lang)
+        await sparqlConstruct(QUERY_METADATA_RPS(rootUri, this.lang), [this.requirementProfilesStore], metadataStore)
+        await sparqlConstruct(QUERY_METADATA_DFS(rootUri, this.lang), [this.dfMatStore], metadataStore)
+        this.metadata = this.metadataFormat === FORMAT.JSON_LD ? await storeToJsonLdObj(metadataStore, ["ff:MetadataExtraction"]) : await storeToTurtle(metadataStore)
         return this
     }
 

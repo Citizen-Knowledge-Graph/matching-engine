@@ -191,9 +191,10 @@ export const QUERY_EXTRACT_INVALID_INDIVIDUALS = `
 
 // metadata
 
-export const QUERY_METADATA_RPS = (lang) => { return `
+export const QUERY_METADATA_RPS = (rootUri, lang) => { return `
     PREFIX ff: <https://foerderfunke.org/default#>
     CONSTRUCT {
+        <${rootUri}> ff:hasRP ?rpUri.
         ?rpUri a ff:RequirementProfile ;
             ff:title ?title ;
             ff:leikaId ?leikaId ;
@@ -223,13 +224,14 @@ export const QUERY_METADATA_RPS = (lang) => { return `
     }`
 }
 
-export const QUERY_METADATA_DFS = (lang) => { return `
+export const QUERY_METADATA_DFS = (rootUri, lang) => { return `
     PREFIX ff: <https://foerderfunke.org/default#>
     PREFIX sh: <http://www.w3.org/ns/shacl#>
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     PREFIX schema: <http://schema.org/>
     CONSTRUCT {
+        <${rootUri}> ff:hasDF ?df.
         ?df a ff:DataField ;
             rdfs:label ?label ;
             schema:category ?category ;
