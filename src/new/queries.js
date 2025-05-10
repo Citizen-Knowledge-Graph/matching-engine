@@ -222,3 +222,51 @@ export const QUERY_METADATA_RPS = (lang) => { return `
         } .
     }`
 }
+
+export const QUERY_METADATA_DFS = (lang) => { return `
+    PREFIX ff: <https://foerderfunke.org/default#>
+    PREFIX sh: <http://www.w3.org/ns/shacl#>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    PREFIX schema: <http://schema.org/>
+    CONSTRUCT {
+        ?df a ff:DataField ;
+            rdfs:label ?label ;
+            schema:category ?category ;
+            schema:question ?question ;
+            rdfs:comment ?comment ;
+            ff:datatype ?datatype ;
+            ff:hasAnswerOption ?option .
+        ?option a ff:AnswerOption ;
+            rdfs:label ?optionLabel .
+    } WHERE {
+        ?df a ff:DataField ;
+            rdfs:label ?label .
+        FILTER (lang(?label) = "${lang}")
+        OPTIONAL {
+            ?df schema:category ?category .
+        }  
+        OPTIONAL {
+            ?df schema:question ?question .
+            FILTER (lang(?question) = "${lang}")
+        }  
+        OPTIONAL { 
+          ?df rdfs:comment ?comment .
+          FILTER (lang(?comment) = "${lang}")
+        }
+        OPTIONAL { 
+            ?df ff:hasShaclShape ?shape .
+            ?shape sh:property ?ps .
+            OPTIONAL { ?ps sh:datatype ?dt }
+            OPTIONAL { ?ps sh:maxCount ?maxCount }
+            BIND(COALESCE(?dt, IF(BOUND(?maxCount), ff:selection, ff:selection_multiple)) AS ?datatype)
+        }
+        OPTIONAL { 
+            ?df ff:hasShaclShape ?shape .
+            ?shape sh:property ?ps .
+            ?ps sh:in/rdf:rest*/rdf:first ?option .
+            ?option rdfs:label ?optionLabel .
+            FILTER(lang(?optionLabel) = "${lang}")     
+        }
+    }`
+}
