@@ -1,5 +1,5 @@
 import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, newStore, addTurtleToStore, storeFromDataset, sparqlConstruct, storeToTurtle, sparqlSelect, addTriple, expand, a, datasetFromStore, storeToJsonLdObj, sparqlInsertDelete, turtleToJsonLdObj, formatTimestamp, formatTimestampAsLiteral } from "@foerderfunke/sem-ops-utils"
-import { FORMAT, MATCHING_MODE, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_VIOLATING_DATAFIELDS, QUERY_BUILD_INDIVIDUALS_TREE, QUERY_EXTRACT_INVALID_INDIVIDUALS, QUERY_HASVALUE_FIX, QUERY_METADATA_RPS, QUERY_METADATA_DFS } from "./queries.js"
+import { FORMAT, MATCHING_MODE, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_VIOLATING_DATAFIELDS, QUERY_BUILD_INDIVIDUALS_TREE, QUERY_EXTRACT_INVALID_INDIVIDUALS, QUERY_HASVALUE_FIX, QUERY_METADATA_RPS, QUERY_METADATA_DFS, QUERY_METADATA_BCS } from "./queries.js"
 import { Graph } from "./Graph.js"
 
 export class MatchingEngine {
@@ -33,6 +33,7 @@ export class MatchingEngine {
         addTriple(metadataStore, rootUri, expand("ff:hasLanguage"), this.lang)
         await sparqlConstruct(QUERY_METADATA_RPS(rootUri, this.lang), [this.requirementProfilesStore], metadataStore)
         await sparqlConstruct(QUERY_METADATA_DFS(rootUri, this.lang), [this.dfMatStore], metadataStore)
+        await sparqlConstruct(QUERY_METADATA_BCS(rootUri, this.lang), [this.dfMatStore], metadataStore)
         this.metadata = this.metadataFormat === FORMAT.JSON_LD ? await storeToJsonLdObj(metadataStore, ["ff:MetadataExtraction"]) : await storeToTurtle(metadataStore)
         return this
     }

@@ -7,6 +7,7 @@ import { expand, isomorphicTurtles } from "@foerderfunke/sem-ops-utils"
 import lodash from "lodash"
 import { FORMAT, MATCHING_MODE } from "../src/new/queries.js"
 import util from "util"
+// import { writeFileSync } from "fs"
 
 describe("all matching-engine tests", function () {
     let matchingEngine
@@ -376,9 +377,10 @@ describe("all matching-engine tests", function () {
 
     describe("testing metadata functions on the matchingEngine object", function () {
         it("should generate the correct requirement profiles metadata", async function () {
-
             console.log(util.inspect(matchingEngine.metadata, false, null, true))
-
+            /*const json  = JSON.stringify(matchingEngine.metadata, null, 2)
+            writeFileSync("./output.json", json, "utf8")
+            console.log("Wrote output.json")*/
         })
 
         it("should generate the correct datafields metadata", async function () {
