@@ -2,12 +2,12 @@ import path from "path"
 import { fileURLToPath } from "url"
 import { promises } from "fs"
 import Table from "cli-table3"
-import { MatchingEngine } from "./src/new/MatchingEngine.js"
-import { getPrioritizedMissingDataFieldsJson } from "./src/prematch.js"
-import { FORMAT, MATCHING_MODE } from "./src/new/queries.js"
+import { MatchingEngine } from "../src/new/MatchingEngine.js"
+import { getPrioritizedMissingDataFieldsJson } from "../src/prematch.js"
+import { FORMAT, MATCHING_MODE } from "../src/new/queries.js"
 
 // requires the knowledge-base in the test-directory ("npm test" will clone it there automatically)
-const repoDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "test", "knowledge-base")
+const repoDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "test", "knowledge-base")
 const user = "@prefix ff: <https://foerderfunke.org/default#> . ff:mainPerson a ff:Citizen ."
 
 async function benchmarkOldMatchingWithFetching() {
