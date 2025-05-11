@@ -52,20 +52,10 @@ export class MatchingEngine {
         return await this.validators[rpUri].validate({ dataset: turtleToDataset(upTurtle) })
     }
 
-    async validateAgainstDatafieldShapes(upTurtle) {
-        return await this.datafieldsValidator.validate({ dataset: turtleToDataset(upTurtle) })
-    }
-
-    async matching(upTurtle, rpUris, matchingMode, format, testMode = false) {
-        let reportStore = newStore()
-
-        const now = new Date()
-        let reportUri = expand("ff:matchingReport") + (testMode ? "_STATIC_TEST_URI" : formatTimestamp(now, true))
-        addTriple(reportStore, reportUri, a, expand("ff:MatchingReport"))
-        addTriple(reportStore, reportUri, expand("ff:hasMode"), expand(matchingMode))
-        addTriple(reportStore, reportUri, expand("ff:hasTimestamp"), (testMode ? "STATIC_TEST_VALUE" : formatTimestampAsLiteral(now)))
-
+    async enrichAndValidateUserProfile(upTurtle, reportUri, reportStore, matchingMode) {
         let upStore = storeFromTurtles([upTurtle])
+
+        // materialization
         let count = 0
         for (let [ matUri, query ] of Object.entries(this.matQueries)) {
             // do we need an exhausting approach instead until nothing is materialized anymore instead of a one-time for loop?
@@ -88,11 +78,28 @@ export class MatchingEngine {
         }
         let upDataset = datasetFromStore(upStore)
 
+        // plausibility validation
         let dfReport = await this.datafieldsValidator.validate({ dataset: upDataset })
         addTriple(reportStore, reportUri, expand("ff:hasConformingUserProfile"), dfReport.conforms)
         if (!dfReport.conforms) {
             // TODO
         }
+
+        // logical consistency validation
+        // TODO
+        return { upStore, upDataset }
+    }
+
+    async matching(upTurtle, rpUris, matchingMode, format, testMode = false) {
+        let reportStore = newStore()
+
+        const now = new Date()
+        let reportUri = expand("ff:matchingReport") + (testMode ? "_STATIC_TEST_URI" : formatTimestamp(now, true))
+        addTriple(reportStore, reportUri, a, expand("ff:MatchingReport"))
+        addTriple(reportStore, reportUri, expand("ff:hasMode"), expand(matchingMode))
+        addTriple(reportStore, reportUri, expand("ff:hasTimestamp"), (testMode ? "STATIC_TEST_VALUE" : formatTimestampAsLiteral(now)))
+
+        let { upStore, upDataset } = await this.enrichAndValidateUserProfile(upTurtle, reportUri, reportStore, matchingMode)
 
         // if subindividuals exist, we built the individuals-tree
         // regex on " a " is a quick and dirty solution to detect individuals for now
