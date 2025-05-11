@@ -3,7 +3,7 @@ import { strictEqual, deepStrictEqual } from "node:assert"
 import { existsSync, promises } from "fs"
 import simpleGit from "simple-git"
 import { MatchingEngine } from "../src/new/MatchingEngine.js"
-import { expand, isomorphicTurtles } from "@foerderfunke/sem-ops-utils"
+import { expand, isomorphicTurtles, storeToTurtle } from "@foerderfunke/sem-ops-utils"
 import lodash from "lodash"
 import { FORMAT, MATCHING_MODE } from "../src/new/queries.js"
 import util from "util"
@@ -46,7 +46,9 @@ describe("all matching-engine tests", function () {
                 ff:staatsbuergerschaft ff:staatsbuergerschaft-ao-eu .`
 
         it("should validate simple profile", async function () {
-            // let report = await matchingEngine.enrichAndValidateUserProfile(SIMPLE_UP)
+            let { upStore, upDataset, reportStore } = await matchingEngine.enrichAndValidateUserProfile(SIMPLE_UP)
+            let turtle = await storeToTurtle(reportStore)
+            console.log(turtle)
             // strictEqual(report.conforms, true, "Simple profile did not pass datafields validation")
         })
     })

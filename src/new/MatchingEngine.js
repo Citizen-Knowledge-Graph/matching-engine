@@ -55,6 +55,10 @@ export class MatchingEngine {
     async enrichAndValidateUserProfile(upTurtle, reportUri, reportStore, matchingMode) {
         let upStore = storeFromTurtles([upTurtle])
 
+        reportUri = reportUri ?? expand("ff:userProfileValidationReport")
+        reportStore = reportStore ?? newStore()
+        matchingMode = matchingMode ?? MATCHING_MODE.QUIZ
+
         // materialization
         let count = 0
         for (let [ matUri, query ] of Object.entries(this.matQueries)) {
@@ -87,7 +91,7 @@ export class MatchingEngine {
 
         // logical consistency validation
         // TODO
-        return { upStore, upDataset }
+        return { upStore, upDataset, reportStore }
     }
 
     async matching(upTurtle, rpUris, matchingMode, format, testMode = false) {
