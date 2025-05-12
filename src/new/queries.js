@@ -289,3 +289,16 @@ export const QUERY_METADATA_BCS = (rootUri, lang) => { return `
         FILTER (lang(?label) = "${lang}")
     }`
 }
+
+export const QUERY_INSERT_VALIDATION_REPORT_URI = (validationReportUri) => { return `
+    PREFIX ff: <https://foerderfunke.org/default#>
+    PREFIX sh: <http://www.w3.org/ns/shacl#>
+    DELETE {
+        ?reportBlankNode ?p ?o .
+    } INSERT {
+        ${validationReportUri} ?p ?o .
+    } WHERE {
+        ?reportBlankNode a sh:ValidationReport ;
+            ?p ?o .
+    }`
+}

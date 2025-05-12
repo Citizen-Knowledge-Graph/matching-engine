@@ -1,5 +1,5 @@
-import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, newStore, addTurtleToStore, storeFromDataset, sparqlConstruct, storeToTurtle, sparqlSelect, addTriple, expand, a, datasetFromStore, storeToJsonLdObj, sparqlInsertDelete, turtleToJsonLdObj, formatTimestamp, formatTimestampAsLiteral } from "@foerderfunke/sem-ops-utils"
-import { FORMAT, MATCHING_MODE, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_VIOLATING_DATAFIELDS, QUERY_BUILD_INDIVIDUALS_TREE, QUERY_EXTRACT_INVALID_INDIVIDUALS, QUERY_HASVALUE_FIX, QUERY_METADATA_RPS, QUERY_METADATA_DFS, QUERY_METADATA_BCS } from "./queries.js"
+import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, newStore, addTurtleToStore, storeFromDataset, sparqlConstruct, storeToTurtle, sparqlSelect, addTriple, expand, a, datasetFromStore, storeToJsonLdObj, sparqlInsertDelete, turtleToJsonLdObj, formatTimestamp, formatTimestampAsLiteral, addStoreToStore } from "@foerderfunke/sem-ops-utils"
+import { FORMAT, MATCHING_MODE, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_VIOLATING_DATAFIELDS, QUERY_BUILD_INDIVIDUALS_TREE, QUERY_EXTRACT_INVALID_INDIVIDUALS, QUERY_HASVALUE_FIX, QUERY_METADATA_RPS, QUERY_METADATA_DFS, QUERY_METADATA_BCS, QUERY_INSERT_VALIDATION_REPORT_URI } from "./queries.js"
 import { Graph } from "./Graph.js"
 
 export class MatchingEngine {
@@ -93,14 +93,22 @@ export class MatchingEngine {
         let dfReport = await this.datafieldsValidator.validate({ dataset: upDataset })
         addTriple(reportStore, reportUri, expand("sh:conforms"), dfReport.conforms)
         if (!dfReport.conforms) {
-            // TODO
+            let dfReportStore = storeFromDataset(dfReport.dataset)
+            let reportName = "ff:PlausibilityValidationReport"
+            addTriple(reportStore, reportUri, expand("ff:hasValidationReport"), expand(reportName))
+            await sparqlInsertDelete(QUERY_INSERT_VALIDATION_REPORT_URI(reportName), dfReportStore)
+            addStoreToStore(dfReportStore, reportStore)
         }
 
         // logical consistency validation
         let lcReport = await this.consistencyValidator.validate({ dataset: upDataset })
         addTriple(reportStore, reportUri, expand("ff:passesLogicalConsistencyCheck"), lcReport.conforms)
         if (!lcReport.conforms) {
-            // TODO
+            let lcReportStore = storeFromDataset(lcReport.dataset)
+            let reportName = "ff:LogicalConsistencyValidationReport"
+            addTriple(reportStore, reportUri, expand("ff:hasValidationReport"), expand(reportName))
+            await sparqlInsertDelete(QUERY_INSERT_VALIDATION_REPORT_URI(reportName), lcReportStore)
+            addStoreToStore(lcReportStore, reportStore)
         }
         return { upStore, upDataset, reportStore }
     }

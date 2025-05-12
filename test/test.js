@@ -41,15 +41,21 @@ describe("all matching-engine tests", function () {
     })
 
     describe("testing profile validation and materialization functions on the matchingEngine object", function () {
-        const SIMPLE_UP = `
+        const UP = `
             @prefix ff: <https://foerderfunke.org/default#> .
+            @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
             ff:mainPerson a ff:Citizen ;
-                ff:staatsbuergerschaft ff:staatsbuergerschaft-ao-eu .`
+                ff:staatsbuergerschaft ff:staatsbuergerschaft-ao-us ;
+                    ff:geburtsdatum "2005-01-02"^^xsd:date ;
+                    ff:hasChild ff:child0 .
+            ff:child0 a ff:Child ;
+                ff:hasAge 25 .`
 
         it("should validate simple profile", async function () {
-            let { upStore, upDataset, reportStore } = await matchingEngine.enrichAndValidateUserProfile(SIMPLE_UP)
+            let { upStore, upDataset, reportStore } = await matchingEngine.enrichAndValidateUserProfile(UP)
             let turtle = await storeToTurtle(reportStore)
             console.log(turtle)
+            // TODO
             // strictEqual(report.conforms, true, "Simple profile did not pass datafields validation")
         })
     })
