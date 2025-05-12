@@ -69,19 +69,20 @@ export class MatchingEngine {
             let materializedQuads = await sparqlConstruct(query, [upStore, this.dfMatStore], upStore)
             materializedTriples += materializedQuads.length
             if (matchingMode !== MATCHING_MODE.FULL || materializedQuads.length === 0) continue
-            let matResultUri = expand("ff:matRes") + "_" + (count ++)
+            let matResultUri = expand("ff:matRes") + count
             addTriple(reportStore, reportUri, expand("ff:hasMaterializationResult"), matResultUri)
             // addTriple(reportStore, matResultUri, a, expand("ff:MaterializationResult"))
             addTriple(reportStore, matResultUri, expand("ff:fromRule"), matUri)
             let c = 0
             for (let quad of materializedQuads) {
-                let matTripleUri = expand("ff:matTriple") + "_" + (c ++)
+                let matTripleUri = expand("ff:matRes") + count + "triple" + (c ++)
                 addTriple(reportStore, matResultUri, expand("ff:hasTriple"), matTripleUri)
                 // addTriple(reportStore, matTripleUri, a, expand("ff:MaterializedTriple"))
                 addTriple(reportStore, matTripleUri, expand("rdf:subject"), quad.subject)
                 addTriple(reportStore, matTripleUri, expand("rdf:predicate"), quad.predicate)
                 addTriple(reportStore, matTripleUri, expand("rdf:object"), quad.object)
             }
+            count ++
         }
         if (materializedTriples > 0) {
             addTriple(reportStore, reportUri, expand("ff:materializedTriples"), materializedTriples)
