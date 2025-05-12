@@ -1,5 +1,5 @@
 import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, newStore, addTurtleToStore, storeFromDataset, sparqlConstruct, storeToTurtle, sparqlSelect, addTriple, expand, a, datasetFromStore, storeToJsonLdObj, sparqlInsertDelete, turtleToJsonLdObj, formatTimestamp, formatTimestampAsLiteral, addStoreToStore } from "@foerderfunke/sem-ops-utils"
-import { FORMAT, MATCHING_MODE, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_VIOLATING_DATAFIELDS, QUERY_BUILD_INDIVIDUALS_TREE, QUERY_EXTRACT_INVALID_INDIVIDUALS, QUERY_HASVALUE_FIX, QUERY_METADATA_RPS, QUERY_METADATA_DFS, QUERY_METADATA_BCS, QUERY_INSERT_VALIDATION_REPORT_URI } from "./queries.js"
+import { FORMAT, MATCHING_MODE, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_BUILD_INDIVIDUALS_TREE, QUERY_EXTRACT_INVALID_INDIVIDUALS, QUERY_HASVALUE_FIX, QUERY_METADATA_RPS, QUERY_METADATA_DFS, QUERY_METADATA_BCS, QUERY_INSERT_VALIDATION_REPORT_URI, QUERY_DELETE_NON_VIOLATING_VALIDATION_RESULTS, QUERY_LINK_REPORT_ONLY_IF_EXISTS } from "./queries.js"
 import { Graph } from "./Graph.js"
 
 export class MatchingEngine {
@@ -152,13 +152,19 @@ export class MatchingEngine {
             missingDfStore = matchingMode === MATCHING_MODE.QUIZ ? newStore() : reportStore
             await sparqlConstruct(QUERY_MISSING_DATAFIELDS(reportUri, rpEvalUri), [sourceStore], missingDfStore)
 
-            if (matchingMode === MATCHING_MODE.FULL) {
-                await sparqlConstruct(QUERY_VIOLATING_DATAFIELDS(rpEvalUri), [sourceStore], reportStore)
-            }
-
             if (individualsTree) {
                 let constructedQuads = await sparqlConstruct(QUERY_EXTRACT_INVALID_INDIVIDUALS, [sourceStore])
                 // TODO
+            }
+
+            if (matchingMode === MATCHING_MODE.FULL) {
+                let reportName = "ff:SubjectSpecificViolationsReport" + "_" + rpUri.split("#").pop()
+                await sparqlInsertDelete(QUERY_DELETE_NON_VIOLATING_VALIDATION_RESULTS, sourceStore)
+                await sparqlInsertDelete(QUERY_INSERT_VALIDATION_REPORT_URI(reportName), sourceStore)
+                let constructedQuads = await sparqlConstruct(QUERY_LINK_REPORT_ONLY_IF_EXISTS(reportName, rpEvalUri), [sourceStore], reportStore)
+                if (constructedQuads.length > 0) {
+                    addStoreToStore(sourceStore, reportStore)
+                }
             }
         }
 

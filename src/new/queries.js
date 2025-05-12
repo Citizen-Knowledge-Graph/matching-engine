@@ -120,30 +120,20 @@ export const QUERY_NUMBER_OF_MISSING_DATAFIELDS = (reportUri) => { return `
     }`
 }
 
-export const QUERY_VIOLATING_DATAFIELDS = (rpEvalUri) => { return `
-    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+export const QUERY_DELETE_NON_VIOLATING_VALIDATION_RESULTS = `
     PREFIX ff: <https://foerderfunke.org/default#>
     PREFIX sh: <http://www.w3.org/ns/shacl#>
-    CONSTRUCT {
-        <${rpEvalUri}> ff:hasViolatingDatafield ?violationId .
-        ?violationId
-            rdf:subject ?individual ;
-            rdf:predicate ?df ;
-            ff:hasViolationType ?type ;
-            ff:hasMessage ?message ;
-            ff:hasValue ?value .
-    } WHERE {
-        ?result a sh:ValidationResult ;
-            sh:sourceConstraintComponent ?type ;
-            sh:focusNode ?individual ;
-            sh:resultPath ?df ;
-        OPTIONAL { ?result sh:resultMessage ?message . }
-        OPTIONAL { ?result sh:value ?value . }
-        FILTER(?type != sh:MinCountConstraintComponent && ?type != sh:QualifiedMinCountConstraintComponent)
-        
-        BIND(IRI(CONCAT(STR(<${rpEvalUri}>), "_", REPLACE(STR(?individual), "^.*[#/]", ""), "_", REPLACE(STR(?df), "^.*[#/]", ""))) AS ?violationId)
+
+    DELETE {
+        ?report sh:result ?result .
+        ?result ?p ?o .
+    } WHERE { 
+        ?report a sh:ValidationReport ;
+            sh:result ?result .
+        ?result sh:sourceConstraintComponent ?type ;
+            ?p ?o .
+        FILTER(?type = sh:MinCountConstraintComponent || ?type = sh:QualifiedMinCountConstraintComponent)
     }`
-}
 
 export const QUERY_BUILD_INDIVIDUALS_TREE = `
     PREFIX ff: <https://foerderfunke.org/default#>
@@ -300,5 +290,15 @@ export const QUERY_INSERT_VALIDATION_REPORT_URI = (validationReportUri) => { ret
     } WHERE {
         ?reportBlankNode a sh:ValidationReport ;
             ?p ?o .
+    }`
+}
+
+export const QUERY_LINK_REPORT_ONLY_IF_EXISTS = (reportName, rpEvalUri) => { return `
+    PREFIX ff: <https://foerderfunke.org/default#>
+    PREFIX sh: <http://www.w3.org/ns/shacl#>
+    CONSTRUCT {
+        <${rpEvalUri}> ff:hasValidationReport ${reportName} .
+    } WHERE {
+        ?result a sh:ValidationResult .
     }`
 }
