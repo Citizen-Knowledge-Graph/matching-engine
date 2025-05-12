@@ -27,6 +27,7 @@ describe("all matching-engine tests", function () {
         matchingEngine = await new MatchingEngine(
             await promises.readFile(`${repoDir}/datafields.ttl`, "utf8"),
             await promises.readFile(`${repoDir}/materialization.ttl`, "utf8"),
+            await promises.readFile(`${repoDir}/consistency.ttl`, "utf8"),
             rps,
             "en",
             FORMAT.JSON_LD
@@ -35,7 +36,7 @@ describe("all matching-engine tests", function () {
 
     it("matchingEngine object should have correct keys", function () {
         deepStrictEqual(
-            Object.keys(matchingEngine), ["datafieldsTurtle", "dfMatStore", "datafieldsValidator", "requirementProfilesStore", "validators", "matQueries", "metadata", "lang", "metadataFormat"],
+            Object.keys(matchingEngine), ["datafieldsTurtle", "dfMatStore", "datafieldsValidator", "consistencyValidator", "requirementProfilesStore", "validators", "matQueries", "metadata", "lang", "metadataFormat"],
             "The matchingEngine object does not have the expected keys")
     })
 

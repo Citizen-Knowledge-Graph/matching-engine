@@ -4,10 +4,11 @@ import { Graph } from "./Graph.js"
 
 export class MatchingEngine {
 
-    constructor(datafieldsTurtle, materializationTurtle, requirementProfilesTurtles, lang, metadataFormat) {
+    constructor(datafieldsTurtle, materializationTurtle, consistencyTurtle, requirementProfilesTurtles, lang, metadataFormat) {
         this.datafieldsTurtle = datafieldsTurtle
         this.dfMatStore = storeFromTurtles([datafieldsTurtle, materializationTurtle])
         this.datafieldsValidator = buildValidator(datafieldsTurtle)
+        this.consistencyValidator = buildValidator(consistencyTurtle)
         this.requirementProfilesStore = newStore()
         this.validators = {}
         for (let rpTurtle of requirementProfilesTurtles) this.addValidator(rpTurtle)
@@ -95,7 +96,11 @@ export class MatchingEngine {
         }
 
         // logical consistency validation
-        // TODO
+        let lcReport = await this.consistencyValidator.validate({ dataset: upDataset })
+        addTriple(reportStore, reportUri, expand("ff:passesLogicalConsistencyCheck"), lcReport.conforms)
+        if (!lcReport.conforms) {
+            // TODO
+        }
         return { upStore, upDataset, reportStore }
     }
 
