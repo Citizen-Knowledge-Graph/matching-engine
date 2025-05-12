@@ -61,10 +61,12 @@ export class MatchingEngine {
 
         // materialization
         let count = 0
+        let materializedTriples = 0
         for (let [ matUri, query ] of Object.entries(this.matQueries)) {
             // do we need an exhausting approach instead until nothing is materialized anymore instead of a one-time for loop?
             // also filling the upStore while also using it as source could create build-ups with side effects?
             let materializedQuads = await sparqlConstruct(query, [upStore, this.dfMatStore], upStore)
+            materializedTriples += materializedQuads.length
             if (matchingMode !== MATCHING_MODE.FULL || materializedQuads.length === 0) continue
             let matResultUri = expand("ff:matRes") + "_" + (count ++)
             addTriple(reportStore, reportUri, expand("ff:hasMaterializationResult"), matResultUri)
@@ -79,6 +81,9 @@ export class MatchingEngine {
                 addTriple(reportStore, matTripleUri, expand("rdf:predicate"), quad.predicate)
                 addTriple(reportStore, matTripleUri, expand("rdf:object"), quad.object)
             }
+        }
+        if (materializedTriples > 0) {
+            addTriple(reportStore, reportUri, expand("ff:materializedTriples"), materializedTriples)
         }
         let upDataset = datasetFromStore(upStore)
 
