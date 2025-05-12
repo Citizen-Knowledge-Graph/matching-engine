@@ -89,7 +89,7 @@ export class MatchingEngine {
 
         // plausibility validation
         let dfReport = await this.datafieldsValidator.validate({ dataset: upDataset })
-        addTriple(reportStore, reportUri, expand("ff:hasConformingUserProfile"), dfReport.conforms)
+        addTriple(reportStore, reportUri, expand("sh:conforms"), dfReport.conforms)
         if (!dfReport.conforms) {
             // TODO
         }
