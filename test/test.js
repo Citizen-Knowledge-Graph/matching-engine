@@ -53,10 +53,46 @@ describe("all matching-engine tests", function () {
 
         it("should validate simple profile", async function () {
             let { upStore, upDataset, reportStore } = await matchingEngine.enrichAndValidateUserProfile(UP)
-            let turtle = await storeToTurtle(reportStore)
-            console.log(turtle)
-            // TODO
-            // strictEqual(report.conforms, true, "Simple profile did not pass datafields validation")
+            let actualTurtle = await storeToTurtle(reportStore)
+
+            const expectedTurtle = `
+                @prefix ff: <https://foerderfunke.org/default#>.
+                @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+                @prefix sh: <http://www.w3.org/ns/shacl#>.
+                
+                ff:LogicalConsistencyValidationReport a sh:ValidationReport;
+                    sh:conforms false;
+                    sh:result [ 
+                        a sh:ValidationResult;
+                        sh:focusNode ff:mainPerson;
+                        sh:resultMessage "A parent must be older than their child.";
+                        sh:resultPath (ff:hasChild ff:hasAge);
+                        sh:resultSeverity sh:Violation;
+                        sh:sourceConstraintComponent sh:LessThanConstraintComponent;
+                        sh:sourceShape [];
+                        sh:value 25
+                    ].
+                ff:PlausibilityValidationReport a sh:ValidationReport;
+                    sh:conforms false;
+                    sh:result [
+                        a sh:ValidationResult;
+                        sh:focusNode ff:mainPerson;
+                        sh:resultMessage "Value is not in https://foerderfunke.org/default#staatsbuergerschaft-ao-ger, https://foerderfunke.org/default#staatsbuergerschaft-ao-eu, https://foerderfunke.org/default#staatsbuergerschaft-ao-3rd";
+                        sh:resultPath ff:staatsbuergerschaft;
+                        sh:resultSeverity sh:Violation;
+                        sh:sourceConstraintComponent sh:InConstraintComponent;
+                        sh:sourceShape [];
+                        sh:value ff:staatsbuergerschaft-ao-us
+                    ].
+                ff:userProfileValidationReport
+                    sh:conforms false;
+                    ff:hasValidationReport
+                        ff:LogicalConsistencyValidationReport,
+                        ff:PlausibilityValidationReport;
+                    ff:materializedTriples 6;
+                    ff:passesLogicalConsistencyCheck false.`
+
+            strictEqual(isomorphicTurtles(actualTurtle, expectedTurtle), true, "The report in Turtle format does not match the expected one")
         })
     })
 
