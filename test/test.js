@@ -209,21 +209,24 @@ describe("all matching-engine tests", function () {
             const expectedTurtle = `
                 @prefix ff: <https://foerderfunke.org/default#>.
                 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+                @prefix sh: <http://www.w3.org/ns/shacl#>.
 
                 ff:mainPerson_hasIncome
                     rdf:predicate ff:hasIncome;
                     rdf:subject ff:mainPerson.
 
                 ff:matchingReport_STATIC_TEST_URI a ff:MatchingReport;
-                    ff:hasConformingUserProfile true;
+                    sh:conforms true;
                     ff:hasEvaluatedRequirementProfile
                         ff:rpEvalRes_devRp1,
                         ff:rpEvalRes_devRp2;
                     ff:hasMode ff:quiz;
                     ff:hasMostMissedDatafield ff:mainPerson_hasIncome;
                     ff:hasNumberOfMissingDatafields 1;
-                    ff:hasTimestamp "STATIC_TEST_VALUE".
-
+                    ff:hasTimestamp "STATIC_TEST_VALUE";
+                    ff:materializedTriples 4;
+                    ff:passesLogicalConsistencyCheck true.
+ 
                 ff:rpEvalRes_devRp1
                     ff:hasEligibilityStatus ff:ineligible;
                     ff:hasRpUri ff:devRp1.
@@ -247,7 +250,7 @@ describe("all matching-engine tests", function () {
                 },
                 '@id': 'ff:matchingReport_STATIC_TEST_URI',
                 '@type': 'ff:MatchingReport',
-                'ff:hasConformingUserProfile': { '@type': 'xsd:boolean', '@value': 'true' },
+                'sh:conforms': { '@type': 'xsd:boolean', '@value': 'true' },
                 'ff:hasEvaluatedRequirementProfile': [
                     {
                         '@id': 'ff:rpEvalRes_devRp1',
@@ -267,7 +270,9 @@ describe("all matching-engine tests", function () {
                     'rdf:subject': { '@id': 'ff:mainPerson' }
                 },
                 'ff:hasNumberOfMissingDatafields': { '@type': 'xsd:integer', '@value': '1' },
-                'ff:hasTimestamp': 'STATIC_TEST_VALUE'
+                'ff:hasTimestamp': 'STATIC_TEST_VALUE',
+                'ff:materializedTriples': { '@type': 'xsd:integer', '@value': '4' },
+                'ff:passesLogicalConsistencyCheck': { '@type': 'xsd:boolean', '@value': 'true' }
             }
             strictEqual(lodash.isEqual(quizReportJsonLd, expectedJsonLd), true, "The report in JSON-LD format does not match the expected one")
         })
@@ -291,41 +296,72 @@ describe("all matching-engine tests", function () {
                     ff:isMissedBy ff:rpEvalRes_devRp2.
                 
                 ff:matchingReport_STATIC_TEST_URI a ff:MatchingReport;
-                    ff:hasConformingUserProfile true;
+                    sh:conforms true;
                     ff:hasEvaluatedRequirementProfile
                         ff:rpEvalRes_devRp1,
                         ff:rpEvalRes_devRp2;
-                    ff:hasMaterializationResult ff:matRes_0;
+                    ff:hasMaterializationResult
+                        ff:matRes0,
+                        ff:matRes1;
                     ff:hasMissingDatafield ff:mainPerson_hasIncome;
                     ff:hasMode ff:full;
                     ff:hasMostMissedDatafield ff:mainPerson_hasIncome;
                     ff:hasNumberOfMissingDatafields 1;
-                    ff:hasTimestamp "STATIC_TEST_VALUE".
+                    ff:hasTimestamp "STATIC_TEST_VALUE";
+                    ff:materializedTriples 4;
+                    ff:passesLogicalConsistencyCheck true.
                 
-                ff:matRes_0
+                ff:matRes0
                     ff:fromRule ff:InterestedInBuildingActivatorRule;
-                    ff:hasTriple ff:matTriple_0.
+                    ff:hasTriple ff:matRes0triple0.
                 
-                ff:matTriple_0
+                ff:matRes0triple0
                     rdf:object false;
                     rdf:predicate ff:interested_in_building_renovation_FLAG;
+                    rdf:subject ff:mainPerson.
+                
+                ff:matRes1
+                    ff:fromRule ff:UebergangsGeldAgenturFuerArbeit;
+                    ff:hasTriple
+                        ff:matRes1triple0,
+                        ff:matRes1triple1,
+                        ff:matRes1triple2.
+                
+                ff:matRes1triple0
+                    rdf:object true;
+                    rdf:predicate ff:vocational_returnee_deactivated;
+                    rdf:subject ff:mainPerson.
+                
+                ff:matRes1triple1
+                    rdf:object true;
+                    rdf:predicate ff:vocationalReturneeShape_deactivated;
+                    rdf:subject ff:mainPerson.
+                
+                ff:matRes1triple2
+                    rdf:object true;
+                    rdf:predicate ff:nonVocationalReturneeShape_deactivated;
                     rdf:subject ff:mainPerson.
                 
                 ff:rpEvalRes_devRp1
                     ff:hasEligibilityStatus ff:ineligible;
                     ff:hasRpUri ff:devRp1;
-                    ff:hasViolatingDatafield ff:rpEvalRes_devRp1_mainPerson_hasAge.
-                
-                ff:rpEvalRes_devRp1_mainPerson_hasAge
-                    rdf:predicate ff:hasAge;
-                    rdf:subject ff:mainPerson;
-                    ff:hasMessage "Value is not greater than or equal to \\"18\\"^^<http://www.w3.org/2001/XMLSchema#integer>";
-                    ff:hasValue 16;
-                    ff:hasViolationType sh:MinInclusiveConstraintComponent.
+                    ff:hasValidationReport ff:SubjectSpecificViolationsReport_devRp1.
                 
                 ff:rpEvalRes_devRp2
                     ff:hasEligibilityStatus ff:missingData;
-                    ff:hasRpUri ff:devRp2.`
+                    ff:hasRpUri ff:devRp2.
+                
+                ff:SubjectSpecificViolationsReport_devRp1 a sh:ValidationReport;
+                    sh:conforms false;
+                    sh:result [ a sh:ValidationResult;
+                        sh:focusNode ff:mainPerson;
+                        sh:resultMessage "Value is not greater than or equal to \\"18\\"^^<http://www.w3.org/2001/XMLSchema#integer>";
+                        sh:resultPath ff:hasAge;
+                        sh:resultSeverity sh:Violation;
+                        sh:sourceConstraintComponent sh:MinInclusiveConstraintComponent;
+                        sh:sourceShape [];
+                        sh:value 16
+                    ].`
             strictEqual(isomorphicTurtles(fullReportTurtle, expectedTurtle), true, "The report in Turtle format does not match the expected one")
 
             // JSON-lD
@@ -342,19 +378,26 @@ describe("all matching-engine tests", function () {
                 },
                 '@id': 'ff:matchingReport_STATIC_TEST_URI',
                 '@type': 'ff:MatchingReport',
-                'ff:hasConformingUserProfile': { '@type': 'xsd:boolean', '@value': 'true' },
+                'sh:conforms': { '@type': 'xsd:boolean', '@value': 'true' },
                 'ff:hasEvaluatedRequirementProfile': [
                     {
                         '@id': 'ff:rpEvalRes_devRp1',
                         'ff:hasEligibilityStatus': { '@id': 'ff:ineligible' },
                         'ff:hasRpUri': { '@id': 'ff:devRp1' },
-                        'ff:hasViolatingDatafield': {
-                            '@id': 'ff:rpEvalRes_devRp1_mainPerson_hasAge',
-                            'rdf:predicate': { '@id': 'ff:hasAge' },
-                            'rdf:subject': { '@id': 'ff:mainPerson' },
-                            'ff:hasMessage': 'Value is not greater than or equal to "18"^^<http://www.w3.org/2001/XMLSchema#integer>',
-                            'ff:hasValue': { '@type': 'xsd:integer', '@value': '16' },
-                            'ff:hasViolationType': { '@id': 'sh:MinInclusiveConstraintComponent' }
+                        'ff:hasValidationReport': {
+                            '@id': 'ff:SubjectSpecificViolationsReport_devRp1',
+                            '@type': 'sh:ValidationReport',
+                            'sh:conforms': { '@type': 'xsd:boolean', '@value': 'false' },
+                            'sh:result': {
+                                '@type': 'sh:ValidationResult',
+                                'sh:focusNode': { '@id': 'ff:mainPerson' },
+                                'sh:resultMessage': 'Value is not greater than or equal to "18"^^<http://www.w3.org/2001/XMLSchema#integer>',
+                                'sh:resultPath': { '@id': 'ff:hasAge' },
+                                'sh:resultSeverity': { '@id': 'sh:Violation' },
+                                'sh:sourceConstraintComponent': { '@id': 'sh:MinInclusiveConstraintComponent' },
+                                'sh:sourceShape': {},
+                                'sh:value': { '@type': 'xsd:integer', '@value': '16' }
+                            }
                         }
                     },
                     {
@@ -363,16 +406,42 @@ describe("all matching-engine tests", function () {
                         'ff:hasRpUri': { '@id': 'ff:devRp2' }
                     }
                 ],
-                'ff:hasMaterializationResult': {
-                    '@id': 'ff:matRes_0',
-                    'ff:fromRule': { '@id': 'ff:InterestedInBuildingActivatorRule' },
-                    'ff:hasTriple': {
-                        '@id': 'ff:matTriple_0',
-                        'rdf:object': { '@type': 'xsd:boolean', '@value': 'false' },
-                        'rdf:predicate': { '@id': 'ff:interested_in_building_renovation_FLAG' },
-                        'rdf:subject': { '@id': 'ff:mainPerson' }
+                'ff:hasMaterializationResult': [
+                    {
+                        '@id': 'ff:matRes0',
+                        'ff:fromRule': { '@id': 'ff:InterestedInBuildingActivatorRule' },
+                        'ff:hasTriple': {
+                            '@id': 'ff:matRes0triple0',
+                            'rdf:object': { '@type': 'xsd:boolean', '@value': 'false' },
+                            'rdf:predicate': { '@id': 'ff:interested_in_building_renovation_FLAG' },
+                            'rdf:subject': { '@id': 'ff:mainPerson' }
+                        }
+                    },
+                    {
+                        '@id': 'ff:matRes1',
+                        'ff:fromRule': { '@id': 'ff:UebergangsGeldAgenturFuerArbeit' },
+                        'ff:hasTriple': [
+                            {
+                                '@id': 'ff:matRes1triple0',
+                                'rdf:object': { '@type': 'xsd:boolean', '@value': 'true' },
+                                'rdf:predicate': { '@id': 'ff:vocational_returnee_deactivated' },
+                                'rdf:subject': { '@id': 'ff:mainPerson' }
+                            },
+                            {
+                                '@id': 'ff:matRes1triple1',
+                                'rdf:object': { '@type': 'xsd:boolean', '@value': 'true' },
+                                'rdf:predicate': { '@id': 'ff:vocationalReturneeShape_deactivated' },
+                                'rdf:subject': { '@id': 'ff:mainPerson' }
+                            },
+                            {
+                                '@id': 'ff:matRes1triple2',
+                                'rdf:object': { '@type': 'xsd:boolean', '@value': 'true' },
+                                'rdf:predicate': { '@id': 'ff:nonVocationalReturneeShape_deactivated' },
+                                'rdf:subject': { '@id': 'ff:mainPerson' }
+                            }
+                        ]
                     }
-                },
+                ],
                 'ff:hasMissingDatafield': {
                     '@id': 'ff:mainPerson_hasIncome',
                     'rdf:predicate': { '@id': 'ff:hasIncome' },
@@ -382,7 +451,9 @@ describe("all matching-engine tests", function () {
                 'ff:hasMode': { '@id': 'ff:full' },
                 'ff:hasMostMissedDatafield': { '@id': 'ff:mainPerson_hasIncome' },
                 'ff:hasNumberOfMissingDatafields': { '@type': 'xsd:integer', '@value': '1' },
-                'ff:hasTimestamp': 'STATIC_TEST_VALUE'
+                'ff:hasTimestamp': 'STATIC_TEST_VALUE',
+                'ff:materializedTriples': { '@type': 'xsd:integer', '@value': '4' },
+                'ff:passesLogicalConsistencyCheck': { '@type': 'xsd:boolean', '@value': 'true' }
             }
             strictEqual(lodash.isEqual(fullReportJsonLd, expectedJsonLd), true, "The report in JSON-LD format does not match the expected one")
         })
