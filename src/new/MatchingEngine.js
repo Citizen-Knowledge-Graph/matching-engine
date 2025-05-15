@@ -91,7 +91,7 @@ export class MatchingEngine {
 
         // plausibility validation
         let dfReport = await this.datafieldsValidator.validate({ dataset: upDataset })
-        addTriple(reportStore, reportUri, expand("sh:conforms"), dfReport.conforms)
+        addTriple(reportStore, reportUri, expand("ff:upPassesPlausibilityCheck"), dfReport.conforms)
         if (!dfReport.conforms) {
             let dfReportStore = storeFromDataset(dfReport.dataset)
             let reportName = "ff:PlausibilityValidationReport"
@@ -102,7 +102,7 @@ export class MatchingEngine {
 
         // logical consistency validation
         let lcReport = await this.consistencyValidator.validate({ dataset: upDataset })
-        addTriple(reportStore, reportUri, expand("ff:passesLogicalConsistencyCheck"), lcReport.conforms)
+        addTriple(reportStore, reportUri, expand("ff:upPassesLogicalConsistencyCheck"), lcReport.conforms)
         if (!lcReport.conforms) {
             let lcReportStore = storeFromDataset(lcReport.dataset)
             let reportName = "ff:LogicalConsistencyValidationReport"

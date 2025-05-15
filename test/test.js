@@ -216,7 +216,7 @@ describe("all matching-engine tests", function () {
                     rdf:subject ff:mainPerson.
 
                 ff:matchingReport_STATIC_TEST_URI a ff:MatchingReport;
-                    sh:conforms true;
+                    ff:upPassesPlausibilityCheck true;
                     ff:hasEvaluatedRequirementProfile
                         ff:rpEvalRes_devRp1,
                         ff:rpEvalRes_devRp2;
@@ -225,7 +225,7 @@ describe("all matching-engine tests", function () {
                     ff:hasNumberOfMissingDatafields 1;
                     ff:hasTimestamp "STATIC_TEST_VALUE";
                     ff:materializedTriples 4;
-                    ff:passesLogicalConsistencyCheck true.
+                    ff:upPassesLogicalConsistencyCheck true.
  
                 ff:rpEvalRes_devRp1
                     ff:hasEligibilityStatus ff:ineligible;
@@ -250,7 +250,7 @@ describe("all matching-engine tests", function () {
                 },
                 '@id': 'ff:matchingReport_STATIC_TEST_URI',
                 '@type': 'ff:MatchingReport',
-                'sh:conforms': { '@type': 'xsd:boolean', '@value': 'true' },
+                'ff:upPassesPlausibilityCheck': { '@type': 'xsd:boolean', '@value': 'true' },
                 'ff:hasEvaluatedRequirementProfile': [
                     {
                         '@id': 'ff:rpEvalRes_devRp1',
@@ -272,7 +272,7 @@ describe("all matching-engine tests", function () {
                 'ff:hasNumberOfMissingDatafields': { '@type': 'xsd:integer', '@value': '1' },
                 'ff:hasTimestamp': 'STATIC_TEST_VALUE',
                 'ff:materializedTriples': { '@type': 'xsd:integer', '@value': '4' },
-                'ff:passesLogicalConsistencyCheck': { '@type': 'xsd:boolean', '@value': 'true' }
+                'ff:upPassesLogicalConsistencyCheck': { '@type': 'xsd:boolean', '@value': 'true' }
             }
             strictEqual(lodash.isEqual(quizReportJsonLd, expectedJsonLd), true, "The report in JSON-LD format does not match the expected one")
         })
@@ -296,7 +296,7 @@ describe("all matching-engine tests", function () {
                     ff:isMissedBy ff:rpEvalRes_devRp2.
                 
                 ff:matchingReport_STATIC_TEST_URI a ff:MatchingReport;
-                    sh:conforms true;
+                    ff:upPassesPlausibilityCheck true;
                     ff:hasEvaluatedRequirementProfile
                         ff:rpEvalRes_devRp1,
                         ff:rpEvalRes_devRp2;
@@ -309,7 +309,7 @@ describe("all matching-engine tests", function () {
                     ff:hasNumberOfMissingDatafields 1;
                     ff:hasTimestamp "STATIC_TEST_VALUE";
                     ff:materializedTriples 4;
-                    ff:passesLogicalConsistencyCheck true.
+                    ff:upPassesLogicalConsistencyCheck true.
                 
                 ff:matRes0
                     ff:fromRule ff:InterestedInBuildingActivatorRule;
