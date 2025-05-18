@@ -14,10 +14,12 @@ export const QUERY_HASVALUE_FIX = `
     PREFIX ff: <https://foerderfunke.org/default#>
     PREFIX sh: <http://www.w3.org/ns/shacl#>
     DELETE {
-        ?report sh:result ?result2 .
+        ?parentNode sh:result ?result2 ;
+            sh:detail ?result2 .
         ?result2 ?p ?o .
     } WHERE {
-        ?report sh:result ?result1, ?result2 .
+        # parentNode can be the blank root node of sh:ValidationReport or sh:detail
+        ?parentNode (sh:result | sh:detail) ?result1, ?result2 .
       
         ?result1 
             sh:focusNode ?focusNode ;
@@ -45,9 +47,8 @@ export const QUERY_ELIGIBILITY_STATUS = (rpEvalUri) => { return `
                 ff:eligible,
                 IF(
                     EXISTS {
-                        ?report sh:result ?result .
                         ?result sh:sourceConstraintComponent ?type .
-                        FILTER(?type NOT IN (sh:MinCountConstraintComponent, sh:QualifiedMinCountConstraintComponent))
+                        FILTER(?type NOT IN (sh:MinCountConstraintComponent, sh:QualifiedMinCountConstraintComponent, sh:OrConstraintComponent))
                     },
                     ff:ineligible, ff:missingData
                 )
@@ -74,9 +75,8 @@ export const QUERY_MISSING_DATAFIELDS = (reportUri, rpEvalUri) => { return `
         FILTER(?type IN (sh:MinCountConstraintComponent, sh:QualifiedMinCountConstraintComponent))                
     
         FILTER NOT EXISTS {
-            ?report sh:result ?otherResult .
             ?otherResult sh:sourceConstraintComponent ?otherType .
-            FILTER(?otherType NOT IN (sh:MinCountConstraintComponent, sh:QualifiedMinCountConstraintComponent))
+            FILTER(?otherType NOT IN (sh:MinCountConstraintComponent, sh:QualifiedMinCountConstraintComponent, sh:OrConstraintComponent))
         }
      
         BIND(IRI(CONCAT(STR(?individual), "_", REPLACE(STR(?df), "^.*[#/]", ""))) AS ?indivDfId)
@@ -125,14 +125,14 @@ export const QUERY_DELETE_NON_VIOLATING_VALIDATION_RESULTS = `
     PREFIX sh: <http://www.w3.org/ns/shacl#>
 
     DELETE {
-        ?report sh:result ?result .
+        ?parentNode sh:result ?result ;
+            sh:detail ?result .
         ?result ?p ?o .
     } WHERE { 
-        ?report a sh:ValidationReport ;
-            sh:result ?result .
+        ?parentNode (sh:result | sh:detail) ?result .
         ?result sh:sourceConstraintComponent ?type ;
             ?p ?o .
-        FILTER(?type = sh:MinCountConstraintComponent || ?type = sh:QualifiedMinCountConstraintComponent)
+        FILTER(?type = sh:MinCountConstraintComponent || ?type = sh:QualifiedMinCountConstraintComponent || ?type = sh:OrConstraintComponent)
     }`
 
 export const QUERY_BUILD_INDIVIDUALS_TREE = `

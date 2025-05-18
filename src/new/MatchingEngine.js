@@ -42,7 +42,7 @@ export class MatchingEngine {
     addValidator(rpTurtle) {
         addTurtleToStore(this.requirementProfilesStore, rpTurtle)
         let rpUri = extractFirstIndividualUriFromTurtle(rpTurtle, "ff:RequirementProfile")
-        if (rpUri) this.validators[rpUri] = buildValidator(rpTurtle)
+        if (rpUri) this.validators[rpUri] = buildValidator(rpTurtle, false, true)
     }
 
     getAllRpUris() {
