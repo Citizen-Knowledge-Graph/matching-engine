@@ -85,12 +85,12 @@ describe("all matching-engine tests", function () {
                         sh:value ff:staatsbuergerschaft-ao-us
                     ].
                 ff:userProfileValidationReport
-                    sh:conforms false;
                     ff:hasValidationReport
                         ff:LogicalConsistencyValidationReport,
                         ff:PlausibilityValidationReport;
                     ff:materializedTriples 6;
-                    ff:passesLogicalConsistencyCheck false.`
+                    ff:upPassesLogicalConsistencyCheck false;
+                    ff:upPassesPlausibilityCheck false.`
 
             strictEqual(isomorphicTurtles(actualTurtle, expectedTurtle), true, "The report in Turtle format does not match the expected one")
         })
@@ -209,14 +209,12 @@ describe("all matching-engine tests", function () {
             const expectedTurtle = `
                 @prefix ff: <https://foerderfunke.org/default#>.
                 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
-                @prefix sh: <http://www.w3.org/ns/shacl#>.
 
                 ff:mainPerson_hasIncome
                     rdf:predicate ff:hasIncome;
                     rdf:subject ff:mainPerson.
 
                 ff:matchingReport_STATIC_TEST_URI a ff:MatchingReport;
-                    ff:upPassesPlausibilityCheck true;
                     ff:hasEvaluatedRequirementProfile
                         ff:rpEvalRes_devRp1,
                         ff:rpEvalRes_devRp2;
@@ -225,8 +223,9 @@ describe("all matching-engine tests", function () {
                     ff:hasNumberOfMissingDatafields 1;
                     ff:hasTimestamp "STATIC_TEST_VALUE";
                     ff:materializedTriples 4;
-                    ff:upPassesLogicalConsistencyCheck true.
- 
+                    ff:upPassesLogicalConsistencyCheck true;
+                    ff:upPassesPlausibilityCheck true.
+
                 ff:rpEvalRes_devRp1
                     ff:hasEligibilityStatus ff:ineligible;
                     ff:hasRpUri ff:devRp1.
@@ -296,7 +295,6 @@ describe("all matching-engine tests", function () {
                     ff:isMissedBy ff:rpEvalRes_devRp2.
                 
                 ff:matchingReport_STATIC_TEST_URI a ff:MatchingReport;
-                    ff:upPassesPlausibilityCheck true;
                     ff:hasEvaluatedRequirementProfile
                         ff:rpEvalRes_devRp1,
                         ff:rpEvalRes_devRp2;
@@ -309,7 +307,8 @@ describe("all matching-engine tests", function () {
                     ff:hasNumberOfMissingDatafields 1;
                     ff:hasTimestamp "STATIC_TEST_VALUE";
                     ff:materializedTriples 4;
-                    ff:upPassesLogicalConsistencyCheck true.
+                    ff:upPassesLogicalConsistencyCheck true;
+                    ff:upPassesPlausibilityCheck true.
                 
                 ff:matRes0
                     ff:fromRule ff:InterestedInBuildingActivatorRule;
@@ -378,7 +377,6 @@ describe("all matching-engine tests", function () {
                 },
                 '@id': 'ff:matchingReport_STATIC_TEST_URI',
                 '@type': 'ff:MatchingReport',
-                'sh:conforms': { '@type': 'xsd:boolean', '@value': 'true' },
                 'ff:hasEvaluatedRequirementProfile': [
                     {
                         '@id': 'ff:rpEvalRes_devRp1',
@@ -453,7 +451,8 @@ describe("all matching-engine tests", function () {
                 'ff:hasNumberOfMissingDatafields': { '@type': 'xsd:integer', '@value': '1' },
                 'ff:hasTimestamp': 'STATIC_TEST_VALUE',
                 'ff:materializedTriples': { '@type': 'xsd:integer', '@value': '4' },
-                'ff:passesLogicalConsistencyCheck': { '@type': 'xsd:boolean', '@value': 'true' }
+                'ff:upPassesLogicalConsistencyCheck': { '@type': 'xsd:boolean', '@value': 'true' },
+                'ff:upPassesPlausibilityCheck': { '@type': 'xsd:boolean', '@value': 'true' }
             }
             strictEqual(lodash.isEqual(fullReportJsonLd, expectedJsonLd), true, "The report in JSON-LD format does not match the expected one")
         })
