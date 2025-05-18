@@ -3,7 +3,7 @@ import { strictEqual, deepStrictEqual } from "node:assert"
 import { existsSync, promises } from "fs"
 import simpleGit from "simple-git"
 import { MatchingEngine } from "../src/new/MatchingEngine.js"
-import { expand, isomorphicTurtles, storeToTurtle } from "@foerderfunke/sem-ops-utils"
+import { expand, isomorphicTurtles, sparqlSelect, storeFromTurtles, storeToTurtle } from "@foerderfunke/sem-ops-utils"
 import lodash from "lodash"
 import { FORMAT, MATCHING_MODE } from "../src/new/queries.js"
 import util from "util"
@@ -100,6 +100,7 @@ describe("all matching-engine tests", function () {
         const SIMPLE_RP1 = "ff:devRp1"
         const SIMPLE_RP2 = "ff:devRp2"
         const SUBINDIV_RP3 = "ff:devRp3"
+        const OR_RP4 = "ff:devRp4"
 
         before(async function () {
             let shacl = `
@@ -177,6 +178,42 @@ describe("all matching-engine tests", function () {
                         sh:minCount 1 ;     
                     ] .`
             matchingEngine.addValidator(shacl)
+            shacl = `
+                @prefix sh: <http://www.w3.org/ns/shacl#> .
+                @prefix ff: <https://foerderfunke.org/default#> .
+                
+                ${OR_RP4} a ff:RequirementProfile .
+                ff:${OR_RP4}Shape a sh:NodeShape ;
+                    sh:targetClass ff:Citizen ;
+                    sh:property [
+                        sh:or (
+                            [ 
+                                sh:property [
+                                    sh:path ff:orBranchAdf1 ;
+                                    sh:in (true) ;
+                                    sh:minCount 1 ;
+                                ] ;
+                                sh:property [
+                                    sh:path ff:orBranchAdf2 ;
+                                    sh:hasValue "test" ;
+                                    sh:minCount 1 ;
+                                ]
+                            ]
+                            [ 
+                                sh:property [
+                                    sh:path ff:orBranchBdf1 ;
+                                    sh:in (true) ;
+                                    sh:minCount 1 ;
+                                ] ;
+                                sh:property [
+                                    sh:path ff:orBranchBdf2 ;
+                                    sh:minInclusive 3 ;
+                                    sh:minCount 1 ;
+                                ]
+                            ]
+                        )
+                    ] .`
+            matchingEngine.addValidator(shacl)
         })
 
         it("should validate conforming for basic case", async function () {
@@ -195,6 +232,28 @@ describe("all matching-engine tests", function () {
             strictEqual(report.conforms, false, "The validation report conforms, even so it shouldn't")
         })
 
+        it("should validate sh:or for missing data correctly", async function () {
+            // this requires the details flag to be activated in the SHACL validator
+            let user = `
+                @prefix ff: <https://foerderfunke.org/default#> .
+                ff:mainPerson a ff:Citizen ;
+                    ff:orBranchAdf1 true ;
+                    ff:orBranchBdf2 4 .`
+            let report = await matchingEngine.matching(user, [expand(OR_RP4)], MATCHING_MODE.FULL, FORMAT.TURTLE, true)
+            // console.log(report)
+            let query = `
+                PREFIX ff: <https://foerderfunke.org/default#>
+                SELECT ?status (COUNT(?df) AS ?count) WHERE {
+                    ?matchingReport ff:hasMissingDatafield ?df ;
+                        ff:hasEvaluatedRequirementProfile ?rp .
+                    ?rp ff:hasEligibilityStatus ?status .
+                } GROUP BY ?status`
+            let rows = await sparqlSelect(query, storeFromTurtles([report]))
+            strictEqual(rows[0].status, expand("ff:missingData"), "The status of the requirement profile should be missing data")
+            strictEqual(rows[0].count, "2", "The requirement profile should have 2 missing data points")
+        })
+
+        // test sh:alternativePath TODO
         // test hasValue fix TODO
         // test sh:deactivated TODO
 
