@@ -132,7 +132,7 @@ describe("all matching-engine tests", function () {
                 @prefix sh: <http://www.w3.org/ns/shacl#> .
                 
                 ${SUBINDIV_RP3} a ff:RequirementProfile .
-                ff:${SUBINDIV_RP3}Shape a sh:NodeShape ;
+                ${SUBINDIV_RP3}Shape a sh:NodeShape ;
                     sh:targetClass ff:Citizen ;
                     ff:conformanceMode ff:cmAtLeastOne ;
                     sh:property [
@@ -183,7 +183,7 @@ describe("all matching-engine tests", function () {
                 @prefix ff: <https://foerderfunke.org/default#> .
                 
                 ${OR_RP4} a ff:RequirementProfile .
-                ff:${OR_RP4}Shape a sh:NodeShape ;
+                ${OR_RP4}Shape a sh:NodeShape ;
                     sh:targetClass ff:Citizen ;
                     sh:property [
                         sh:or (
