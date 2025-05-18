@@ -482,7 +482,7 @@ describe("all matching-engine tests", function () {
                 ff:car0 a ff:Car ; ff:engineType ff:diesel .`
 
             // Turtle
-            let quizReportTurtle = await matchingEngine.matching(user, [expand(SUBINDIV_RP3)], MATCHING_MODE.FULL, FORMAT.TURTLE)
+            // let quizReportTurtle = await matchingEngine.matching(user, [expand(SUBINDIV_RP3)], MATCHING_MODE.FULL, FORMAT.TURTLE)
             // console.log(quizReportTurtle)
 
             // const expectedTurtle = ``
@@ -496,8 +496,9 @@ describe("all matching-engine tests", function () {
 
     describe("testing metadata functions on the matchingEngine object", function () {
         it("should generate the correct requirement profiles metadata", async function () {
-            console.log(util.inspect(matchingEngine.metadata, false, null, true))
-            /*const json  = JSON.stringify(matchingEngine.metadata, null, 2)
+            // TODO
+            /* console.log(util.inspect(matchingEngine.metadata, false, null, true))
+            const json  = JSON.stringify(matchingEngine.metadata, null, 2)
             writeFileSync("./output.json", json, "utf8")
             console.log("Wrote output.json")*/
         })
