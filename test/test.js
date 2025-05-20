@@ -1,37 +1,16 @@
+import "./fixtures/common.js"
 import { describe } from "mocha"
 import { strictEqual, deepStrictEqual } from "node:assert"
-import { existsSync, promises } from "fs"
-import simpleGit from "simple-git"
-import { MatchingEngine } from "../src/new/MatchingEngine.js"
 import { expand, isomorphicTurtles, sparqlSelect, storeFromTurtles, storeToTurtle } from "@foerderfunke/sem-ops-utils"
 import lodash from "lodash"
 import { FORMAT, MATCHING_MODE } from "../src/new/queries.js"
-import util from "util"
 // import { writeFileSync } from "fs"
 
 describe("all matching-engine tests", function () {
     let matchingEngine
 
-    before(async function () {
-        const repoDir = "test/knowledge-base"
-        const repoUrl = "https://github.com/Citizen-Knowledge-Graph/knowledge-base"
-        if (existsSync(repoDir)) {
-            await simpleGit(repoDir).pull()
-        } else {
-            await simpleGit().clone(repoUrl, repoDir)
-        }
-        const rps = []
-        for (let file of await promises.readdir(`${repoDir}/shacl`)) {
-            rps.push(await promises.readFile(`${repoDir}/shacl/${file}`, "utf8"))
-        }
-        matchingEngine = await new MatchingEngine(
-            await promises.readFile(`${repoDir}/datafields.ttl`, "utf8"),
-            await promises.readFile(`${repoDir}/materialization.ttl`, "utf8"),
-            await promises.readFile(`${repoDir}/consistency.ttl`, "utf8"),
-            rps,
-            "en",
-            FORMAT.JSON_LD
-        ).init()
+    before(function () {
+        matchingEngine = global.matchingEngine
     })
 
     it("matchingEngine object should have correct keys", function () {
