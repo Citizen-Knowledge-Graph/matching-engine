@@ -15,7 +15,7 @@ before(async function () {
     for (let file of await promises.readdir(`${repoDir}/shacl`)) {
         rps.push(await promises.readFile(`${repoDir}/shacl/${file}`, "utf8"))
     }
-    global.matchingEngine = await new MatchingEngine(
+    globalThis.matchingEngine = await new MatchingEngine(
         await promises.readFile(`${repoDir}/datafields.ttl`, "utf8"),
         await promises.readFile(`${repoDir}/materialization.ttl`, "utf8"),
         await promises.readFile(`${repoDir}/consistency.ttl`, "utf8"),
