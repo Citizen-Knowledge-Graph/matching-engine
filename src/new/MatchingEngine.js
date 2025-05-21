@@ -172,7 +172,15 @@ export class MatchingEngine {
         await sparqlConstruct(QUERY_TOP_MISSING_DATAFIELD(reportUri), [missingDfStore], reportStore)
         await sparqlConstruct(QUERY_NUMBER_OF_MISSING_DATAFIELDS(reportUri), [missingDfStore], reportStore)
 
-        if (format === FORMAT.JSON_LD) return await storeToJsonLdObj(reportStore, ["ff:MatchingReport"])
-        return await storeToTurtle(reportStore)
+        switch (format) {
+            case FORMAT.STORE:
+                return reportStore
+            case FORMAT.JSON_LD:
+                return await storeToJsonLdObj(reportStore, ["ff:MatchingReport"])
+            case FORMAT.TURTLE:
+                return await storeToTurtle(reportStore)
+            default:
+                throw new Error("Unknown format: " + format)
+        }
     }
 }

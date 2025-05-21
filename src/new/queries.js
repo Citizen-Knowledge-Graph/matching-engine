@@ -5,7 +5,8 @@ export const MATCHING_MODE = {
 
 export const FORMAT = {
     TURTLE: 1,
-    JSON_LD: 2
+    JSON_LD: 2,
+    STORE: 3
 }
 
 // to be used on one SHACL validation report at a time
