@@ -6,6 +6,7 @@ describe("testing matching functionality via journey calls", function () {
 
     before(function () {
         matchingEngine = globalThis.matchingEngine
+        matchingEngine.init()
     })
 
     // TODO

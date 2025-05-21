@@ -10,6 +10,7 @@ describe("testing matching functionality via single calls", function () {
 
     before(function () {
         matchingEngine = globalThis.matchingEngine
+        matchingEngine.init()
     })
 
     const SIMPLE_RP1 = "ff:devRp1"

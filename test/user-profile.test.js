@@ -8,6 +8,7 @@ describe("testing user profile functionality", function () {
 
     before(function () {
         matchingEngine = globalThis.matchingEngine
+        matchingEngine.init()
     })
 
     const UP = `

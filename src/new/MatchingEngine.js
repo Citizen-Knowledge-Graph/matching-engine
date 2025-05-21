@@ -4,7 +4,7 @@ import { Graph } from "./Graph.js"
 
 export class MatchingEngine {
 
-    constructor(datafieldsTurtle, materializationTurtle, consistencyTurtle, requirementProfilesTurtles, lang, metadataFormat) {
+    constructor(datafieldsTurtle, materializationTurtle, consistencyTurtle, requirementProfilesTurtles) {
         this.datafieldsTurtle = datafieldsTurtle
         this.dfMatStore = storeFromTurtles([datafieldsTurtle, materializationTurtle])
         this.datafieldsValidator = buildValidator(datafieldsTurtle)
@@ -14,11 +14,12 @@ export class MatchingEngine {
         for (let rpTurtle of requirementProfilesTurtles) this.addValidator(rpTurtle)
         this.matQueries = {}
         this.metadata = {}
-        this.lang = lang
-        this.metadataFormat = metadataFormat
     }
 
-    async init() {
+    // no more addValidator() after calling init()
+    async init(lang = "en", metadataFormat = FORMAT.JSON_LD) {
+        this.lang = lang
+        this.metadataFormat = metadataFormat
         // materialization queries
         let query = `
             PREFIX ff: <https://foerderfunke.org/default#>

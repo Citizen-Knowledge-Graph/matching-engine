@@ -7,11 +7,23 @@ describe("basic tests", function () {
 
     before(function () {
         matchingEngine = globalThis.matchingEngine
+        matchingEngine.init()
     })
 
     it("matchingEngine object should have correct keys", function () {
+        const expectedKeys = [
+            "datafieldsTurtle",
+            "dfMatStore",
+            "datafieldsValidator",
+            "consistencyValidator",
+            "requirementProfilesStore",
+            "validators",
+            "matQueries",
+            "metadata",
+            "lang",
+            "metadataFormat"
+        ]
         deepStrictEqual(
-            Object.keys(matchingEngine), ["datafieldsTurtle", "dfMatStore", "datafieldsValidator", "consistencyValidator", "requirementProfilesStore", "validators", "matQueries", "metadata", "lang", "metadataFormat"],
-            "The matchingEngine object does not have the expected keys")
+            Object.keys(matchingEngine), expectedKeys, "The matchingEngine object does not have the expected keys")
     })
 })

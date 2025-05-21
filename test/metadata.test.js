@@ -7,6 +7,7 @@ describe("testing metadata functionality", function () {
 
     before(function () {
         matchingEngine = globalThis.matchingEngine
+        matchingEngine.init()
     })
 
     it("should generate the correct metadata", async function () {
