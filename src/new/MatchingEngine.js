@@ -127,7 +127,7 @@ export class MatchingEngine {
 
         // if subindividuals exist, we built the individuals-tree
         // regex on " a " is a quick and dirty solution to detect individuals for now
-        const matches = upTurtle.match(/ a /g)
+        /*const matches = upTurtle.match(/ a /g)
         let individualsTree
         if (matches && matches.length > 1) {
             individualsTree = new Graph()
@@ -135,7 +135,7 @@ export class MatchingEngine {
             for (let quad of constructedQuads) individualsTree.processQuad(quad)
             console.log(individualsTree)
             // TODO
-        }
+        }*/
 
         let missingDfStore
         for (let rpUri of rpUris) {
@@ -153,10 +153,10 @@ export class MatchingEngine {
             missingDfStore = matchingMode === MATCHING_MODE.QUIZ ? newStore() : reportStore
             await sparqlConstruct(QUERY_MISSING_DATAFIELDS(reportUri, rpEvalUri), [sourceStore], missingDfStore)
 
-            if (individualsTree) {
+            /*if (individualsTree) {
                 let constructedQuads = await sparqlConstruct(QUERY_EXTRACT_INVALID_INDIVIDUALS, [sourceStore])
                 // TODO
-            }
+            }*/
 
             if (matchingMode === MATCHING_MODE.FULL) {
                 let reportName = "ff:SubjectSpecificViolationsReport" + "_" + rpUri.split("#").pop()
