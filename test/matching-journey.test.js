@@ -16,12 +16,13 @@ describe("testing matching functionality via journey calls", function () {
             @prefix shn: <https://schemas.link/shacl-next#>.
             
             ff:uebergangsgeld-behinderung a ff:RequirementProfile ;
-                ff:hasMainShape ff:uebergangsgeldShape .
+                ff:hasEvalShape ff:uebergangsgeldEvalShape ;
+                ff:hasFlowShape ff:uebergangsgeldFlowShape .
             
-            ff:uebergangsgeldShape a sh:NodeShape ;
+            # ----- EVALUATION LOGIC -----
+            
+            ff:uebergangsgeldEvalShape a sh:NodeShape ;
                 sh:targetClass ff:Citizen ;
-
-                # ----- EVALUATION LOGIC -----
 
                 sh:property [ sh:path ff:has_disability ; sh:in (true) ] ;
                 sh:property [ sh:path ff:rehabilitation_provider ; sh:in (ff:rehabilitation_provider-bundesagentur-fuer-arbeit) ] ;
@@ -50,9 +51,12 @@ describe("testing matching functionality via journey calls", function () {
                             )
                         ]
                     )
-                ] ;
+                ] .
             
-                # ----- DECISION TREE LOGIC -----
+            # ----- DECISION TREE LOGIC -----
+
+            ff:uebergangsgeldFlowShape a sh:NodeShape ;
+                sh:targetClass ff:Citizen ;
             
                 sh:property ff:baseRequirements ;
                 sh:property ff:ausbildungPS ;
