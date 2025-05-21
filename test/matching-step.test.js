@@ -10,7 +10,6 @@ describe("testing matching functionality via single calls", function () {
 
     before(function () {
         matchingEngine = globalThis.matchingEngine
-        matchingEngine.init()
     })
 
     const SIMPLE_RP1 = "ff:devRp1"
@@ -130,6 +129,7 @@ describe("testing matching functionality via single calls", function () {
                     )
                 ] .`
         matchingEngine.addValidator(shacl)
+        matchingEngine.init()
     })
 
     it("should validate conforming for basic case", async function () {
