@@ -1,53 +1,46 @@
-import { shrink } from "@foerderfunke/sem-ops-utils"
-
 export class Graph {
-    constructor() {
-        this.nodes = {}
-        this.edges = []
-    }
-
-    processQuad(quad) {
-        // subject
-        let sVal = quad.subject.value
-        let sId = shrink(sVal)
-        let sType = quad.subject.constructor.name
-        if (!this.nodes[sId]) this.nodes[sId] = new Node(sId, sVal, sType)
-        // object
-        let oVal = quad.object.value
-        let oId = shrink(oVal)
-        let oType = quad.object.constructor.name
-        if (oType === "Literal") {
-            oId = oVal + "_" + Math.random().toString(36).slice(2, 6)
-            this.nodes[oId] = new Node(oId, oVal, oType)
-        } else {
-            if (!this.nodes[oId]) this.nodes[oId] = new Node(oId, oVal, oType)
-        }
-        // predicate
-        let pVal = quad.predicate.value
-        let pId = shrink(pVal)
-        this.edges.push(new Edge(pId, pVal, sId, oId))
-
-        this.nodes[sId].addChild(oId)
+    constructor(jsonLd) {
+        this.root = new Node("AND", jsonLd["sh:property"].map(walk))
     }
 }
 
 export class Node {
-    constructor(id, value, type) {
-        this.id = id
-        this.value = value
+    constructor(type, children, rule) {
         this.type = type
-        this.children = []
-    }
-    addChild(child) {
-        this.children.push(child)
+        if (children.length > 0) this.children = children
+        if (rule) this.rule = rule
     }
 }
 
-export class Edge {
-    constructor(id, value, sourceId, targetId) {
-        this.id = id
-        this.value = value
-        this.sourceId = sourceId
-        this.targetId = targetId
-    }
+function walk(obj) {
+    if (obj["sh:not"]) return new Node("NOT", [walk(obj["sh:not"])])
+    if (obj["sh:or"]) return new Node("OR", list(obj["sh:or"]).map(walk))
+    if (obj["sh:and"]) return new Node("AND", list(obj["sh:and"]).map(walk))
+
+    if (Array.isArray(obj["sh:property"])) return new Node("AND", obj["sh:property"].map(walk))
+    if (obj["sh:property"]) return walk(obj["sh:property"])
+    if (obj["sh:path"]) return makeRule(obj)
+
+    throw new Error("Unhandled shape fragment:\n" + JSON.stringify(obj, null, 2))
+}
+
+function makeRule(p) {
+    const rule = Object.fromEntries(
+        [
+            ["path", p["sh:path"]?.["@id"]],
+            ["minInclusive", num(p["sh:minInclusive"])],
+            ["maxExclusive", num(p["sh:maxExclusive"])],
+            ["in", p["sh:in"] ? list(p["sh:in"]).map(atom) : null]
+        ].filter(([, v]) => v !== null)
+    )
+    return new Node("RULE", [], rule)
+}
+
+const list = x => x?.["@list"] ?? []
+const num  = lit => lit ? Number(lit["@value"]) : null
+
+function atom(lit) {
+    if (lit["@id"]) return lit["@id"]
+    const { ["@type"]: t, ["@value"]: v } = lit
+    return t?.endsWith("boolean")  ? v === "true" : t?.endsWith("integer") ? Number(v) : v
 }

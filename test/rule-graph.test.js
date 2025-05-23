@@ -9,7 +9,7 @@ describe("rule graph", function () {
         matchingEngine.init()
     })
 
-    it("simple rule graph should be correct",function () {
+    it("rule graph should be correct",async function () {
         let shacl = `
             @prefix sh: <http://www.w3.org/ns/shacl#> .
             @prefix ff: <https://foerderfunke.org/default#> .
@@ -20,11 +20,14 @@ describe("rule graph", function () {
             sh:property [ sh:path ff:foo ; sh:in (true) ] ;
             sh:property [ sh:path ff:bar ; sh:in (ff:blau) ] ;
             sh:property [
-              sh:or (
-                [ sh:property [ sh:path ff:dings ; sh:in (true) ] ]
-                [ sh:property [ sh:path ff:jo ; sh:in (false) ] ]
-              )
+                sh:or (
+                    [ sh:and (
+                        [ sh:property [ sh:path ff:dings ; sh:in (true) ] ]
+                        [ sh:property [ sh:path ff:hey ; sh:in (true) ] ]
+                    ) ]
+                    [ sh:property [ sh:path ff:jo ; sh:in (false) ] ]
+                )
             ] .`
-        matchingEngine.buildRuleGraph(shacl)
+        await matchingEngine.buildRuleGraph(shacl)
     })
 })
