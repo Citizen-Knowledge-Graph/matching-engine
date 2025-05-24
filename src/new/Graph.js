@@ -38,6 +38,8 @@ function makeRule(p) {
         [
             ["path", p["sh:path"]?.["@id"]],
             ["minInclusive", num(p["sh:minInclusive"])],
+            ["minExclusive", num(p["sh:minExclusive"])],
+            ["maxInclusive", num(p["sh:maxInclusive"])],
             ["maxExclusive", num(p["sh:maxExclusive"])],
             ["in", p["sh:in"] ? list(p["sh:in"]).map(atom) : null]
         ].filter(([, v]) => v !== null)
