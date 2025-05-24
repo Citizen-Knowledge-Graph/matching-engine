@@ -13,12 +13,21 @@ export class Node {
 }
 
 function walk(obj) {
-    if (obj["sh:not"]) return new Node("NOT", [walk(obj["sh:not"])])
-    if (obj["sh:or"]) return new Node("OR", list(obj["sh:or"]).map(walk))
-    if (obj["sh:and"]) return new Node("AND", list(obj["sh:and"]).map(walk))
+    const children = []
 
-    if (Array.isArray(obj["sh:property"])) return new Node("AND", obj["sh:property"].map(walk))
-    if (obj["sh:property"]) return walk(obj["sh:property"])
+    if (obj["sh:property"]) {
+        const props = obj["sh:property"]
+        const list  = Array.isArray(props) ? props : [props]
+        children.push(... list.map(walk))
+    }
+
+    if (obj["sh:not"]) children.push(new Node("NOT", [walk(obj["sh:not"])]))
+    if (obj["sh:or"]) children.push(new Node("OR", list(obj["sh:or"]).map(walk)))
+    if (obj["sh:and"]) children.push(new Node("AND", list(obj["sh:and"]).map(walk)))
+
+    if (children.length === 1) return children[0]
+    if (children.length >  1) return new Node("AND", children) // implicit AND
+
     if (obj["sh:path"]) return makeRule(obj)
 
     throw new Error("Unhandled shape fragment:\n" + JSON.stringify(obj, null, 2))
