@@ -56,3 +56,42 @@ function atom(lit) {
     const { ["@type"]: t, ["@value"]: v } = lit
     return t?.endsWith("boolean")  ? v === "true" : t?.endsWith("integer") ? Number(v) : v
 }
+
+export function toMermaid(graph, dir = "TD") {
+    const lines = [`flowchart ${dir}`]
+    const idGen = (() => {
+        let n = 0
+        return () => "N" + (++n)
+    })();
+
+    (function walk(node, parentId) {
+        const id = idGen()
+        lines.push(`    ${id}${shape(node)}`)
+        if (parentId) lines.push(`    ${parentId} --> ${id}`);
+        (node.children || []).forEach(child => walk(child, id))
+    })(graph.root ?? graph)
+
+    return lines.join("\n")
+}
+
+function shape(node) {
+    let str = `"${label(node)}"`
+    if (node.type === "RULE") return `[${str}]`
+    return `([${str}])`
+}
+
+function label(node) {
+    if (node.type !== "RULE") return node.type
+    const { path, in: _in, minInclusive, minExclusive, maxInclusive, maxExclusive } = node.rule
+    const parts = [
+        `<b>${path}</b>`,
+        _in !== undefined ? `= ${format(_in)}`      : null,
+        minInclusive != null ? `<= ${minInclusive}` : null,
+        minExclusive != null ? `< ${minExclusive}` : null,
+        maxInclusive != null ? `>= ${maxInclusive}` : null,
+        maxExclusive != null ? `> ${maxExclusive}` : null,
+    ].filter(Boolean)
+    return `${parts.join("<br/>")}`
+}
+
+const format = v => Array.isArray(v) ? v.join(" | ") : v
