@@ -1,6 +1,7 @@
 export class Graph {
     constructor(jsonLd) {
-        this.root = new Node("AND", jsonLd["sh:property"].map(walk))
+        let implicitAndNode = new Node("AND", jsonLd["sh:property"].map(walk))
+        this.root = new Node("ROOT", [implicitAndNode])
     }
 }
 
