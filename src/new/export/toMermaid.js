@@ -24,10 +24,11 @@ function shape(node) {
 
 function label(node) {
     if (node.type !== "RULE") return node.type
-    const { path, in: _in, minInclusive, minExclusive, maxInclusive, maxExclusive } = node.rule
+    const { path, in: _in, notIn: _notIn, minInclusive, minExclusive, maxInclusive, maxExclusive } = node.rule
     const parts = [
         `<b>${path}</b>`,
-        _in !== undefined ? `= ${format(_in)}`      : null,
+        _in !== undefined ? `= ${format(_in)}` : null,
+        _notIn !== undefined ? `!= ${format(_notIn)}` : null,
         minInclusive != null ? `<= ${minInclusive}` : null,
         minExclusive != null ? `< ${minExclusive}` : null,
         maxInclusive != null ? `>= ${maxInclusive}` : null,
