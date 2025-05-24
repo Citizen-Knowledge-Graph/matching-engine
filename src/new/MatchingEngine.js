@@ -1,7 +1,9 @@
 import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, newStore, addTurtleToStore, storeFromDataset, sparqlConstruct, storeToTurtle, sparqlSelect, addTriple, expand, a, datasetFromStore, storeToJsonLdObj, sparqlInsertDelete, formatTimestamp, formatTimestampAsLiteral, addStoreToStore } from "@foerderfunke/sem-ops-utils"
 import { FORMAT, MATCHING_MODE, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_BUILD_INDIVIDUALS_TREE, QUERY_EXTRACT_INVALID_INDIVIDUALS, QUERY_HASVALUE_FIX, QUERY_METADATA_RPS, QUERY_METADATA_DFS, QUERY_METADATA_BCS, QUERY_INSERT_VALIDATION_REPORT_URI, QUERY_DELETE_NON_VIOLATING_VALIDATION_RESULTS, QUERY_LINK_REPORT_ONLY_IF_EXISTS } from "./queries.js"
-import { Graph, toMermaid } from "./Graph.js"
+import { Graph } from "./Graph.js"
 import { inspect } from "util"
+import { ruleGraphFromShacl } from "./import/fromShacl.js"
+import { ruleGraphToMermaid } from "./export/toMermaid.js"
 
 export class MatchingEngine {
 
@@ -187,10 +189,10 @@ export class MatchingEngine {
 
     async buildRuleGraph(turtle) {
         let jsonLd = await storeToJsonLdObj(storeFromTurtles([turtle]), ["sh:NodeShape"])
-        let graph = new Graph(jsonLd)
         // console.log(inspect(jsonLd, false, null, true))
+        let graph = new Graph(ruleGraphFromShacl(jsonLd))
         console.log(inspect(graph.root, false, null, true))
-        let mermaid = toMermaid(graph)
+        let mermaid = ruleGraphToMermaid(graph)
         console.log(mermaid)
     }
 }
