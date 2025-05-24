@@ -24,7 +24,7 @@ function shape(node) {
 
 function label(node) {
     if (node.type !== "RULE") return node.type
-    const { path, in: _in, notIn: _notIn, minInclusive, minExclusive, maxInclusive, maxExclusive } = node.rule
+    const { path, in: _in, notIn: _notIn, minInclusive, minExclusive, maxInclusive, maxExclusive, minCount, maxCount } = node.rule
     const parts = [
         `<b>${path}</b>`,
         _in !== undefined ? `= ${format(_in)}` : null,
@@ -33,6 +33,8 @@ function label(node) {
         minExclusive != null ? `< ${minExclusive}` : null,
         maxInclusive != null ? `>= ${maxInclusive}` : null,
         maxExclusive != null ? `> ${maxExclusive}` : null,
+        minCount != null ? `minCount ${minCount}` : null,
+        maxCount != null ? `maxCount ${maxCount}` : null,
     ].filter(Boolean)
     return `${parts.join("<br/>")}`
 }

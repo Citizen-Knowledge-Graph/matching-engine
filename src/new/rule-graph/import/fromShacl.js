@@ -36,6 +36,8 @@ function makeRule(p, path, neg = false) {
     const rule = Object.fromEntries(
         [
             ["path", p["sh:path"]?.["@id"] ?? path],
+            ["minCount", num(p["sh:minCount"])],
+            ["maxCount", num(p["sh:maxCount"])],
             ["minInclusive", num(p["sh:minInclusive"])],
             ["minExclusive", num(p["sh:minExclusive"])],
             ["maxInclusive", num(p["sh:maxInclusive"])],
@@ -48,7 +50,7 @@ function makeRule(p, path, neg = false) {
     return new Node("RULE", [], rule)
 }
 
-const FACET_KEYS = new Set(["sh:in", "sh:minInclusive", "sh:minExclusive", "sh:maxInclusive", "sh:maxExclusive"])
+const FACET_KEYS = new Set(["sh:in", "sh:minInclusive", "sh:minExclusive", "sh:maxInclusive", "sh:maxExclusive", "sh:minCount", "sh:maxCount"])
 
 const hasFacet = o => [... FACET_KEYS].some(k => k in o)
 const canInlineNotIn = o => Object.keys(o).every(k => k === "sh:path" || k === "sh:in")
