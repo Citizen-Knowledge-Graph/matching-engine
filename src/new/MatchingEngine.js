@@ -13,6 +13,7 @@ export class MatchingEngine {
         this.datafieldsValidator = buildValidator(datafieldsTurtle)
         this.consistencyValidator = buildValidator(consistencyTurtle)
         this.requirementProfilesStore = newStore()
+        this.requirementProfileTurtles = {}
         this.validators = {}
         for (let rpTurtle of requirementProfilesTurtles) this.addValidator(rpTurtle)
         this.matQueries = {}
@@ -46,6 +47,7 @@ export class MatchingEngine {
     addValidator(rpTurtle) {
         addTurtleToStore(this.requirementProfilesStore, rpTurtle)
         let rpUri = extractFirstIndividualUriFromTurtle(rpTurtle, "ff:RequirementProfile")
+        this.requirementProfileTurtles[rpUri] = rpTurtle
         if (rpUri) this.validators[rpUri] = buildValidator(rpTurtle, false, true)
     }
 
@@ -185,6 +187,44 @@ export class MatchingEngine {
             default:
                 throw new Error("Unknown format: " + format)
         }
+    }
+
+    async detailedSingleRequirementProfileValidation(upTurtle, rpUri) {
+        const rpTurtle = this.requirementProfileTurtles[rpUri]
+        let reportStore = newStore()
+        let upStore = storeFromTurtles([upTurtle])
+        for (let [ matUri, query ] of Object.entries(this.matQueries)) {
+            await sparqlConstruct(query, [upStore, this.dfMatStore], upStore)
+        }
+        let upDataset = datasetFromStore(upStore)
+
+        let validator = buildValidator(rpTurtle, true, true)
+        let shaclReport = await validator.validate({ dataset: upDataset })
+        let query = `
+            PREFIX sh: <http://www.w3.org/ns/shacl#>
+            SELECT * WHERE {
+                ?result sh:focusNode ?subject ;
+                    sh:resultPath ?path ;
+                    sh:resultSeverity ?severity .
+            }`
+        let rows = await sparqlSelect(query, storeFromDataset(shaclReport.dataset))
+        let map = {}
+        for (let row of rows) {
+            if (row.type === expand("sh:MinCountConstraintComponent")) continue // sh:QualifiedMinCountConstraintComponent also?
+            map[row.path] = {
+                subject : row.subject,
+                status: row.severity === expand("sh:Violation") ? "VIOLATION" : "OK",
+                value: row.value ?? null,
+                message: row.message ?? null
+            }
+        }
+        console.log(map)
+
+        let jsonLd = await storeToJsonLdObj(storeFromTurtles([rpTurtle]), ["sh:NodeShape"])
+        let graph = new Graph(ruleGraphFromShacl(jsonLd))
+        console.log(graph)
+
+        // TODO
     }
 
     async buildRuleGraph(turtle) {

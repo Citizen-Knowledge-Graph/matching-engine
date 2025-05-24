@@ -17,6 +17,7 @@ describe("basic tests", function () {
             "datafieldsValidator",
             "consistencyValidator",
             "requirementProfilesStore",
+            "requirementProfileTurtles",
             "validators",
             "matQueries",
             "metadata",
