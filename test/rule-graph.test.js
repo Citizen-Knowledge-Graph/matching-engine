@@ -17,7 +17,7 @@ describe("rule graph", function () {
             ff:devShape a sh:NodeShape ;
             sh:targetClass ff:Citizen ;
             
-            sh:property [ sh:path ff:foo ; sh:minInclusive 15 ; sh:maxExclusive 36 ] ;
+            sh:property [ sh:not [ sh:path ff:foo ; sh:minInclusive 15 ; sh:maxExclusive 36  ] ] ;
             sh:property [ sh:path ff:bar ; sh:not [ sh:in (ff:blau ff:red) ] ] ;
             sh:property [
                 sh:or (
