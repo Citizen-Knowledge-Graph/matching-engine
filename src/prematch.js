@@ -170,11 +170,11 @@ export async function getDetailsAboutDfs(shortenedDfUris = [], store, lang = "en
         PREFIX sh: <http://www.w3.org/ns/shacl#>
         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
         SELECT * WHERE {
-            ?df a ff:DataField .
             ${shortenedDfUris.length === 0 ? "" : "VALUES ?df { " + shortenedDfUris.join(" ") + " }" }
             ?df ff:hasShaclShape ?shaclShape .
             ?shaclShape sh:property ?propertyShape .
-            ?propertyShape sh:in/rdf:rest*/rdf:first ?option .
+            ?propertyShape sh:in ?listHead . 
+            { ?listHead rdf:first ?option } UNION { ?listHead rdf:rest+/rdf:first ?option }
             ?option rdfs:label ?label .
             FILTER (lang(?label) = "${lang}")
         }`
