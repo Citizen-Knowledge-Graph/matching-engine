@@ -21,7 +21,7 @@ import {
 } from "../src/prematch.js";
 import {Store} from "n3";
 
-const DB_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "requirement-profiles")
+const DB_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "../test/fixtures/knowledge-base")
 const SHACL_DIR = `${DB_DIR}/shacl`
 const USER_PROFILE = `${DB_DIR}/user-profile-examples/kinderzuschlag-user-profile.ttl`
 const DATAFIELDS = `${DB_DIR}/datafields.ttl`
@@ -242,9 +242,9 @@ async function devGetPrioritizedMissingDataFieldsJson() {
         @prefix ff: <https://foerderfunke.org/default#> .
         ff:mainPerson a ff:Citizen .
     `
-    let datafieldsStr = await fsPromise.readFile(`${DB_DIR}/sozialplattform/datafields.ttl`, "utf8")
-    let materializationStr = await fsPromise.readFile(`${DB_DIR}/sozialplattform/materialization.ttl`, "utf8")
-    let shaclDir = `${DB_DIR}/sozialplattform/shacl`
+    let datafieldsStr = await fsPromise.readFile(`${DB_DIR}/datafields.ttl`, "utf8")
+    let materializationStr = await fsPromise.readFile(`${DB_DIR}/materialization.ttl`, "utf8")
+    let shaclDir = `${DB_DIR}/beta`
     let shaclFiles = await fsPromise.readdir(`${shaclDir}`)
     let rps = []
     for (let file of shaclFiles) {
