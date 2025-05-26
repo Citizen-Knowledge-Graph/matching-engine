@@ -168,6 +168,7 @@ export async function getDetailsAboutDfs(shortenedDfUris = [], store, lang = "en
     query = `
         PREFIX ff: <https://foerderfunke.org/default#>
         PREFIX sh: <http://www.w3.org/ns/shacl#>
+        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
         SELECT * WHERE {
             ?df a ff:DataField .
             ${shortenedDfUris.length === 0 ? "" : "VALUES ?df { " + shortenedDfUris.join(" ") + " }" }
