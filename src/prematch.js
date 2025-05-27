@@ -5,6 +5,8 @@ import {
     runSparqlSelectQueryOnStore
 } from "./utils.js"
 import { validateAll } from "./index.js";
+import { DataFactory } from "n3";
+const { namedNode } = DataFactory
 
 function shortenUri(uri, shorten = true) {
     if (uri.startsWith("ff:")) return uri
@@ -126,82 +128,78 @@ export async function getPrioritizedMissingDataFieldsJson(selectedBenefitCategor
 }
 
 export async function getDetailsAboutDfs(shortenedDfUris = [], store, lang = "en") {
-    let fieldsMap = {}
-    // Query 1: get info about data fields and their datatype
+    console.log('adding hasMember triples to the store');
+    await addHasMemberTriples(store); // Ensure hasMember triples are added to the store
+    console.log('hasMember triples added');
+    const fieldsMap = {};
+    // Query 1: metadata
     let query = `
         PREFIX ff: <https://foerderfunke.org/default#>
         PREFIX sh: <http://www.w3.org/ns/shacl#>
         SELECT * WHERE {
             ?df a ff:DataField .
-            ${shortenedDfUris.length === 0 ? "" : "VALUES ?df { " + shortenedDfUris.join(" ") + " }" }
-            ?df rdfs:label ?label .
-            ?df schema:question ?question .
-            FILTER (lang(?label) = "${lang}")
-            FILTER (lang(?question) = "${lang}")
-            OPTIONAL { 
-                ?df rdfs:comment ?comment .
-                FILTER (lang(?comment) = "${lang}")
-            } .
-            ?df ff:hasShaclShape ?shaclShape .
-            ?shaclShape sh:property ?propertyShape .
-            OPTIONAL { ?propertyShape sh:datatype ?datatype . }
-            OPTIONAL { ?propertyShape sh:maxCount ?maxCount . }
-        }`
-    let rows = await runSparqlSelectQueryOnStore(query, store)
-    for (let row of rows) {
-        let field = {
+            ${shortenedDfUris.length ? `VALUES ?df { ${shortenedDfUris.join(" ")} }` : ``}
+            ?df rdfs:label ?label . FILTER(lang(?label)="${lang}")
+            ?df schema:question ?question . FILTER(lang(?question)="${lang}")
+            OPTIONAL { ?df rdfs:comment ?comment . FILTER(lang(?comment)="${lang}") }
+            ?df ff:hasShaclShape ?sh .
+            ?sh sh:property ?ps .
+            OPTIONAL { ?ps sh:datatype ?datatype }
+            OPTIONAL { ?ps sh:maxCount ?maxCount }
+        }`;
+    console.log("Query 1");
+    let rows = await runSparqlSelectQueryOnStore(query, store);
+    console.log("Query 1 DONE");
+    for (const row of rows) {
+        const field = {
             datafield: shortenUri(row.df),
             label: row.label,
             question: row.question,
-            comment: row.comment ?? "",
+            comment: row.comment || "",
             materializable: false
+        };
+        if (row.datatype) field.datatype = row.datatype.split("#")[1];
+        else {
+            field.datatype = row.maxCount ? "selection" : "selection-multiple";
+            field.choices = [];
         }
-        if (row.datatype) {
-            field.datatype = row.datatype.split("#")[1]
-        } else {
-            field.datatype = row.maxCount ? "selection" : "selection-multiple"
-            field.choices = []
-        }
-        fieldsMap[row.df] = field
+        fieldsMap[row.df] = field;
     }
-    // Query 2: get choices for datafields that have selection as datatype
+
+    // Query 2: choices via hasMember
     query = `
         PREFIX ff: <https://foerderfunke.org/default#>
         PREFIX sh: <http://www.w3.org/ns/shacl#>
-        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-        SELECT * WHERE {
-            ${shortenedDfUris.length === 0 ? "" : "VALUES ?df { " + shortenedDfUris.join(" ") + " }" }
-            ?df ff:hasShaclShape ?shaclShape .
-            ?shaclShape sh:property ?propertyShape .
-            ?propertyShape sh:in ?listHead . 
-            { ?listHead rdf:first ?option } UNION { ?listHead rdf:rest+/rdf:first ?option }
-            ?option rdfs:label ?label .
-            FILTER (lang(?label) = "${lang}")
-        }`
-    rows = await runSparqlSelectQueryOnStore(query, store)
-    for (let row of rows) {
-        fieldsMap[row.df].choices.push({
-            "value": shortenUri(row.option),
-            "label": row.label
-        })
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        SELECT DISTINCT ?df ?option ?label WHERE {
+            ${shortenedDfUris.length ? `VALUES ?df { ${shortenedDfUris.join(" ")} }` : ``}
+            ?df ff:hasShaclShape ?sh .
+            ?sh sh:property ?ps .
+            ?ps sh:in ?listHead .
+            ?listHead ff:hasMember ?option .
+            ?option rdfs:label ?label . FILTER(lang(?label)="${lang}")
+        }`;
+    console.log("Query 2");
+    rows = await runSparqlSelectQueryOnStore(query, store);
+    console.log("Query 2 DONE");
+    for (const row of rows) {
+        fieldsMap[row.df].choices.push({ value: shortenUri(row.option), label: row.label });
     }
-    // Query 3: get data fields that have only a label because they get materialized
-    // Rethink this logic. The ff:NoKidsImpliesNoKidsInAgeRanges rule also materializes data fields, but those can be also set by the user TODO
-    query = `
-        PREFIX ff: <https://foerderfunke.org/default#>
+
+    // Query 3: materializable fields
+    query = `PREFIX ff: <https://foerderfunke.org/default#>
         SELECT * WHERE {
             ?df a ff:MaterializableDataField .
-            ?df rdfs:label ?label .
-            FILTER (lang(?label) = "${lang}")
-        }`
-    rows = await runSparqlSelectQueryOnStore(query, store)
-    for (let row of rows) {
-        fieldsMap[row.df] = {
-            label: row.label,
-            materializable: true
-        }
+            ?df rdfs:label ?label . FILTER(lang(?label)="${lang}")
+        }`;
+    console.log("Query 3");
+    rows = await runSparqlSelectQueryOnStore(query, store);
+    console.log("Query 3 DONE");
+    for (const row of rows) {
+        fieldsMap[row.df] = { label: row.label, materializable: true };
     }
-    return fieldsMap
+
+    return fieldsMap;
 }
 
 export const RuleType = {
@@ -341,4 +339,28 @@ export async function transformRulesFromRequirementProfile(reqProfileStr,lang = 
         }
     }
     return rules
+}
+
+// Utility to flatten RDF lists into a fast-access predicate
+async function addHasMemberTriples(store) {
+    const RDF_FIRST  = namedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#first");
+    const RDF_REST   = namedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#rest");
+    const IN         = namedNode("http://www.w3.org/ns/shacl#in");
+    const FF_HAS_MEM = namedNode("https://foerderfunke.org/default#hasMember");
+
+    // For each list head in an sh:in, walk the list and add hasMember
+    for (const quad of store.getQuads(null, IN, null, null)) {
+        const listHead = quad.object;
+        let cursor = listHead;
+        // Walk until rdf:nil or break
+        while (cursor.value !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil") {
+            const firstQuads = store.getQuads(cursor, RDF_FIRST, null, null);
+            if (firstQuads.length === 0) break;
+            const item = firstQuads[0].object;
+            store.addQuad(listHead, FF_HAS_MEM, item);
+            const restQuads = store.getQuads(cursor, RDF_REST, null, null);
+            if (restQuads.length === 0) break;
+            cursor = restQuads[0].object;
+        }
+    }
 }
