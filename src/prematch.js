@@ -128,9 +128,7 @@ export async function getPrioritizedMissingDataFieldsJson(selectedBenefitCategor
 }
 
 export async function getDetailsAboutDfs(shortenedDfUris = [], store, lang = "en") {
-    console.log('adding hasMember triples to the store');
     await addHasMemberTriples(store); // Ensure hasMember triples are added to the store
-    console.log('hasMember triples added');
     const fieldsMap = {};
     // Query 1: metadata
     let query = `
@@ -147,9 +145,7 @@ export async function getDetailsAboutDfs(shortenedDfUris = [], store, lang = "en
             OPTIONAL { ?ps sh:datatype ?datatype }
             OPTIONAL { ?ps sh:maxCount ?maxCount }
         }`;
-    console.log("Query 1");
     let rows = await runSparqlSelectQueryOnStore(query, store);
-    console.log("Query 1 DONE");
     for (const row of rows) {
         const field = {
             datafield: shortenUri(row.df),
@@ -179,9 +175,7 @@ export async function getDetailsAboutDfs(shortenedDfUris = [], store, lang = "en
             ?listHead ff:hasMember ?option .
             ?option rdfs:label ?label . FILTER(lang(?label)="${lang}")
         }`;
-    console.log("Query 2");
     rows = await runSparqlSelectQueryOnStore(query, store);
-    console.log("Query 2 DONE");
     for (const row of rows) {
         fieldsMap[row.df].choices.push({ value: shortenUri(row.option), label: row.label });
     }
@@ -192,9 +186,7 @@ export async function getDetailsAboutDfs(shortenedDfUris = [], store, lang = "en
             ?df a ff:MaterializableDataField .
             ?df rdfs:label ?label . FILTER(lang(?label)="${lang}")
         }`;
-    console.log("Query 3");
     rows = await runSparqlSelectQueryOnStore(query, store);
-    console.log("Query 3 DONE");
     for (const row of rows) {
         fieldsMap[row.df] = { label: row.label, materializable: true };
     }
