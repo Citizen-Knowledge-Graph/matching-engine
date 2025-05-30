@@ -5,24 +5,18 @@ export const ruleGraphFromShacl = shape => new Node("ROOT", [walk(shape)])
 function walk(obj, path = null) {
     path = obj["sh:path"]?.["@id"] ?? path
     const children = []
-    let notIn = null
     if (obj["sh:property"]) {
         children.push(... asArray(obj["sh:property"]).map(p => walk(p)))
     }
     if (obj["sh:not"]) {
         const inner = obj["sh:not"]
-        if (canInlineNotIn(inner)) {
-            notIn = list(inner["sh:in"]).map(atom)
-        } else {
-            children.push(new Node("NOT", [walk(inner, path)]))
-        }
+        children.push(new Node("NOT", [walk(inner, path)]))
     }
     for (const [key, label] of [["sh:or", "OR"], ["sh:and", "AND"]]) {
-        if (obj[key])
-            children.push(new Node(label, list(obj[key]).map(n => walk(n, path))))
+        if (obj[key]) children.push(new Node(label, list(obj[key]).map(n => walk(n, path))))
     }
-    if (hasFacet(obj) || notIn) {
-        const rule = makeRule(obj, path, notIn)
+    if (hasFacet(obj)) {
+        const rule = makeRule(obj, path)
         if (!children.length) return rule
         children.unshift(rule)
     }
@@ -31,7 +25,7 @@ function walk(obj, path = null) {
     throw new Error("Unhandled fragment:\n" + JSON.stringify(obj, null, 2))
 }
 
-function makeRule(p, inheritedPath, notIn = null) {
+function makeRule(p, inheritedPath) {
     const rule = Object.fromEntries(
         [
             ["path", p["sh:path"]?.["@id"] ?? inheritedPath],
@@ -42,7 +36,6 @@ function makeRule(p, inheritedPath, notIn = null) {
             ["maxInclusive", num(p["sh:maxInclusive"])],
             ["maxExclusive", num(p["sh:maxExclusive"])],
             ["in", p["sh:in"] ? list(p["sh:in"]).map(atom) : null],
-            ["notIn", notIn]
         ].filter(([, v]) => v != null)
     )
     if (!rule.path) throw new Error("No path for rule:\n" + JSON.stringify(p))
@@ -52,7 +45,6 @@ function makeRule(p, inheritedPath, notIn = null) {
 const FACET_KEYS = new Set(["sh:in", "sh:minInclusive", "sh:minExclusive", "sh:maxInclusive", "sh:maxExclusive", "sh:minCount", "sh:maxCount"])
 
 const hasFacet = o => [... FACET_KEYS].some(k => k in o)
-const canInlineNotIn = o => Object.keys(o).every(k => k === "sh:path" || k === "sh:in")
 
 const list = x => x?.["@list"] ?? []
 const num = lit => lit ? Number(lit["@value"]) : null
