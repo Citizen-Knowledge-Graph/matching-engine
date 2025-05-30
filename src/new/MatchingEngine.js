@@ -204,8 +204,11 @@ export class MatchingEngine {
             PREFIX sh: <http://www.w3.org/ns/shacl#>
             SELECT * WHERE {
                 ?result sh:focusNode ?subject ;
-                    sh:resultPath ?path ;
-                    sh:resultSeverity ?severity .
+                        sh:resultPath ?path ;
+                        sh:resultSeverity ?severity ;
+                        sh:sourceConstraintComponent ?type ;
+              OPTIONAL { ?result sh:resultMessage ?message . }
+              OPTIONAL { ?result sh:value ?value . }     
             }`
         let rows = await sparqlSelect(query, storeFromDataset(shaclReport.dataset))
         let map = {}
@@ -214,6 +217,7 @@ export class MatchingEngine {
             map[row.path] = {
                 subject : row.subject,
                 status: row.severity === expand("sh:Violation") ? "VIOLATION" : "OK",
+                type: row.type.split("#").pop(),
                 value: row.value ?? null,
                 message: row.message ?? null
             }
@@ -222,7 +226,7 @@ export class MatchingEngine {
 
         let jsonLd = await storeToJsonLdObj(storeFromTurtles([rpTurtle]), ["sh:NodeShape"])
         let graph = new Graph(ruleGraphFromShacl(jsonLd))
-        console.log(graph)
+        console.log(inspect(graph.root, false, null, true))
 
         // TODO
     }

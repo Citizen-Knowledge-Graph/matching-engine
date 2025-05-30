@@ -1,12 +1,12 @@
 import "./fixtures/common.js"
 import { describe } from "mocha"
+import { expand } from "@foerderfunke/sem-ops-utils"
 
 describe("rule graph", function () {
     let matchingEngine
 
     before(function () {
         matchingEngine = globalThis.matchingEngine
-        matchingEngine.init()
     })
 
     it("rule graph should be correct",async function () {
@@ -14,6 +14,7 @@ describe("rule graph", function () {
             @prefix sh: <http://www.w3.org/ns/shacl#> .
             @prefix ff: <https://foerderfunke.org/default#> .
 
+            ff:ruleGraphDev a ff:RequirementProfile .
             ff:devShape a sh:NodeShape ;
             sh:targetClass ff:Citizen ;
             
@@ -29,5 +30,19 @@ describe("rule graph", function () {
                 )
             ] .`
         await matchingEngine.buildRuleGraph(shacl)
+
+        let up = `
+            @prefix ff: <https://foerderfunke.org/default#> .
+            ff:mainPerson a ff:Citizen ;
+                ff:foo 7 ;
+                ff:bar ff:green ;
+                ff:dings true ;
+                ff:hey true ;
+                ff:jo true .`
+
+        matchingEngine.addValidator(shacl)
+        matchingEngine.init()
+
+        await matchingEngine.detailedSingleRequirementProfileValidation(up, expand("ff:ruleGraphDev"))
     })
 })
