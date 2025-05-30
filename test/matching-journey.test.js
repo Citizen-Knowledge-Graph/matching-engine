@@ -8,7 +8,7 @@ describe("testing matching functionality via journey calls", function () {
     // this.timeout(10000)
     let matchingEngine
 
-    before(function () {
+    before(async function () {
         matchingEngine = globalThis.matchingEngine
         let shacl = `
             @prefix sh: <http://www.w3.org/ns/shacl#> .
@@ -125,7 +125,7 @@ describe("testing matching functionality via journey calls", function () {
                 sh:property [ sh:path ff:anspruchAlg ; sh:minCount 1 ] ;
                 sh:property [ sh:path ff:anspruchSoldaten ; sh:minCount 1 ] .`
         matchingEngine.addValidator(shacl)
-        matchingEngine.init()
+        await matchingEngine.init()
     })
 
     it("happy path of nested sh:or-case should work", async function () {

@@ -6,9 +6,9 @@ import { isomorphicTurtles, storeToTurtle } from "@foerderfunke/sem-ops-utils"
 describe("testing user profile functionality", function () {
     let matchingEngine
 
-    before(function () {
+    before(async function () {
         matchingEngine = globalThis.matchingEngine
-        matchingEngine.init()
+        await matchingEngine.init()
     })
 
     const UP = `

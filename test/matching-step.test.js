@@ -129,7 +129,7 @@ describe("testing matching functionality via single calls", function () {
                     )
                 ] .`
         matchingEngine.addValidator(shacl)
-        matchingEngine.init()
+        await matchingEngine.init()
     })
 
     it("should validate conforming for basic case", async function () {

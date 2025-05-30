@@ -5,9 +5,9 @@ import { deepStrictEqual } from "node:assert"
 describe("basic tests", function () {
     let matchingEngine
 
-    before(function () {
+    before(async function () {
         matchingEngine = globalThis.matchingEngine
-        matchingEngine.init()
+        await matchingEngine.init()
     })
 
     it("matchingEngine object should have correct keys", function () {

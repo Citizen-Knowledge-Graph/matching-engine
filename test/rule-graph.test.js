@@ -41,7 +41,7 @@ describe("rule graph", function () {
                 ff:jo true .`
 
         matchingEngine.addValidator(shacl)
-        matchingEngine.init()
+        await matchingEngine.init()
 
         await matchingEngine.detailedSingleRequirementProfileValidation(up, expand("ff:ruleGraphDev"))
     })

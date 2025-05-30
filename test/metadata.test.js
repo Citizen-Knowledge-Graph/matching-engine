@@ -5,9 +5,9 @@ import { describe } from "mocha"
 describe("testing metadata functionality", function () {
     let matchingEngine
 
-    before(function () {
+    before(async function () {
         matchingEngine = globalThis.matchingEngine
-        matchingEngine.init()
+        await matchingEngine.init()
     })
 
     it("should generate the correct metadata", async function () {
