@@ -232,7 +232,7 @@ export class MatchingEngine {
         // console.log(inspect(jsonLd, false, null, true))
         let graph = new Graph(ruleGraphFromShacl(jsonLd))
         console.log(inspect(graph.root, false, null, true))
-        let mermaid = ruleGraphToMermaid(graph)
-        console.log(mermaid)
+        // let mermaid = ruleGraphToMermaid(graph) TODO re-enable
+        // console.log(mermaid)
     }
 }

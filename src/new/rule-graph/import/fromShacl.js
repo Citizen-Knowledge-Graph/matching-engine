@@ -47,8 +47,8 @@ function buildFacetNodes(o) {
     return leaves
 }
 
-function constraintNode(kind, value) {
-    const n = new Node(kind, [])
+function constraintNode(type, value) {
+    const n = new Node(type, [])
     n.value = value
     return n
 }
