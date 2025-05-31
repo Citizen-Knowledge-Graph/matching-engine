@@ -27,9 +27,27 @@ export class Graph {
 }
 
 export class Node {
-    constructor(type, children, rule) {
-        this.type = type
+    constructor(children) {
         if (children && children.length > 0) this.children = children
-        if (rule) this.rule = rule
     }
+}
+
+export class NodeAND extends Node {
+    constructor(children) { super(children) }
+}
+
+export class NodeOR extends Node {
+    constructor(children) { super(children) }
+}
+
+export class NodeNOT extends Node {
+    constructor(children) { super(children) }
+}
+
+export class NodeDATAFIELD extends Node {
+    constructor(children) { super(children) }
+}
+
+export class NodeRULE extends Node {
+    constructor(children) { super(children) }
 }

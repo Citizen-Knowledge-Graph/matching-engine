@@ -1,6 +1,6 @@
-import { Node } from "../Graph.js"
+import { Node, NodeAND, NodeDATAFIELD, NodeNOT, NodeOR, NodeRULE } from "../Graph.js"
 
-export const ruleGraphFromShacl = shape => new Node("ROOT", [walk(shape)])
+export const ruleGraphFromShacl = shape => new Node([walk(shape)])
 
 function walk(obj, path = null) {
     path = obj["sh:path"]?.["@id"] ?? path
@@ -11,44 +11,47 @@ function walk(obj, path = null) {
     if (obj["sh:not"]) {
         const inner = obj["sh:not"]
         if (canInlineNotIn(inner)) {
-            children.push(new Node("NOT", [constraintNode("IN", list(inner["sh:in"]).map(atom))]))
+            children.push(new NodeNOT([ruleNode("IN", list(inner["sh:in"]).map(atom))]))
         } else {
-            children.push(new Node("NOT", [walk(inner, path)]))
+            children.push(new NodeNOT([walk(inner, path)]))
         }
     }
-    for (const [k, lbl] of [["sh:or", "OR"], ["sh:and", "AND"]]) {
-        if (obj[k]) children.push(new Node(lbl, list(obj[k]).map(n => walk(n, path))))
+    if (obj["sh:or"]) {
+        const orChildren = list(obj["sh:or"]).map(n => walk(n, path))
+        children.push(new NodeOR(orChildren))
     }
-    const facetLeaves = buildFacetNodes(obj)
+    if (obj["sh:and"]) {
+        const andChildren = list(obj["sh:and"]).map(n => walk(n, path))
+        children.push(new NodeAND(andChildren))
+    }
+    const facetLeaves = buildFacetNodes(obj);
     if (facetLeaves.length) {
-        const pathNode = new Node("RULE",
-            facetLeaves.length === 1 ? facetLeaves
-                : [new Node("AND", facetLeaves)]
-        )
+        const pathNode = new NodeDATAFIELD(facetLeaves)
         pathNode.path = path
         if (!children.length) return pathNode
         children.unshift(pathNode)
     }
     if (children.length === 1) return children[0]
-    if (children.length >  1) return new Node("AND", children)
+    if (children.length >  1) return new NodeAND(children)
     throw new Error("Unhandled fragment:\n" + JSON.stringify(obj, null, 2))
 }
 
 function buildFacetNodes(o) {
     const leaves = []
-    if (o["sh:in"])           leaves.push(constraintNode("sh:InConstraintComponent", list(o["sh:in"]).map(atom)))
-    if (o["sh:hasValue"])     leaves.push(constraintNode("sh:HasValueConstraintComponent", atom(o["sh:hasValue"])))
-    if (o["sh:minCount"])     leaves.push(constraintNode("sh:MinCountConstraintComponent", num(o["sh:minCount"])))
-    if (o["sh:maxCount"])     leaves.push(constraintNode("sh:MaxCountConstraintComponent", num(o["sh:maxCount"])))
-    if (o["sh:minInclusive"]) leaves.push(constraintNode("sh:MinInclusiveConstraintComponent",  num(o["sh:minInclusive"])))
-    if (o["sh:minExclusive"]) leaves.push(constraintNode("sh:MinExclusiveConstraintComponent",  num(o["sh:minExclusive"])))
-    if (o["sh:maxInclusive"]) leaves.push(constraintNode("sh:MaxInclusiveConstraintComponent",  num(o["sh:maxInclusive"])))
-    if (o["sh:maxExclusive"]) leaves.push(constraintNode("sh:MaxExclusiveConstraintComponent",  num(o["sh:maxExclusive"])))
+    if (o["sh:in"])           leaves.push(ruleNode("sh:InConstraintComponent", list(o["sh:in"]).map(atom)))
+    if (o["sh:hasValue"])     leaves.push(ruleNode("sh:HasValueConstraintComponent", atom(o["sh:hasValue"])))
+    if (o["sh:minCount"])     leaves.push(ruleNode("sh:MinCountConstraintComponent", num(o["sh:minCount"])))
+    if (o["sh:maxCount"])     leaves.push(ruleNode("sh:MaxCountConstraintComponent", num(o["sh:maxCount"])))
+    if (o["sh:minInclusive"]) leaves.push(ruleNode("sh:MinInclusiveConstraintComponent",  num(o["sh:minInclusive"])))
+    if (o["sh:minExclusive"]) leaves.push(ruleNode("sh:MinExclusiveConstraintComponent",  num(o["sh:minExclusive"])))
+    if (o["sh:maxInclusive"]) leaves.push(ruleNode("sh:MaxInclusiveConstraintComponent",  num(o["sh:maxInclusive"])))
+    if (o["sh:maxExclusive"]) leaves.push(ruleNode("sh:MaxExclusiveConstraintComponent",  num(o["sh:maxExclusive"])))
     return leaves
 }
 
-function constraintNode(type, value) {
-    const n = new Node(type, [])
+function ruleNode(type, value) {
+    const n = new NodeRULE([])
+    n.type = type
     n.value = value
     return n
 }
