@@ -206,24 +206,28 @@ export class MatchingEngine {
         let jsonLd = await storeToJsonLdObj(storeFromTurtles([rpTurtle]), ["sh:NodeShape"])
         let graph = new Graph(ruleGraphFromShacl(jsonLd))
 
-        // evaluate leaves
-        for (let node of graph.leaves) {
-            let path = graph.getUpstreamPath(node)
+        function walk(node, parent) {
+            if (node.children && node.children.length > 0) {
+                for (let child of node.children) walk(child, node)
+                return
+            }
+            let path = parent.path
             for (let row of rows) {
                 // focusNode other than ff:mainPerson TODO
                 // are these two conditions enough for unique attribution?
                 if ((row.resultPath === expand(path) || row.parentResultPath === expand(path))
                     && (row.type === expand(node.type)))
                 {
-                    let status = row.severity === expand("sh:Violation") ? "VIOLATION" : "OK"
-                    node.result = { status: status }
-                    if (status === "VIOLATION" && row.resultMessage) node.result.reason = row.resultMessage
-                    if (row.value) node.result.actualValue = row.value
+                    let isOk = row.severity !== expand("sh:Violation")
+                    node.shaclEval = { isOk: isOk }
+                    if (!isOk && row.resultMessage) node.shaclEval.reason = row.resultMessage
+                    if (row.value) node.shaclEval.actualValue = row.value
                     break
                 }
             }
         }
-
+        walk(graph.root, null)
+        graph.eval()
         console.log(inspect(graph.root, false, null, true))
     }
 

@@ -53,6 +53,7 @@ function ruleNode(type, value) {
     const node = new NodeRULE()
     node.type = type
     node.value = value
+    delete node.children
     return node
 }
 

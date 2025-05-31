@@ -2,56 +2,53 @@
 export class Graph {
     constructor(root) {
         this.root = root
-        this.nodes = {}
-        this.leaves = []
-        this.counter = 0
-        this.tagIds(this.root)
+        this.conforms = null
     }
-
-    tagIds(node, parentId = null) {
-        let id = `n${++ this.counter}`
-        node.id = id
-        node.parentId = parentId
-        this.nodes[id] = node
-        if (!node.children || node.children.length === 0) this.leaves.push(node);
-        (node.children ?? []).forEach(child => this.tagIds(child, node.id))
-    }
-
-    getUpstreamPath(node) {
-        while (node?.parentId) {
-            node = this.nodes[node.parentId]
-            if (node?.path) return node.path
-        }
-        return null
+    eval() {
+        this.conforms = this.root.eval()
     }
 }
 
 export class Node {
-    constructor(children) {
-        if (children && children.length > 0) this.children = children
+    constructor(children = []) {
+        this.children = children
+    }
+    eval() {
+        let ok = true
+        for (const child of this.children) {
+            ok = child.eval() && ok
+        }
+        this.treeEvalIsOk = ok
+        return ok
     }
 }
 
-export class NodeROOT extends Node {
-    constructor(children) { super(children) }
-}
-
-export class NodeAND extends Node {
-    constructor(children) { super(children) }
-}
+export class NodeROOT extends Node {}
+export class NodeAND extends Node {}
+export class NodeDATAFIELD extends Node {}
 
 export class NodeOR extends Node {
-    constructor(children) { super(children) }
+    eval() {
+        let ok = false
+        for (const child of this.children) {
+            ok = child.eval() || ok // no early exit, visit all
+        }
+        this.treeEvalIsOk = ok
+        return ok
+    }
 }
 
 export class NodeNOT extends Node {
-    constructor(children) { super(children) }
-}
-
-export class NodeDATAFIELD extends Node {
-    constructor(children) { super(children) }
+    eval() {
+        const childResult = this.children[0]?.eval() ?? true
+        let ok = !childResult
+        this.treeEvalIsOk = ok
+        return ok
+    }
 }
 
 export class NodeRULE extends Node {
-    constructor() { super() }
+    eval() {
+        return this.shaclEval?.isOk
+    }
 }

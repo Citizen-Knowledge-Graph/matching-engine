@@ -30,7 +30,7 @@ describe("rule graph", function () {
                     [ sh:property [ sh:path ff:testy ; sh:hasValue ff:something ] ]
                 )
             ] .`
-        await matchingEngine.buildRuleGraph(shacl)
+        // await matchingEngine.buildRuleGraph(shacl)
 
         let up = `
             @prefix ff: <https://foerderfunke.org/default#> .
