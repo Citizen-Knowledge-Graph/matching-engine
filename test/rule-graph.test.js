@@ -18,8 +18,8 @@ describe("rule graph", function () {
             ff:devShape a sh:NodeShape ;
             sh:targetClass ff:Citizen ;
             
-            sh:property [ sh:not [ sh:path ff:foo ; sh:minInclusive 15 ; sh:maxExclusive 36  ] ] ;
-            sh:property [ sh:path ff:bar ; sh:not [ sh:in (ff:blau ff:red) ] ] ;
+            sh:property [ sh:path ff:foo ; sh:not [ sh:minInclusive 15 ; sh:maxExclusive 36  ] ] ;
+            sh:property [ sh:path ff:bar ; sh:in (ff:blau ff:red) ] ;
             sh:property [
                 sh:or (
                     [ sh:and (
@@ -27,6 +27,7 @@ describe("rule graph", function () {
                         [ sh:property [ sh:path ff:hey ; sh:in (true) ] ]
                     ) ]
                     [ sh:property [ sh:path ff:jo ; sh:in (false) ] ]
+                    [ sh:property [ sh:path ff:testy ; sh:hasValue ff:something ] ]
                 )
             ] .`
         await matchingEngine.buildRuleGraph(shacl)
