@@ -32,6 +32,10 @@ export class Node {
     }
 }
 
+export class NodeROOT extends Node {
+    constructor(children) { super(children) }
+}
+
 export class NodeAND extends Node {
     constructor(children) { super(children) }
 }
@@ -49,5 +53,5 @@ export class NodeDATAFIELD extends Node {
 }
 
 export class NodeRULE extends Node {
-    constructor(children) { super(children) }
+    constructor() { super() }
 }

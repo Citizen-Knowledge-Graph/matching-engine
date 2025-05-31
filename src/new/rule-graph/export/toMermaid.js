@@ -32,10 +32,7 @@ function label(node) {
     if (cls === "NodeDATAFIELD") {
         return `<b>${node.path}</b>`
     }
-    if (cls === "NodeAND" || cls === "NodeOR" || cls === "NodeNOT") {
-        return cls.replace("Node", "")
-    }
-    return cls
+    return cls.replace("Node", "")
 }
 
 const format = v => Array.isArray(v) ? v.join(" | ") : v

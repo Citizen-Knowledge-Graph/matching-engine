@@ -1,6 +1,6 @@
-import { Node, NodeAND, NodeDATAFIELD, NodeNOT, NodeOR, NodeRULE } from "../Graph.js"
+import { NodeAND, NodeDATAFIELD, NodeNOT, NodeOR, NodeROOT, NodeRULE } from "../Graph.js"
 
-export const ruleGraphFromShacl = shape => new Node([walk(shape)])
+export const ruleGraphFromShacl = shape => new NodeROOT([walk(shape)])
 
 function walk(obj, path = null) {
     path = obj["sh:path"]?.["@id"] ?? path
@@ -50,10 +50,10 @@ function buildFacetNodes(o) {
 }
 
 function ruleNode(type, value) {
-    const n = new NodeRULE([])
-    n.type = type
-    n.value = value
-    return n
+    const node = new NodeRULE()
+    node.type = type
+    node.value = value
+    return node
 }
 
 const canInlineNotIn = o => Object.keys(o).every(k => k === "sh:path" || k === "sh:in")
