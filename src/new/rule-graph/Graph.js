@@ -2,6 +2,17 @@
 export class Graph {
     constructor(root) {
         this.root = root
+        this.nodes = {}
+        this.counter = 0
+        this.tagIds(this.root)
+    }
+
+    tagIds(node, parentId = null) {
+        let id = `n${++ this.counter}`
+        node.id = id
+        node.parentId = parentId
+        this.nodes[id] = node;
+        (node.children ?? []).forEach(child => this.tagIds(child, node.id))
     }
 }
 
