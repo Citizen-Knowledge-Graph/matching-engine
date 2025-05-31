@@ -36,13 +36,15 @@ function makeRule(p, inheritedPath) {
             ["maxInclusive", num(p["sh:maxInclusive"])],
             ["maxExclusive", num(p["sh:maxExclusive"])],
             ["in", p["sh:in"] ? list(p["sh:in"]).map(atom) : null],
+            ["hasValue", p["sh:hasValue"] ? atom(p["sh:hasValue"]) : null],
+            // TODO add more
         ].filter(([, v]) => v != null)
     )
     if (!rule.path) throw new Error("No path for rule:\n" + JSON.stringify(p))
     return new Node("RULE", [], rule)
 }
 
-const FACET_KEYS = new Set(["sh:in", "sh:minInclusive", "sh:minExclusive", "sh:maxInclusive", "sh:maxExclusive", "sh:minCount", "sh:maxCount"])
+const FACET_KEYS = new Set(["sh:hasValue", "sh:in", "sh:minInclusive", "sh:minExclusive", "sh:maxInclusive", "sh:maxExclusive", "sh:minCount", "sh:maxCount"])
 
 const hasFacet = o => [... FACET_KEYS].some(k => k in o)
 
