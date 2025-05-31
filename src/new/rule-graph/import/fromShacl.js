@@ -36,14 +36,14 @@ function walk(obj, path = null) {
 
 function buildFacetNodes(o) {
     const leaves = []
-    if (o["sh:in"])           leaves.push(constraintNode("IN", list(o["sh:in"]).map(atom)))
-    if (o["sh:hasValue"])     leaves.push(constraintNode("HAS_VALUE", atom(o["sh:hasValue"])))
-    if (o["sh:minCount"])     leaves.push(constraintNode("MIN_COUNT", num(o["sh:minCount"])))
-    if (o["sh:maxCount"])     leaves.push(constraintNode("MAX_COUNT", num(o["sh:maxCount"])))
-    if (o["sh:minInclusive"]) leaves.push(constraintNode("MIN_INC",  num(o["sh:minInclusive"])))
-    if (o["sh:minExclusive"]) leaves.push(constraintNode("MIN_EXC",  num(o["sh:minExclusive"])))
-    if (o["sh:maxInclusive"]) leaves.push(constraintNode("MAX_INC",  num(o["sh:maxInclusive"])))
-    if (o["sh:maxExclusive"]) leaves.push(constraintNode("MAX_EXC",  num(o["sh:maxExclusive"])))
+    if (o["sh:in"])           leaves.push(constraintNode("sh:InConstraintComponent", list(o["sh:in"]).map(atom)))
+    if (o["sh:hasValue"])     leaves.push(constraintNode("sh:HasValueConstraintComponent", atom(o["sh:hasValue"])))
+    if (o["sh:minCount"])     leaves.push(constraintNode("sh:MinCountConstraintComponent", num(o["sh:minCount"])))
+    if (o["sh:maxCount"])     leaves.push(constraintNode("sh:MaxCountConstraintComponent", num(o["sh:maxCount"])))
+    if (o["sh:minInclusive"]) leaves.push(constraintNode("sh:MinInclusiveConstraintComponent",  num(o["sh:minInclusive"])))
+    if (o["sh:minExclusive"]) leaves.push(constraintNode("sh:MinExclusiveConstraintComponent",  num(o["sh:minExclusive"])))
+    if (o["sh:maxInclusive"]) leaves.push(constraintNode("sh:MaxInclusiveConstraintComponent",  num(o["sh:maxInclusive"])))
+    if (o["sh:maxExclusive"]) leaves.push(constraintNode("sh:MaxExclusiveConstraintComponent",  num(o["sh:maxExclusive"])))
     return leaves
 }
 
