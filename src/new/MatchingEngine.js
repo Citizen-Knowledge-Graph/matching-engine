@@ -1,5 +1,5 @@
 import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, newStore, addTurtleToStore, storeFromDataset, sparqlConstruct, storeToTurtle, sparqlSelect, addTriple, expand, a, datasetFromStore, storeToJsonLdObj, sparqlInsertDelete, formatTimestamp, formatTimestampAsLiteral, addStoreToStore } from "@foerderfunke/sem-ops-utils"
-import { FORMAT, MATCHING_MODE, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_BUILD_INDIVIDUALS_TREE, QUERY_EXTRACT_INVALID_INDIVIDUALS, QUERY_HASVALUE_FIX, QUERY_METADATA_RPS, QUERY_METADATA_DFS, QUERY_METADATA_BCS, QUERY_INSERT_VALIDATION_REPORT_URI, QUERY_DELETE_NON_VIOLATING_VALIDATION_RESULTS, QUERY_LINK_REPORT_ONLY_IF_EXISTS, flattenListWorkaround } from "./queries.js"
+import { FORMAT, MATCHING_MODE, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_BUILD_INDIVIDUALS_TREE, QUERY_EXTRACT_INVALID_INDIVIDUALS, QUERY_HASVALUE_FIX, QUERY_METADATA_RPS, QUERY_METADATA_DFS, QUERY_METADATA_BCS, QUERY_INSERT_VALIDATION_REPORT_URI, QUERY_DELETE_NON_VIOLATING_VALIDATION_RESULTS, QUERY_LINK_REPORT_ONLY_IF_EXISTS, flattenListWorkaround, FETCH_LEAVE_NODE_EVALS } from "./queries.js"
 import { Graph } from "./rule-graph/Graph.js"
 import { inspect } from "util"
 import { ruleGraphFromShacl } from "./rule-graph/import/fromShacl.js"
@@ -201,35 +201,34 @@ export class MatchingEngine {
 
         let validator = buildValidator(rpTurtle, true, true)
         let shaclReport = await validator.validate({ dataset: upDataset })
-        let query = `
-            PREFIX sh: <http://www.w3.org/ns/shacl#>
-            SELECT * WHERE {
-                ?result sh:focusNode ?subject ;
-                        sh:resultPath ?path ;
-                        sh:resultSeverity ?severity ;
-                        sh:sourceConstraintComponent ?type ;
-              OPTIONAL { ?result sh:resultMessage ?message . }
-              OPTIONAL { ?result sh:value ?value . }     
-            }`
-        let rows = await sparqlSelect(query, storeFromDataset(shaclReport.dataset))
-        let map = {}
-        for (let row of rows) {
-            if (row.type === expand("sh:MinCountConstraintComponent")) continue // sh:QualifiedMinCountConstraintComponent also?
-            map[row.path] = {
-                subject : row.subject,
-                status: row.severity === expand("sh:Violation") ? "VIOLATION" : "OK",
-                type: row.type.split("#").pop(),
-                value: row.value ?? null,
-                message: row.message ?? null
-            }
-        }
-        console.log(map)
+        let rows = await sparqlSelect(FETCH_LEAVE_NODE_EVALS, storeFromDataset(shaclReport.dataset))
 
         let jsonLd = await storeToJsonLdObj(storeFromTurtles([rpTurtle]), ["sh:NodeShape"])
         let graph = new Graph(ruleGraphFromShacl(jsonLd))
-        console.log(inspect(graph.root, false, null, true))
 
-        // TODO
+        this.recursiveEval(graph, graph.root, rows)
+        console.log(inspect(graph.root, false, null, true))
+    }
+
+    recursiveEval(graph, node, rows) {
+        if (node.children) {
+            for (let child of node.children) this.recursiveEval(graph, child, rows)
+        } else {
+            let path = graph.getUpstreamPath(node)
+            for (let row of rows) {
+                // focusNode other than ff:mainPerson TODO
+                // are these two conditions enough for unique attribution?
+                if ((row.resultPath === expand(path) || row.parentResultPath === expand(path))
+                    && (row.type === expand(node.type)))
+                {
+                    let status = row.severity === expand("sh:Violation") ? "VIOLATION" : "OK"
+                    node.result = { status: status }
+                    if (status === "VIOLATION" && row.resultMessage) node.result.reason = row.resultMessage
+                    if (row.value) node.result.actualValue = row.value
+                    break
+                }
+            }
+        }
     }
 
     async buildRuleGraph(turtle) {

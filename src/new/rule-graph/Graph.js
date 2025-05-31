@@ -14,12 +14,20 @@ export class Graph {
         this.nodes[id] = node;
         (node.children ?? []).forEach(child => this.tagIds(child, node.id))
     }
+
+    getUpstreamPath(node) {
+        while (node?.parentId) {
+            node = this.nodes[node.parentId]
+            if (node?.path) return node.path
+        }
+        return null
+    }
 }
 
 export class Node {
     constructor(type, children, rule) {
         this.type = type
-        if (children.length > 0) this.children = children
+        if (children && children.length > 0) this.children = children
         if (rule) this.rule = rule
     }
 }

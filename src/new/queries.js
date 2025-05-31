@@ -330,3 +330,26 @@ export const QUERY_LINK_REPORT_ONLY_IF_EXISTS = (reportName, rpEvalUri) => { ret
         ?result a sh:ValidationResult .
     }`
 }
+
+export const FETCH_LEAVE_NODE_EVALS = `
+    PREFIX ff: <https://foerderfunke.org/default#>
+    PREFIX sh: <http://www.w3.org/ns/shacl#>
+    SELECT * WHERE {
+        ?result sh:focusNode ?focusNode ;
+            sh:resultSeverity ?severity ;
+            sh:sourceConstraintComponent ?type .    
+        FILTER(?type NOT IN (
+            sh:NotConstraintComponent,
+            sh:OrConstraintComponent,
+            sh:AndConstraintComponent,
+            sh:MinCountConstraintComponent
+        )) .
+        OPTIONAL { ?result sh:resultPath ?resultPath . }
+        OPTIONAL { ?result sh:resultMessage ?resultMessage . }
+        OPTIONAL { ?result sh:value ?value . }
+        OPTIONAL {
+            ?parent sh:result|sh:detail ?result ;
+                sh:resultPath ?parentResultPath ;
+                sh:focusNode ?parentFocusNode .
+        }        
+    }`
