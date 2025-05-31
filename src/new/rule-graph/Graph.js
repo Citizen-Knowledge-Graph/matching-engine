@@ -3,6 +3,7 @@ export class Graph {
     constructor(root) {
         this.root = root
         this.nodes = {}
+        this.leaves = []
         this.counter = 0
         this.tagIds(this.root)
     }
@@ -11,7 +12,8 @@ export class Graph {
         let id = `n${++ this.counter}`
         node.id = id
         node.parentId = parentId
-        this.nodes[id] = node;
+        this.nodes[id] = node
+        if (!node.children || node.children.length === 0) this.leaves.push(node);
         (node.children ?? []).forEach(child => this.tagIds(child, node.id))
     }
 

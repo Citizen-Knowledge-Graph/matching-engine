@@ -206,14 +206,8 @@ export class MatchingEngine {
         let jsonLd = await storeToJsonLdObj(storeFromTurtles([rpTurtle]), ["sh:NodeShape"])
         let graph = new Graph(ruleGraphFromShacl(jsonLd))
 
-        this.recursiveEval(graph, graph.root, rows)
-        console.log(inspect(graph.root, false, null, true))
-    }
-
-    recursiveEval(graph, node, rows) {
-        if (node.children) {
-            for (let child of node.children) this.recursiveEval(graph, child, rows)
-        } else {
+        // evaluate leaves
+        for (let node of graph.leaves) {
             let path = graph.getUpstreamPath(node)
             for (let row of rows) {
                 // focusNode other than ff:mainPerson TODO
@@ -229,6 +223,8 @@ export class MatchingEngine {
                 }
             }
         }
+
+        console.log(inspect(graph.root, false, null, true))
     }
 
     async buildRuleGraph(turtle) {
