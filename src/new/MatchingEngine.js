@@ -220,6 +220,10 @@ export class MatchingEngine {
                     && (row.type === expand(node.type)))
                 {
                     let isOk = row.severity !== expand("sh:Violation")
+                    // workaround for the same path being true in one branch and false in another one
+                    if (node.type === "sh:InConstraintComponent" && node.value && (node.value[0] === true || node.value[0] === false)) {
+                        isOk = isOk && node.value[0] === Boolean(row.value)
+                    }
                     node.shaclEval.status = isOk ? STATUS.OK : STATUS.VIOLATION
                     if (!isOk && row.resultMessage) node.shaclEval.reason = row.resultMessage
                     if (row.value) node.shaclEval.actualValue = row.value
