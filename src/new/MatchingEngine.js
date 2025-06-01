@@ -233,10 +233,6 @@ export class MatchingEngine {
 
     async buildRuleGraph(turtle) {
         let jsonLd = await storeToJsonLdObj(storeFromTurtles([turtle]), ["sh:NodeShape"])
-        // console.log(inspect(jsonLd, false, null, true))
-        let graph = new Graph(ruleGraphFromShacl(jsonLd))
-        console.log(inspect(graph.root, false, null, true))
-        let mermaid = ruleGraphToMermaid(graph)
-        console.log(mermaid)
+        return new Graph(ruleGraphFromShacl(jsonLd))
     }
 }

@@ -2,7 +2,6 @@
 export class Graph {
     constructor(root) {
         this.root = root
-        this.conforms = null
     }
     eval() {
         this.conforms = this.root.eval()
