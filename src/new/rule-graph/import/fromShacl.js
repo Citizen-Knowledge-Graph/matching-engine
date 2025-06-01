@@ -63,7 +63,14 @@ const num  = lit => lit ? Number(lit["@value"]) : null
 const arr  = x => (Array.isArray(x) ? x : [x])
 
 function atom(lit) {
+    if (lit === null || typeof lit !== "object") return lit
     if (lit["@id"]) return lit["@id"]
-    const { ["@type"]: t, ["@value"]: v } = lit
-    return t?.endsWith("boolean") ? v === "true" : t?.endsWith("integer") ? Number(v) : v
+    if ("@value" in lit) {
+        const val = lit["@value"]
+        const type = lit["@type"] || ""
+        if (type.endsWith("boolean")) return val === "true"
+        if (type.endsWith("integer")) return Number(val)
+        return val
+    }
+    return lit
 }
