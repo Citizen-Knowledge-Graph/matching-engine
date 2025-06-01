@@ -388,6 +388,29 @@ class N18 violation`
      { status: 'violation',
        reason: 'Missing expected value <https://foerderfunke.org/default#something>' },
     depth: 4 } ]`
+
+/*
+The above translates into this structure, depth applied as tabs:
+
+ROOT
+    AND
+        NOT
+            ff:foo
+                >= 15 (violated)
+                <= 36 (ok)
+        ff:bar
+            = ff:blau | ff:red (violated)
+        OR
+            AND
+                ff:dings
+                    = true (ok)
+                ff:hey
+                    = true (ok)
+            ff:jo
+                = false (missing)
+            ff:testy
+                hasValue ff:something (violated)
+*/
         strictEqual(actual, expected.trim(), "The flattened rule graph with validation results does not match the expected one")
     })
 
@@ -400,6 +423,7 @@ class N18 violation`
         let graph = await matchingEngine.detailedSingleRequirementProfileValidation(upSimple, expand("ff:uebergangsgeld"))
         let mermaid = ruleGraphToMermaid(graph, true)
         console.log(mermaid)
+        // TODO
     })
 
     it("build rule graph with validation results from simple example SHACL shape",async function () {
@@ -410,5 +434,6 @@ class N18 violation`
         let graph = await matchingEngine.detailedSingleRequirementProfileValidation(upSimple, expand("ff:simpleRp"))
         let mermaid = ruleGraphToMermaid(graph, true)
         console.log(mermaid)
+        // TODO
     })
 })
