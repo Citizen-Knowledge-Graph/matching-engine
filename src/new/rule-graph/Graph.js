@@ -1,10 +1,36 @@
+export const STATUS = {
+    OK: "ok",
+    VIOLATION: "violation",
+    MISSING: "missing"
+}
+const { OK, VIOLATION, MISSING } = STATUS
+
+function andStatus(a, b) {
+    if (a === VIOLATION || b === VIOLATION) return VIOLATION
+    if (a === MISSING || b === MISSING) return MISSING
+    return OK
+}
+
+function orStatus(a, b) {
+    if (a === OK || b === OK) return OK
+    if (a === MISSING || b === MISSING) return MISSING
+    return VIOLATION
+}
+
+function notStatus(s) {
+    if (s === OK) return VIOLATION
+    if (s === VIOLATION) return OK
+    return MISSING
+}
 
 export class Graph {
     constructor(root) {
         this.root = root
     }
     eval() {
-        this.conforms = this.root.eval()
+        const res = this.root.eval()
+        this.conforms = res === OK
+        return res
     }
 }
 
@@ -13,12 +39,9 @@ export class Node {
         this.children = children
     }
     eval() {
-        let ok = true
-        for (const child of this.children) {
-            ok = child.eval() && ok
-        }
-        this.treeEvalIsOk = ok
-        return ok
+        this.status = OK
+        for (const c of this.children) this.status = andStatus(this.status, c.eval())
+        return this.status
     }
 }
 
@@ -28,26 +51,22 @@ export class NodeDATAFIELD extends Node {}
 
 export class NodeOR extends Node {
     eval() {
-        let ok = false
-        for (const child of this.children) {
-            ok = child.eval() || ok // no early exit, visit all
-        }
-        this.treeEvalIsOk = ok
-        return ok
+        this.status = VIOLATION
+        for (const c of this.children) this.status = orStatus(this.status, c.eval())
+        return this.status;
     }
 }
 
 export class NodeNOT extends Node {
     eval() {
-        const childResult = this.children[0]?.eval() ?? true
-        let ok = !childResult
-        this.treeEvalIsOk = ok
-        return ok
+        const childStat = this.children[0]?.eval() ?? OK // default true
+        this.status = notStatus(childStat)
+        return this.status;
     }
 }
 
 export class NodeRULE extends Node {
     eval() {
-        return this.shaclEval?.isOk
+        return this.shaclEval.status
     }
 }

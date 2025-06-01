@@ -1,6 +1,6 @@
 import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, newStore, addTurtleToStore, storeFromDataset, sparqlConstruct, storeToTurtle, sparqlSelect, addTriple, expand, a, datasetFromStore, storeToJsonLdObj, sparqlInsertDelete, formatTimestamp, formatTimestampAsLiteral, addStoreToStore } from "@foerderfunke/sem-ops-utils"
 import { FORMAT, MATCHING_MODE, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_BUILD_INDIVIDUALS_TREE, QUERY_EXTRACT_INVALID_INDIVIDUALS, QUERY_HASVALUE_FIX, QUERY_METADATA_RPS, QUERY_METADATA_DFS, QUERY_METADATA_BCS, QUERY_INSERT_VALIDATION_REPORT_URI, QUERY_DELETE_NON_VIOLATING_VALIDATION_RESULTS, QUERY_LINK_REPORT_ONLY_IF_EXISTS, flattenListWorkaround, FETCH_LEAVE_NODE_EVALS } from "./queries.js"
-import { Graph } from "./rule-graph/Graph.js"
+import { Graph, STATUS } from "./rule-graph/Graph.js"
 import { inspect } from "util"
 import { ruleGraphFromShacl } from "./rule-graph/import/fromShacl.js"
 import { ruleGraphToMermaid } from "./rule-graph/export/toMermaid.js"
@@ -212,6 +212,7 @@ export class MatchingEngine {
                 return
             }
             let path = parent.path
+            node.shaclEval = { status: STATUS.MISSING }
             for (let row of rows) {
                 // focusNode other than ff:mainPerson TODO
                 // are these two conditions enough for unique attribution?
@@ -219,7 +220,7 @@ export class MatchingEngine {
                     && (row.type === expand(node.type)))
                 {
                     let isOk = row.severity !== expand("sh:Violation")
-                    node.shaclEval = { isOk: isOk }
+                    node.shaclEval.status = isOk ? STATUS.OK : STATUS.VIOLATION
                     if (!isOk && row.resultMessage) node.shaclEval.reason = row.resultMessage
                     if (row.value) node.shaclEval.actualValue = row.value
                     break
