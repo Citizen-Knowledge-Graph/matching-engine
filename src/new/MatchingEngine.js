@@ -229,7 +229,7 @@ export class MatchingEngine {
         }
         walk(graph.root, null)
         graph.eval()
-        console.log(inspect(graph.root, false, null, true))
+        return graph
     }
 
     async buildRuleGraph(turtle) {
