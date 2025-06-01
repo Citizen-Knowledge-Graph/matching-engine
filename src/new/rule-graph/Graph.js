@@ -32,6 +32,17 @@ export class Graph {
         this.conforms = res === OK
         return res
     }
+    flatten() {
+        let nodes = []
+        function walk(node, depth) {
+            node.depth = depth
+            nodes.push(node);
+            (node.children ?? []).forEach(c => walk(c, depth + 1))
+        }
+        walk(this.root, 0)
+        for (let node of nodes) delete node.children
+        return nodes
+    }
 }
 
 export class Node {

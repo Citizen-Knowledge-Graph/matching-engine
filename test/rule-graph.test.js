@@ -274,4 +274,67 @@ class N17 violation
 class N18 violation`
         strictEqual(actual, expected.trim(), "The mermaid syntax from rule graph with validation results does not match the expected one")
     })
+
+    it("flatten rule graph validation results",async function () {
+        let graph = await matchingEngine.detailedSingleRequirementProfileValidation(up, expand("ff:ruleGraphDev"))
+        let actual = inspect(graph.flatten(), { depth: null, compact: true })
+        const expected = `
+[ NodeROOT { status: 'violation', depth: 0 },
+  NodeAND { status: 'violation', depth: 1 },
+  NodeNOT { status: 'ok', depth: 2 },
+  NodeDATAFIELD { path: 'ff:foo', status: 'violation', depth: 3 },
+  NodeRULE {
+    type: 'sh:MinInclusiveConstraintComponent',
+    value: 15,
+    shaclEval:
+     { status: 'violation',
+       reason:
+        'Value is not greater than or equal to "15"^^<http://www.w3.org/2001/XMLSchema#integer>',
+       actualValue: '7' },
+    depth: 4 },
+  NodeRULE {
+    type: 'sh:MaxExclusiveConstraintComponent',
+    value: 36,
+    shaclEval: { status: 'ok', actualValue: '7' },
+    depth: 4 },
+  NodeDATAFIELD { path: 'ff:bar', status: 'violation', depth: 2 },
+  NodeRULE {
+    type: 'sh:InConstraintComponent',
+    value: [ 'ff:blau', 'ff:red' ],
+    shaclEval:
+     { status: 'violation',
+       reason:
+        'Value is not in https://foerderfunke.org/default#blau, https://foerderfunke.org/default#red',
+       actualValue: 'https://foerderfunke.org/default#green' },
+    depth: 3 },
+  NodeOR { status: 'ok', depth: 2 },
+  NodeAND { status: 'ok', depth: 3 },
+  NodeDATAFIELD { path: 'ff:dings', status: 'ok', depth: 4 },
+  NodeRULE {
+    type: 'sh:InConstraintComponent',
+    value: [ true ],
+    shaclEval: { status: 'ok', actualValue: 'true' },
+    depth: 5 },
+  NodeDATAFIELD { path: 'ff:hey', status: 'ok', depth: 4 },
+  NodeRULE {
+    type: 'sh:InConstraintComponent',
+    value: [ true ],
+    shaclEval: { status: 'ok', actualValue: 'true' },
+    depth: 5 },
+  NodeDATAFIELD { path: 'ff:jo', status: 'missing', depth: 3 },
+  NodeRULE {
+    type: 'sh:InConstraintComponent',
+    value: [ false ],
+    shaclEval: { status: 'missing' },
+    depth: 4 },
+  NodeDATAFIELD { path: 'ff:testy', status: 'violation', depth: 3 },
+  NodeRULE {
+    type: 'sh:HasValueConstraintComponent',
+    value: 'ff:something',
+    shaclEval:
+     { status: 'violation',
+       reason: 'Missing expected value <https://foerderfunke.org/default#something>' },
+    depth: 4 } ]`
+        strictEqual(actual, expected.trim(), "The flattened rule graph with validation results does not match the expected one")
+    })
 })
