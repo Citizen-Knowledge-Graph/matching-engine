@@ -6,7 +6,78 @@ import { strictEqual } from "node:assert"
 import { ruleGraphToMermaid } from "../src/new/rule-graph/export/toMermaid.js"
 
 describe("rule graph", function () {
-    let matchingEngine, shacl1
+    let matchingEngine
+    let shacl1 = `
+        @prefix sh: <http://www.w3.org/ns/shacl#> .
+        @prefix ff: <https://foerderfunke.org/default#> .
+    
+        ff:ruleGraphDev a ff:RequirementProfile .
+        ff:devShape a sh:NodeShape ;
+        sh:targetClass ff:Citizen ;
+        
+        sh:property [ sh:path ff:foo ; sh:not [ sh:minInclusive 15 ; sh:maxExclusive 36  ] ] ;
+        sh:property [ sh:path ff:bar ; sh:in (ff:blau ff:red) ] ;
+        sh:property [
+            sh:or (
+                [ sh:and (
+                    [ sh:property [ sh:path ff:dings ; sh:in (true) ] ]
+                    [ sh:property [ sh:path ff:hey ; sh:in (true) ] ]
+                ) ]
+                [ sh:property [ sh:path ff:jo ; sh:in (false) ] ]
+                [ sh:property [ sh:path ff:testy ; sh:hasValue ff:something ] ]
+            )
+        ] .`
+    let shacl2 = `
+        @prefix sh: <http://www.w3.org/ns/shacl#> .
+        @prefix ff: <https://foerderfunke.org/default#> .
+        @prefix shn: <https://schemas.link/shacl-next#>.
+        
+        ff:uebergangsgeld a ff:RequirementProfile .
+        ff:uebergangsgeldShape a sh:NodeShape ;
+            sh:targetClass ff:Citizen ;
+
+            sh:property [ sh:path ff:has_disability ; sh:in (true) ] ;
+            sh:property [ sh:path ff:rehabilitation_provider ; sh:in (ff:rehabilitation_provider-bundesagentur-fuer-arbeit) ] ;
+            sh:property [
+                sh:or (
+                    [ sh:property [ sh:path ff:berufsausbildungsabschluss ; sh:in (true) ] ]
+                    [ 
+                        sh:property [ sh:path ff:berufsausbildungsabschluss ; sh:in (false) ] ;
+                        sh:or (
+                            [ 
+                                sh:property [ sh:path ff:berufsrueckkehrer ; sh:in (false) ] ;
+                                sh:or (
+                                    [ sh:property [ sh:path ff:sozialversichert12in3 ; sh:in (true) ] ]
+                                    [ sh:property [ sh:path ff:anspruchAlgIn3 ; sh:in (true) ] ]
+                                    [ sh:property [ sh:path ff:anspruchSoldatenIn3 ; sh:in (true) ] ]
+                                )
+                            ]
+                            [ 
+                                sh:property [ sh:path ff:berufsrueckkehrer ; sh:in (true) ] ;
+                                sh:or (
+                                    [ sh:property [ sh:path ff:sozialversichert12 ; sh:in (true) ] ]
+                                    [ sh:property [ sh:path ff:anspruchAlg ; sh:in (true) ] ]
+                                    [ sh:property [ sh:path ff:anspruchSoldaten ; sh:in (true) ] ]
+                                )
+                            ]
+                        )
+                    ]
+                )
+            ] .`
+    let shacl3 = `
+        @prefix sh: <http://www.w3.org/ns/shacl#> .
+        @prefix ff: <https://foerderfunke.org/default#> .
+        ff:simpleRp a ff:RequirementProfile .
+        ff:simpleRpShape a sh:NodeShape ;
+            sh:targetNode ff:mainPerson ;
+            sh:property [
+                sh:path ff:hasAge ;
+                sh:minInclusive 18 ;
+            ] ;
+            sh:property [
+                sh:path ff:hasResidence ;
+                sh:in ("Berlin") ;
+            ] .`
     const up = `
         @prefix ff: <https://foerderfunke.org/default#> .
             ff:mainPerson a ff:Citizen ;
@@ -17,27 +88,9 @@ describe("rule graph", function () {
 
     before(async function () {
         matchingEngine = globalThis.matchingEngine
-        shacl1 = `
-            @prefix sh: <http://www.w3.org/ns/shacl#> .
-            @prefix ff: <https://foerderfunke.org/default#> .
-
-            ff:ruleGraphDev a ff:RequirementProfile .
-            ff:devShape a sh:NodeShape ;
-            sh:targetClass ff:Citizen ;
-            
-            sh:property [ sh:path ff:foo ; sh:not [ sh:minInclusive 15 ; sh:maxExclusive 36  ] ] ;
-            sh:property [ sh:path ff:bar ; sh:in (ff:blau ff:red) ] ;
-            sh:property [
-                sh:or (
-                    [ sh:and (
-                        [ sh:property [ sh:path ff:dings ; sh:in (true) ] ]
-                        [ sh:property [ sh:path ff:hey ; sh:in (true) ] ]
-                    ) ]
-                    [ sh:property [ sh:path ff:jo ; sh:in (false) ] ]
-                    [ sh:property [ sh:path ff:testy ; sh:hasValue ff:something ] ]
-                )
-            ] .`
         matchingEngine.addValidator(shacl1)
+        matchingEngine.addValidator(shacl2)
+        matchingEngine.addValidator(shacl3)
         await matchingEngine.init()
     })
 
@@ -336,5 +389,26 @@ class N18 violation`
        reason: 'Missing expected value <https://foerderfunke.org/default#something>' },
     depth: 4 } ]`
         strictEqual(actual, expected.trim(), "The flattened rule graph with validation results does not match the expected one")
+    })
+
+    it("build rule graph with validation results from uebergangsgeld example SHACL shape",async function () {
+        const upSimple = `
+        @prefix ff: <https://foerderfunke.org/default#> .
+            ff:mainPerson a ff:Citizen ;
+                ff:has_disability true ;
+                ff:berufsrueckkehrer true .`
+        let graph = await matchingEngine.detailedSingleRequirementProfileValidation(upSimple, expand("ff:uebergangsgeld"))
+        let mermaid = ruleGraphToMermaid(graph, true)
+        console.log(mermaid)
+    })
+
+    it("build rule graph with validation results from simple example SHACL shape",async function () {
+        const upSimple = `
+        @prefix ff: <https://foerderfunke.org/default#> .
+            ff:mainPerson a ff:Citizen ;
+                ff:hasAge 17 .`
+        let graph = await matchingEngine.detailedSingleRequirementProfileValidation(upSimple, expand("ff:simpleRp"))
+        let mermaid = ruleGraphToMermaid(graph, true)
+        console.log(mermaid)
     })
 })
