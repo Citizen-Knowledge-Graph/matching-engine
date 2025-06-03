@@ -128,25 +128,12 @@ describe("testing matching functionality via journey calls", function () {
         await matchingEngine.init()
     })
 
-    it("happy path of nested sh:or-case should work", async function () {
-        // in the head of the user, before having answered questions
-        let upMap = {
-            "ff:mainPerson": {
-                "ff:has_disability": true,
-                "ff:rehabilitation_provider": "ff:rehabilitation_provider-bundesagentur-fuer-arbeit",
-                "ff:berufsausbildungsabschluss": false,
-                "ff:berufsrueckkehrer": true,
-                "ff:sozialversichert12": true
-            }
-        }
-        let upStore = storeFromTurtles([`
-            @prefix ff: <https://foerderfunke.org/default#> .
-            ff:mainPerson a ff:Citizen .`
-        ])
+    async function journeyLoop(upMap, initialUp, rpUri) {
+        let upStore = storeFromTurtles([initialUp])
         let reportStore
         let keepGoing = true
         while (keepGoing) {
-            reportStore = await matchingEngine.matching(await storeToTurtle(upStore), [expand("ff:uebergangsgeld-behinderung")], MATCHING_MODE.QUIZ, FORMAT.STORE, true)
+            reportStore = await matchingEngine.matching(await storeToTurtle(upStore), [rpUri], MATCHING_MODE.QUIZ, FORMAT.STORE, true)
             let query = `
                 PREFIX ff: <https://foerderfunke.org/default#>
                 SELECT ?subject ?df WHERE {
@@ -171,7 +158,25 @@ describe("testing matching functionality via journey calls", function () {
                 INSERT DATA { ${subject} ${df} ${value} }`
             await sparqlInsertDelete(query, upStore)
         }
+        return upStore
+    }
 
+    it("happy path of nested sh:or-case should work", async function () {
+        // in the head of the user, before having answered questions
+        let upMap = {
+            "ff:mainPerson": {
+                "ff:has_disability": true,
+                "ff:rehabilitation_provider": "ff:rehabilitation_provider-bundesagentur-fuer-arbeit",
+                "ff:berufsausbildungsabschluss": false,
+                "ff:berufsrueckkehrer": true,
+                "ff:sozialversichert12": true
+            }
+        }
+        let initialUp = `
+            @prefix ff: <https://foerderfunke.org/default#> .
+            ff:mainPerson a ff:Citizen .`
+        let upStore = await journeyLoop(upMap, initialUp, expand("ff:uebergangsgeld-behinderung"))
+        const actualUp = await storeToTurtle(upStore)
         const expectedUp = `
             @prefix ff: <https://foerderfunke.org/default#>.
             @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
@@ -181,7 +186,6 @@ describe("testing matching functionality via journey calls", function () {
               ff:has_disability true;
               ff:rehabilitation_provider ff:rehabilitation_provider-bundesagentur-fuer-arbeit;
               ff:sozialversichert12 true.`
-        const actualUp = await storeToTurtle(upStore)
         strictEqual(isomorphicTurtles(actualUp, expectedUp), true, "The user profile at the end of the matching journey is not as expected")
     })
 })
