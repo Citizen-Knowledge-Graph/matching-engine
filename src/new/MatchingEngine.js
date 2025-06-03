@@ -143,7 +143,7 @@ export class MatchingEngine {
             // TODO
         }*/
 
-        let missingDfStore
+        let missingDfStore = matchingMode === MATCHING_MODE.QUIZ ? newStore() : reportStore
         for (let rpUri of rpUris) {
             let rpEvalUri = expand("ff:rpEvalRes") + "_" + rpUri.split("#").pop()
             addTriple(reportStore, reportUri, expand("ff:hasEvaluatedRequirementProfile"), rpEvalUri)
@@ -155,8 +155,6 @@ export class MatchingEngine {
 
             await sparqlInsertDelete(QUERY_HASVALUE_FIX, sourceStore)
             await sparqlConstruct(QUERY_ELIGIBILITY_STATUS(rpEvalUri), [sourceStore], reportStore)
-
-            missingDfStore = matchingMode === MATCHING_MODE.QUIZ ? newStore() : reportStore
             await sparqlConstruct(QUERY_MISSING_DATAFIELDS(reportUri, rpEvalUri), [sourceStore], missingDfStore)
 
             /*if (individualsTree) {
