@@ -1,12 +1,19 @@
-import "./fixtures/common.js"
 import { describe } from "mocha"
 import { expand, isomorphicTurtles, shrink, sparqlInsertDelete, sparqlSelect, storeFromTurtles, storeToTurtle } from "@foerderfunke/sem-ops-utils"
 import { FORMAT, MATCHING_MODE } from "../src/new/queries.js"
 import { strictEqual } from "node:assert"
+import { addRpsFromKnowledgeBase } from "./fixtures/common.js"
 
 describe("testing matching functionality via journey calls", function () {
     // this.timeout(10000)
     let matchingEngine
+    let familienleistungenRpUris = [
+        expand("ff:hilfe-zum-lebensunterhalt"),
+        expand("ff:kindergeld"),
+        expand("ff:kinderzuschlag"),
+        expand("ff:buergergeld"),
+        expand("ff:bildung-und-teilhabe-bei-bezug-von-buergergeld")
+    ]
 
     before(async function () {
         matchingEngine = globalThis.matchingEngine
@@ -125,6 +132,7 @@ describe("testing matching functionality via journey calls", function () {
                 sh:property [ sh:path ff:anspruchAlg ; sh:minCount 1 ] ;
                 sh:property [ sh:path ff:anspruchSoldaten ; sh:minCount 1 ] .`
         matchingEngine.addValidator(shacl)
+        await addRpsFromKnowledgeBase(familienleistungenRpUris)
         await matchingEngine.init()
     })
 
@@ -187,5 +195,19 @@ describe("testing matching functionality via journey calls", function () {
               ff:rehabilitation_provider ff:rehabilitation_provider-bundesagentur-fuer-arbeit;
               ff:sozialversichert12 true.`
         strictEqual(isomorphicTurtles(actualUp, expectedUp), true, "The user profile at the end of the matching journey is not as expected")
+    })
+
+    it("test path through Familienleistungen", async function () {
+        let upMap = {
+            "ff:mainPerson": {
+                "ff:aufenthaltsort": "ff:aufenthaltsort-ao-innerhalb"
+            }
+        }
+        let initialUp = `
+            @prefix ff: <https://foerderfunke.org/default#> .
+            ff:mainPerson a ff:Citizen .`
+        let upStore = await journeyLoop(upMap, initialUp, familienleistungenRpUris)
+        console.log(await storeToTurtle(upStore))
+        // TODO
     })
 })
