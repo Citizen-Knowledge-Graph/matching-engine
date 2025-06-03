@@ -21,8 +21,19 @@ describe("testing user profile functionality", function () {
         ff:child0 a ff:Child ;
             ff:hasAge 25 .`
 
+    it("should throw error if no citizen is in profile", async function () {
+        let errThrown = false
+        try {
+            await matchingEngine.enrichAndValidateUserProfile("");
+        } catch (err) {
+            errThrown = err.message === "User profile does not contain an individual of class ff:Citizen"
+        } finally {
+            strictEqual(errThrown, true, "The error expected for missing individual was not thrown")
+        }
+    })
+
     it("should validate simple profile", async function () {
-        let {upStore, upDataset, reportStore} = await matchingEngine.enrichAndValidateUserProfile(UP)
+        let { upStore, upDataset, reportStore } = await matchingEngine.enrichAndValidateUserProfile(UP)
         let actualTurtle = await storeToTurtle(reportStore)
 
         const expectedTurtle = `
