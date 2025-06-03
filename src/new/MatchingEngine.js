@@ -1,9 +1,7 @@
 import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, newStore, addTurtleToStore, storeFromDataset, sparqlConstruct, storeToTurtle, sparqlSelect, addTriple, expand, a, datasetFromStore, storeToJsonLdObj, sparqlInsertDelete, formatTimestamp, formatTimestampAsLiteral, addStoreToStore } from "@foerderfunke/sem-ops-utils"
-import { FORMAT, MATCHING_MODE, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_BUILD_INDIVIDUALS_TREE, QUERY_EXTRACT_INVALID_INDIVIDUALS, QUERY_HASVALUE_FIX, QUERY_METADATA_RPS, QUERY_METADATA_DFS, QUERY_METADATA_BCS, QUERY_INSERT_VALIDATION_REPORT_URI, QUERY_DELETE_NON_VIOLATING_VALIDATION_RESULTS, QUERY_LINK_REPORT_ONLY_IF_EXISTS, flattenListWorkaround, FETCH_LEAVE_NODE_EVALS } from "./queries.js"
+import { FORMAT, MATCHING_MODE, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_HASVALUE_FIX, QUERY_METADATA_RPS, QUERY_METADATA_DFS, QUERY_METADATA_BCS, QUERY_INSERT_VALIDATION_REPORT_URI, QUERY_DELETE_NON_VIOLATING_VALIDATION_RESULTS, QUERY_LINK_REPORT_ONLY_IF_EXISTS, flattenListWorkaround, FETCH_LEAVE_NODE_EVALS } from "./queries.js"
 import { Graph, STATUS } from "./rule-graph/Graph.js"
-import { inspect } from "util"
 import { ruleGraphFromShacl } from "./rule-graph/import/fromShacl.js"
-import { ruleGraphToMermaid } from "./rule-graph/export/toMermaid.js"
 
 export class MatchingEngine {
 
@@ -131,18 +129,6 @@ export class MatchingEngine {
 
         let { upStore, upDataset } = await this.enrichAndValidateUserProfile(upTurtle, reportUri, reportStore, matchingMode)
 
-        // if subindividuals exist, we built the individuals-tree
-        // regex on " a " is a quick and dirty solution to detect individuals for now
-        /*const matches = upTurtle.match(/ a /g)
-        let individualsTree
-        if (matches && matches.length > 1) {
-            individualsTree = new Graph()
-            let constructedQuads = await sparqlConstruct(QUERY_BUILD_INDIVIDUALS_TREE, [upStore])
-            for (let quad of constructedQuads) individualsTree.processQuad(quad)
-            console.log(individualsTree)
-            // TODO
-        }*/
-
         let missingDfStore = matchingMode === MATCHING_MODE.QUIZ ? newStore() : reportStore
         for (let rpUri of rpUris) {
             let rpEvalUri = expand("ff:rpEvalRes") + "_" + rpUri.split("#").pop()
@@ -156,11 +142,6 @@ export class MatchingEngine {
             await sparqlInsertDelete(QUERY_HASVALUE_FIX, sourceStore)
             await sparqlConstruct(QUERY_ELIGIBILITY_STATUS(rpEvalUri), [sourceStore], reportStore)
             await sparqlConstruct(QUERY_MISSING_DATAFIELDS(reportUri, rpEvalUri), [sourceStore], missingDfStore)
-
-            /*if (individualsTree) {
-                let constructedQuads = await sparqlConstruct(QUERY_EXTRACT_INVALID_INDIVIDUALS, [sourceStore])
-                // TODO
-            }*/
 
             if (matchingMode === MATCHING_MODE.FULL) {
                 let reportName = "ff:SubjectSpecificViolationsReport" + "_" + rpUri.split("#").pop()
