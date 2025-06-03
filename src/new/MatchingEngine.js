@@ -171,9 +171,8 @@ export class MatchingEngine {
 
     async detailedSingleRequirementProfileValidation(upTurtle, rpUri) {
         const rpTurtle = this.requirementProfileTurtles[rpUri]
-        let reportStore = newStore()
         let upStore = storeFromTurtles([upTurtle])
-        for (let [ matUri, query ] of Object.entries(this.matQueries)) {
+        for (let [, query ] of Object.entries(this.matQueries)) {
             await sparqlConstruct(query, [upStore, this.dfMatStore], upStore)
         }
         let upDataset = datasetFromStore(upStore)
