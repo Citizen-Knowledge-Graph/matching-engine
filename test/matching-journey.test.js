@@ -128,12 +128,12 @@ describe("testing matching functionality via journey calls", function () {
         await matchingEngine.init()
     })
 
-    async function journeyLoop(upMap, initialUp, rpUri) {
+    async function journeyLoop(upMap, initialUp, rpUris) {
         let upStore = storeFromTurtles([initialUp])
         let reportStore
         let keepGoing = true
         while (keepGoing) {
-            reportStore = await matchingEngine.matching(await storeToTurtle(upStore), [rpUri], MATCHING_MODE.QUIZ, FORMAT.STORE, true)
+            reportStore = await matchingEngine.matching(await storeToTurtle(upStore), rpUris, MATCHING_MODE.QUIZ, FORMAT.STORE, true)
             let query = `
                 PREFIX ff: <https://foerderfunke.org/default#>
                 SELECT ?subject ?df WHERE {
@@ -175,7 +175,7 @@ describe("testing matching functionality via journey calls", function () {
         let initialUp = `
             @prefix ff: <https://foerderfunke.org/default#> .
             ff:mainPerson a ff:Citizen .`
-        let upStore = await journeyLoop(upMap, initialUp, expand("ff:uebergangsgeld-behinderung"))
+        let upStore = await journeyLoop(upMap, initialUp, [expand("ff:uebergangsgeld-behinderung")])
         const actualUp = await storeToTurtle(upStore)
         const expectedUp = `
             @prefix ff: <https://foerderfunke.org/default#>.
