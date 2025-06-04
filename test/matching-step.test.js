@@ -428,6 +428,18 @@ describe("testing matching functionality via single calls", function () {
         strictEqual(lodash.isEqual(fullReportJsonLd, expectedJsonLd), true, "The report in JSON-LD format does not match the expected one")
     })
 
+    it("should behave correctly when no more missing data", async function () {
+        let up = `
+            @prefix ff: <https://foerderfunke.org/default#> .
+            ff:mainPerson a ff:Citizen ; ff:hasAge 20 .`
+        let quizReportStore = await matchingEngine.matching(up, [expand(SIMPLE_RP1)], MATCHING_MODE.QUIZ, FORMAT.STORE, true)
+        let query = `
+            PREFIX ff: <https://foerderfunke.org/default#>
+            SELECT * WHERE { ?matchingReport ff:hasNumberOfMissingDatafields ?numb . } `
+        let rows = await sparqlSelect(query, quizReportStore)
+        strictEqual(rows[0].numb, "0", "The number of missing datafields is not 0 as expected")
+    })
+
     // test sh:alternativePath TODO
     // test hasValue fix TODO
     // test sh:deactivated TODO
