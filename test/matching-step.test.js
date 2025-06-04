@@ -169,10 +169,6 @@ describe("testing matching functionality via single calls", function () {
         strictEqual(rows[0].count, "2", "The requirement profile should have 2 missing data points")
     })
 
-    // test sh:alternativePath TODO
-    // test hasValue fix TODO
-    // test sh:deactivated TODO
-
     it("should generate correct quiz matching report", async function () {
         let user = `
             @prefix ff: <https://foerderfunke.org/default#> .
@@ -432,35 +428,7 @@ describe("testing matching functionality via single calls", function () {
         strictEqual(lodash.isEqual(fullReportJsonLd, expectedJsonLd), true, "The report in JSON-LD format does not match the expected one")
     })
 
-    it("should generate correct matching report with ineligible subindividuals", async function () {
-        let user = `
-            @prefix ff: <https://foerderfunke.org/default#> .
-            @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-            
-            ff:mainPerson a ff:Citizen ;
-                ff:hasChild ff:child0, ff:child1 ;
-                ff:hasCar ff:car0 .
-            
-            ff:child0 a ff:Child ;
-                ff:hasAge 7 ;
-                ff:hasToy ff:toy0 .
-            
-            ff:child1 a ff:Child ;
-                ff:hasAge 20 ;
-                ff:hasToy ff:toy1 , ff:toy2, ff:toy3 .
-            
-            ff:toy0 a ff:Toy ; ff:costed 30 .
-            ff:toy1 a ff:Toy ; ff:costed 40 .
-            ff:toy2 a ff:Toy ; ff:costed 70 .
-            ff:toy3 a ff:Toy .
-            
-            ff:car0 a ff:Car ; ff:engineType ff:diesel .`
-
-        // Turtle
-        // let quizReportTurtle = await matchingEngine.matching(user, [expand(SUBINDIV_RP3)], MATCHING_MODE.FULL, FORMAT.TURTLE)
-        // console.log(quizReportTurtle)
-
-        // const expectedTurtle = ``
-        // strictEqual(isomorphicTurtles(quizReportTurtle, expectedTurtle), true, "The report in Turtle format does not match the expected one")
-    })
+    // test sh:alternativePath TODO
+    // test hasValue fix TODO
+    // test sh:deactivated TODO
 })
