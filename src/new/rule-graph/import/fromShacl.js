@@ -8,23 +8,24 @@ function walk(obj, path = null) {
     if (obj["sh:property"]) {
         children.push(... arr(obj["sh:property"]).map(p => walk(p)))
     }
+    const facetLeaves = buildFacetNodes(obj)
     if (obj["sh:not"]) {
         const inner = obj["sh:not"]
         if (canInlineNotIn(inner)) {
-            children.push(new NodeNOT([ruleNode("IN", list(inner["sh:in"]).map(atom))]))
+            const notLeaf = new NodeNOT([
+                ruleNode("sh:InConstraintComponent", list(inner["sh:in"]).map(atom))
+            ])
+            facetLeaves.push(notLeaf)
         } else {
             children.push(new NodeNOT([walk(inner, path)]))
         }
     }
     if (obj["sh:or"]) {
-        const orChildren = list(obj["sh:or"]).map(n => walk(n, path))
-        children.push(new NodeOR(orChildren))
+        children.push(new NodeOR(list(obj["sh:or"]).map(n => walk(n, path))))
     }
     if (obj["sh:and"]) {
-        const andChildren = list(obj["sh:and"]).map(n => walk(n, path))
-        children.push(new NodeAND(andChildren))
+        children.push(new NodeAND(list(obj["sh:and"]).map(n => walk(n, path))))
     }
-    const facetLeaves = buildFacetNodes(obj);
     if (facetLeaves.length) {
         const pathNode = new NodeDATAFIELD(facetLeaves)
         pathNode.path = path
