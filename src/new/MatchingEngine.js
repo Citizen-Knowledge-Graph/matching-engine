@@ -2,6 +2,7 @@ import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, 
 import { FORMAT, MATCHING_MODE, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_HASVALUE_FIX, QUERY_METADATA_RPS, QUERY_METADATA_DFS, QUERY_METADATA_BCS, QUERY_INSERT_VALIDATION_REPORT_URI, QUERY_DELETE_NON_VIOLATING_VALIDATION_RESULTS, QUERY_LINK_REPORT_ONLY_IF_EXISTS, flattenListWorkaround, FETCH_LEAVE_NODE_EVALS } from "./queries.js"
 import { Graph, STATUS } from "./rule-graph/Graph.js"
 import { ruleGraphFromShacl } from "./rule-graph/import/fromShacl.js"
+// import util from "util"
 
 export class MatchingEngine {
 
@@ -200,7 +201,7 @@ export class MatchingEngine {
             node.shaclEval = { status: STATUS.MISSING }
             for (let row of rows) {
                 // focusNode other than ff:mainPerson TODO
-                // are these two conditions enough for unique attribution?
+                // are these 3 conditions enough for unique attribution?
                 if ((row.resultPath === expand(path) || row.parentResultPath === expand(path))
                     && (row.type === expand(node.type)))
                 {
@@ -218,6 +219,7 @@ export class MatchingEngine {
         }
         walk(graph.root, null)
         graph.eval()
+        // console.log(util.inspect(graph, false, null, true))
         return graph
     }
 
