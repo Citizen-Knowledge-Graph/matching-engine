@@ -191,12 +191,12 @@ export class MatchingEngine {
         let jsonLd = await storeToJsonLdObj(storeFromTurtles([rpTurtle]), ["sh:NodeShape"])
         let graph = new Graph(ruleGraphFromShacl(jsonLd))
 
-        function walk(node, parent) {
+        function walk(node, pathOnBranch) {
             if (node.children && node.children.length > 0) {
-                for (let child of node.children) walk(child, node)
+                for (let child of node.children) walk(child, pathOnBranch ?? node.path)
                 return
             }
-            let path = parent.path
+            let path = pathOnBranch // collected it while descending the branch
             node.shaclEval = { status: STATUS.MISSING }
             for (let row of rows) {
                 // focusNode other than ff:mainPerson TODO
