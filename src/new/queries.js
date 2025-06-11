@@ -49,7 +49,7 @@ export const QUERY_ELIGIBILITY_STATUS = (rpEvalUri) => { return `
                 IF(
                     EXISTS {
                         ?result sh:sourceConstraintComponent ?type .
-                        FILTER(?type NOT IN (sh:MinCountConstraintComponent, sh:QualifiedMinCountConstraintComponent, sh:OrConstraintComponent))
+                        FILTER(?type NOT IN (sh:MinCountConstraintComponent, sh:QualifiedMinCountConstraintComponent, sh:OrConstraintComponent, sh:AndConstraintComponent, sh:NodeConstraintComponent))
                     },
                     ff:ineligible, ff:missingData
                 )
@@ -77,7 +77,7 @@ export const QUERY_MISSING_DATAFIELDS = (reportUri, rpEvalUri) => { return `
     
         FILTER NOT EXISTS {
             ?otherResult sh:sourceConstraintComponent ?otherType .
-            FILTER(?otherType NOT IN (sh:MinCountConstraintComponent, sh:QualifiedMinCountConstraintComponent, sh:OrConstraintComponent))
+            FILTER(?otherType NOT IN (sh:MinCountConstraintComponent, sh:QualifiedMinCountConstraintComponent, sh:OrConstraintComponent, sh:AndConstraintComponent, sh:NodeConstraintComponent))
         }
      
         BIND(IRI(CONCAT(STR(?individual), "_", REPLACE(STR(?df), "^.*[#/]", ""))) AS ?indivDfId)
@@ -133,7 +133,7 @@ export const QUERY_DELETE_NON_VIOLATING_VALIDATION_RESULTS = `
         ?parentNode (sh:result | sh:detail) ?result .
         ?result sh:sourceConstraintComponent ?type ;
             ?p ?o .
-        FILTER(?type = sh:MinCountConstraintComponent || ?type = sh:QualifiedMinCountConstraintComponent || ?type = sh:OrConstraintComponent)
+        FILTER(?type = sh:MinCountConstraintComponent || ?type = sh:QualifiedMinCountConstraintComponent || ?type = sh:OrConstraintComponent || ?type = sh:AndConstraintComponent || ?type = sh:NodeConstraintComponent)
     }`
 
 // metadata
