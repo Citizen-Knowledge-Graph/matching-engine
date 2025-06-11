@@ -46,6 +46,7 @@ export class Graph {
 }
 
 export class Node {
+    static nodeType = "Node"
     constructor(children = []) {
         this.children = children
     }
@@ -56,11 +57,12 @@ export class Node {
     }
 }
 
-export class NodeROOT extends Node {}
-export class NodeAND extends Node {}
-export class NodeDATAFIELD extends Node {}
+export class NodeROOT extends Node { static nodeType = "NodeROOT" }
+export class NodeAND extends Node { static nodeType = "NodeAND" }
+export class NodeDATAFIELD extends Node { static nodeType = "NodeDATAFIELD" }
 
 export class NodeOR extends Node {
+    static nodeType = "NodeOR"
     eval() {
         this.status = VIOLATION
         for (const c of this.children) this.status = orStatus(this.status, c.eval())
@@ -69,6 +71,7 @@ export class NodeOR extends Node {
 }
 
 export class NodeNOT extends Node {
+    static nodeType = "NodeNOT"
     eval() {
         const childStat = this.children[0]?.eval() ?? OK // default true
         this.status = notStatus(childStat)
@@ -77,6 +80,7 @@ export class NodeNOT extends Node {
 }
 
 export class NodeRULE extends Node {
+    static nodeType = "NodeRULE"
     eval() {
         return this.shaclEval.status
     }
