@@ -149,7 +149,7 @@ describe("testing matching functionality via journey calls", function () {
                     ?dfObj rdf:subject ?subject ;
                         rdf:predicate ?df .
                 }`
-            let rows = await sparqlSelect(query, reportStore)
+            let rows = await sparqlSelect(query, [reportStore])
             if (rows.length === 0) {
                 keepGoing = false
                 break

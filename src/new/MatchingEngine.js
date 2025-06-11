@@ -27,7 +27,7 @@ export class MatchingEngine {
         let query = `
             PREFIX ff: <https://foerderfunke.org/default#>
             SELECT * WHERE { ?uri ff:sparqlConstructQuery ?query . }`
-        let rows = await sparqlSelect(query, this.dfMatStore)
+        let rows = await sparqlSelect(query, [this.dfMatStore])
         for (let row of rows) {
             this.matQueries[row.uri] = row.query
         }
@@ -65,7 +65,7 @@ export class MatchingEngine {
         let query = `
             PREFIX ff: <https://foerderfunke.org/default#>
             ASK { ?user a ff:Citizen . }`
-        if (!await sparqlAsk(query, upStore)) {
+        if (!await sparqlAsk(query, [upStore])) {
             throw new Error("User profile does not contain an individual of class ff:Citizen")
         }
 
@@ -187,7 +187,7 @@ export class MatchingEngine {
 
         let validator = buildValidator(rpTurtle, true, true)
         let shaclReport = await validator.validate({ dataset: upDataset })
-        let rows = await sparqlSelect(FETCH_LEAVE_NODE_EVALS, storeFromDataset(shaclReport.dataset))
+        let rows = await sparqlSelect(FETCH_LEAVE_NODE_EVALS, [storeFromDataset(shaclReport.dataset)])
 
         let jsonLd = await storeToJsonLdObj(storeFromTurtles([rpTurtle]), ["sh:NodeShape"])
         let graph = new Graph(ruleGraphFromShacl(jsonLd))

@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@comunica/query-sparql-rdfjs": "^4.0.2",
-    "@foerderfunke/sem-ops-utils": "^0.2.3",
+    "@foerderfunke/sem-ops-utils": "^0.2.4",
     "n3": "^1.23.1",
     "rdf-ext": "^2.5.2",
     "shacl-engine": "github:rdf-ext/shacl-engine#experimental"

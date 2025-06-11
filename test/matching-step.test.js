@@ -164,7 +164,7 @@ describe("testing matching functionality via single calls", function () {
                     ff:hasEvaluatedRequirementProfile ?rp .
                 ?rp ff:hasEligibilityStatus ?status .
             } GROUP BY ?status`
-        let rows = await sparqlSelect(query, storeFromTurtles([report]))
+        let rows = await sparqlSelect(query, [storeFromTurtles([report])])
         strictEqual(rows[0].status, expand("ff:missingData"), "The status of the requirement profile should be missing data")
         strictEqual(rows[0].count, "2", "The requirement profile should have 2 missing data points")
     })
@@ -436,7 +436,7 @@ describe("testing matching functionality via single calls", function () {
         let query = `
             PREFIX ff: <https://foerderfunke.org/default#>
             SELECT * WHERE { ?matchingReport ff:hasNumberOfMissingDatafields ?numb . } `
-        let rows = await sparqlSelect(query, quizReportStore)
+        let rows = await sparqlSelect(query, [quizReportStore])
         strictEqual(rows[0].numb, "0", "The number of missing datafields is not 0 as expected")
     })
 
