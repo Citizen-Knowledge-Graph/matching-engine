@@ -424,7 +424,7 @@ ROOT
                 ff:berufsrueckkehrer true .`
         let graph = await matchingEngine.detailedSingleRequirementProfileValidation(upSimple, expand("ff:uebergangsgeld"))
         let mermaid = ruleGraphToMermaid(graph, true)
-        console.log(mermaid)
+        // console.log(mermaid)
         // TODO
     })
 
@@ -435,7 +435,7 @@ ROOT
                 ff:hasAge 17 .`
         let graph = await matchingEngine.detailedSingleRequirementProfileValidation(upSimple, expand("ff:simpleRp"))
         let mermaid = ruleGraphToMermaid(graph, true)
-        console.log(mermaid)
+        // console.log(mermaid)
         // TODO
     })
 

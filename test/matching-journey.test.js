@@ -207,7 +207,7 @@ describe("testing matching functionality via journey calls", function () {
             @prefix ff: <https://foerderfunke.org/default#> .
             ff:mainPerson a ff:Citizen .`
         let upStore = await journeyLoop(upMap, initialUp, familienleistungenRpUris)
-        console.log(await storeToTurtle(upStore))
+        // console.log(await storeToTurtle(upStore))
         // TODO
     })
 })
