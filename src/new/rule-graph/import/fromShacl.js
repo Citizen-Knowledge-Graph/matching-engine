@@ -47,6 +47,7 @@ function buildFacetNodes(o) {
     if (o["sh:minExclusive"]) leaves.push(ruleNode("sh:MinExclusiveConstraintComponent", num(o["sh:minExclusive"])))
     if (o["sh:maxInclusive"]) leaves.push(ruleNode("sh:MaxInclusiveConstraintComponent", num(o["sh:maxInclusive"])))
     if (o["sh:maxExclusive"]) leaves.push(ruleNode("sh:MaxExclusiveConstraintComponent", num(o["sh:maxExclusive"])))
+    if (o["sh:lessThan"])     leaves.push(ruleNode("sh:LessThanConstraintComponent",     atom(o["sh:lessThan"])))
     return leaves
 }
 
