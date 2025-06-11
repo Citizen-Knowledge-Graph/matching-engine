@@ -4,6 +4,7 @@ import { expand } from "@foerderfunke/sem-ops-utils"
 import { inspect } from "util"
 import { strictEqual } from "node:assert"
 import { ruleGraphToMermaid } from "../src/new/rule-graph/export/toMermaid.js"
+import { addRpsFromKnowledgeBase } from "./fixtures/common.js"
 
 describe("rule graph", function () {
     let matchingEngine
@@ -91,6 +92,7 @@ describe("rule graph", function () {
         matchingEngine.addValidator(shacl1)
         matchingEngine.addValidator(shacl2)
         matchingEngine.addValidator(shacl3)
+        await addRpsFromKnowledgeBase([expand("ff:wohngeld")])
         await matchingEngine.init()
     })
 
@@ -435,5 +437,21 @@ ROOT
         let mermaid = ruleGraphToMermaid(graph, true)
         console.log(mermaid)
         // TODO
+    })
+
+    it("Wohngeld example should show up as conforming in rule graph", async function () {
+        const up = `
+            @prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+            @prefix ff: <https://foerderfunke.org/default#>.
+            ff:quick-check-user a ff:Citizen ;
+                ff:aufenthaltsort ff:aufenthaltsort-ao-innerhalb ;
+                ff:bezogene_leistungen ff:bezogene_leistungen-keine ;
+                ff:geburtsdatum "1991-06-09"^^xsd:date ;
+                ff:beruf_neu ff:beruf_neu-ao-soz ;
+                ff:experience_financial_difficulties true ;
+                ff:household_members 4 ;
+                ff:vermoegen 10000 .`
+        let graph = await matchingEngine.detailedSingleRequirementProfileValidation(up, expand("ff:wohngeld"))
+        strictEqual(graph.conforms, true, "The Wohngeld example should show up as overall conforming in the rule graph")
     })
 })
