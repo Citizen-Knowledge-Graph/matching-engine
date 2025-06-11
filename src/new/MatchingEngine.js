@@ -193,7 +193,7 @@ export class MatchingEngine {
         let graph = new Graph(ruleGraphFromShacl(jsonLd))
 
         function walk(node, pathOnBranch) {
-            if (node.children && node.children.length > 0) {
+            if (node.children) {
                 for (let child of node.children) walk(child, pathOnBranch ?? node.path)
                 return
             }

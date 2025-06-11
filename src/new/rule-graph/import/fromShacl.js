@@ -34,6 +34,13 @@ function walk(obj, path = null) {
     }
     if (children.length === 1) return children[0]
     if (children.length > 1) return new NodeAND(children)
+
+    if (path) {
+        const empty = new NodeDATAFIELD([])
+        empty.path  = path
+        return empty
+    }
+
     throw new Error("Unhandled fragment:\n" + JSON.stringify(obj, null, 2))
 }
 
@@ -41,13 +48,16 @@ function buildFacetNodes(o) {
     const leaves = []
     if (o["sh:in"])           leaves.push(ruleNode("sh:InConstraintComponent",           list(o["sh:in"]).map(atom)))
     if (o["sh:hasValue"])     leaves.push(ruleNode("sh:HasValueConstraintComponent",     atom(o["sh:hasValue"])))
-    if (o["sh:minCount"])     leaves.push(ruleNode("sh:MinCountConstraintComponent",     num(o["sh:minCount"])))
     if (o["sh:maxCount"])     leaves.push(ruleNode("sh:MaxCountConstraintComponent",     num(o["sh:maxCount"])))
     if (o["sh:minInclusive"]) leaves.push(ruleNode("sh:MinInclusiveConstraintComponent", num(o["sh:minInclusive"])))
     if (o["sh:minExclusive"]) leaves.push(ruleNode("sh:MinExclusiveConstraintComponent", num(o["sh:minExclusive"])))
     if (o["sh:maxInclusive"]) leaves.push(ruleNode("sh:MaxInclusiveConstraintComponent", num(o["sh:maxInclusive"])))
     if (o["sh:maxExclusive"]) leaves.push(ruleNode("sh:MaxExclusiveConstraintComponent", num(o["sh:maxExclusive"])))
     if (o["sh:lessThan"])     leaves.push(ruleNode("sh:LessThanConstraintComponent",     atom(o["sh:lessThan"])))
+    if (o["sh:minCount"]) {
+        let numb = num(o["sh:minCount"])
+        if (numb !== 1)       leaves.push(ruleNode("sh:MinCountConstraintComponent",     numb))
+    }
     return leaves
 }
 
