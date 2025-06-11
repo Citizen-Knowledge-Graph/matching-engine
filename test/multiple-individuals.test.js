@@ -27,6 +27,7 @@ describe("multiple individuals tests", function () {
                     sh:minInclusive 10 ;
                     sh:minCount 1 ;
                 ] .`
+        matchingEngine.addValidator(shacl1)
         let shacl2 = `
             @prefix ff: <https://foerderfunke.org/default#> .
             @prefix sh: <http://www.w3.org/ns/shacl#> .
