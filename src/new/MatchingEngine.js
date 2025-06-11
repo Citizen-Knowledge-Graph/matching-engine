@@ -47,8 +47,12 @@ export class MatchingEngine {
     addValidator(rpTurtle) {
         addTurtleToStore(this.requirementProfilesStore, rpTurtle)
         let rpUri = extractFirstIndividualUriFromTurtle(rpTurtle, "ff:RequirementProfile")
+        if (!rpUri) {
+            console.error("No ff:RequirementProfile individual found in the provided turtle file")
+            return
+        }
         this.requirementProfileTurtles[rpUri] = rpTurtle
-        if (rpUri) this.validators[rpUri] = buildValidator(rpTurtle, false, true)
+        this.validators[rpUri] = buildValidator(rpTurtle, false, true)
     }
 
     getAllRpUris() {
