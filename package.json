@@ -1,6 +1,6 @@
 {
   "name": "@foerderfunke/matching-engine",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Checks eligibilities by validating a user profile against requirement profiles",
   "author": "@foerderfunke",
   "repository": "github:Citizen-Knowledge-Graph/matching-engine",
