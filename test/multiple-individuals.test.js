@@ -7,6 +7,14 @@ import { FORMAT, MATCHING_MODE } from "../src/new/queries.js"
 describe("multiple individuals tests", function () {
     let matchingEngine
 
+    const userProfile1 = `
+            @prefix ff: <https://foerderfunke.org/default#> .        
+            ff:mainPerson a ff:Citizen ;
+                ff:hasChild ff:child0, ff:child1 .
+            ff:child0 a ff:Child ;
+                ff:hasAge 14 .
+            ff:child1 a ff:Child .`
+
     before(async function () {
         matchingEngine = globalThis.matchingEngine
         let shacl1 = `
@@ -71,13 +79,7 @@ describe("multiple individuals tests", function () {
     })
 
     it("missing datafields in simple multi-individual case", async function () {
-        const up = `
-            @prefix ff: <https://foerderfunke.org/default#> .        
-            ff:mainPerson a ff:Citizen ;
-                ff:hasChild ff:child0, ff:child1 .
-            ff:child0 a ff:Child ; ff:hasAge 14 .
-            ff:child1 a ff:Child .`
-        let reportStore = await matchingEngine.matching(up, [expand("ff:shacl1")], MATCHING_MODE.QUIZ, FORMAT.STORE, true)
+        let reportStore = await matchingEngine.matching(userProfile1, [expand("ff:shacl1")], MATCHING_MODE.QUIZ, FORMAT.STORE, true)
         let query = `
             PREFIX ff: <https://foerderfunke.org/default#>
             ASK { ?report ff:hasMostMissedDatafield ff:child1_hasAge . }`
