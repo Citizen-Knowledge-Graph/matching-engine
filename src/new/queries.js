@@ -11,6 +11,8 @@ export const FORMAT = {
 
 // to be used on one SHACL validation report at a time
 
+// for a non-existing triple, sh:hasValue throws two validation errors: sh:MinCountConstraintComponent AND sh:HasValueConstraintComponent
+// this doesn't work with our approach to determine eligibility, that's why we delete the HasValueConstraintComponent validation result in this case
 export const QUERY_HASVALUE_FIX = `
     PREFIX ff: <https://foerderfunke.org/default#>
     PREFIX sh: <http://www.w3.org/ns/shacl#>
