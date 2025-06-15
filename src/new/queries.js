@@ -50,7 +50,8 @@ export const QUERY_ELIGIBILITY_STATUS = (rpEvalUri) => { return `
                 ff:eligible,
                 IF(
                     EXISTS {
-                        ?result sh:sourceConstraintComponent ?type .
+                        ?result sh:sourceConstraintComponent ?type ;
+                            sh:resultSeverity sh:Violation .
                         FILTER(?type NOT IN (sh:MinCountConstraintComponent, sh:QualifiedMinCountConstraintComponent, sh:OrConstraintComponent, sh:AndConstraintComponent, sh:NodeConstraintComponent))
                     },
                     ff:ineligible, ff:missingData
@@ -74,14 +75,10 @@ export const QUERY_MISSING_DATAFIELDS = (reportUri, rpEvalUri) => { return `
         ?result a sh:ValidationResult ;
             sh:sourceConstraintComponent ?type ;
             sh:focusNode ?individual ;
-            sh:resultPath ?df .
-        FILTER(?type IN (sh:MinCountConstraintComponent, sh:QualifiedMinCountConstraintComponent))                
-    
-        FILTER NOT EXISTS {
-            ?otherResult sh:sourceConstraintComponent ?otherType .
-            FILTER(?otherType NOT IN (sh:MinCountConstraintComponent, sh:QualifiedMinCountConstraintComponent, sh:OrConstraintComponent, sh:AndConstraintComponent, sh:NodeConstraintComponent))
-        }
-     
+            sh:resultPath ?df ;
+            sh:resultSeverity sh:Violation .
+        FILTER(?type IN (sh:MinCountConstraintComponent, sh:QualifiedMinCountConstraintComponent))
+        
         BIND(IRI(CONCAT(STR(?individual), "_", REPLACE(STR(?df), "^.*[#/]", ""))) AS ?indivDfId)
     }`
 }

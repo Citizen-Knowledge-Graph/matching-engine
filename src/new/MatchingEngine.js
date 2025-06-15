@@ -52,7 +52,8 @@ export class MatchingEngine {
             return
         }
         this.requirementProfileTurtles[rpUri] = rpTurtle
-        this.validators[rpUri] = buildValidator(rpTurtle, false, true)
+        const debugOn = rpTurtle.includes("sh:qualifiedValueShape")
+        this.validators[rpUri] = buildValidator(rpTurtle, debugOn, true)
     }
 
     getAllRpUris() {
@@ -130,7 +131,7 @@ export class MatchingEngine {
         return { upStore, upDataset, reportStore }
     }
 
-    async matching(upTurtle, rpUris, matchingMode, format, testMode = false) {
+    async matching(upTurtle, rpUris, matchingMode, format, testMode = false, continueMissingDataDespiteConforming = false) {
         let reportStore = newStore()
 
         const now = new Date()
@@ -152,8 +153,25 @@ export class MatchingEngine {
             let sourceStore = storeFromDataset(shaclReport.dataset) // store this in class object for reuse until overwritten again?
 
             await sparqlInsertDelete(QUERY_HASVALUE_FIX, sourceStore)
-            await sparqlConstruct(QUERY_ELIGIBILITY_STATUS(rpEvalUri), [sourceStore], reportStore)
-            await sparqlConstruct(QUERY_MISSING_DATAFIELDS(reportUri, rpEvalUri), [sourceStore], missingDfStore)
+            let eligibilityQuad = await sparqlConstruct(QUERY_ELIGIBILITY_STATUS(rpEvalUri), [sourceStore], reportStore)
+            if (eligibilityQuad.length > 0) {
+                let status = eligibilityQuad[0].object.value
+                const handleMissingDataQuerying = async () => {
+                    if (status === expand("ff:ineligible")) return
+                    let missingDataQuads = await sparqlConstruct(QUERY_MISSING_DATAFIELDS(reportUri, rpEvalUri), [sourceStore])
+                    if (missingDataQuads.length === 0) return // must be ff:eligible then
+                    const addQuadsToMissingDfStore = () => missingDataQuads.forEach(quad => missingDfStore.addQuad(quad))
+                    if (status === expand("ff:missingData")) {
+                        addQuadsToMissingDfStore()
+                        return
+                    }
+                    if (status === expand("ff:eligible")) {
+                        addTriple(reportStore, reportUri, expand("ff:hasMissingDataDespiteConformingFor"), rpEvalUri)
+                        if (continueMissingDataDespiteConforming) addQuadsToMissingDfStore()
+                    }
+                }
+                await handleMissingDataQuerying() // move more logic from javascript to semantic operations TODO
+            }
 
             if (matchingMode === MATCHING_MODE.FULL) {
                 let reportName = "ff:SubjectSpecificViolationsReport" + "_" + rpUri.split("#").pop()

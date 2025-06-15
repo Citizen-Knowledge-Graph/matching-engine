@@ -86,14 +86,21 @@ describe("multiple individuals tests", function () {
         strictEqual(await sparqlAsk(query, [reportStore]), true, "The most missing datafield is not the expected one")
     })
 
-    it("extract eligible sub-individuals when overall conforming", async function () {
-        const up = `
-            @prefix ff: <https://foerderfunke.org/default#> .        
-            ff:mainPerson a ff:Citizen ;
-                ff:hasChild ff:child0, ff:child1 .
-            ff:child0 a ff:Child ; ff:hasAge 14 .
-            ff:child1 a ff:Child .`
-        let reportStore = await matchingEngine.matching(up, [expand("ff:shacl2")], MATCHING_MODE.QUIZ, FORMAT.STORE, true)
-        // TODO
+    it("signal more missing datafields when already overall conforming if sh:qualifiedValueShape is present", async function () {
+        const continueMissingDataDespiteConforming = false
+        let reportStore = await matchingEngine.matching(userProfile1, [expand("ff:shacl2")], MATCHING_MODE.QUIZ, FORMAT.STORE, true, continueMissingDataDespiteConforming)
+        let query = `
+            PREFIX ff: <https://foerderfunke.org/default#>
+            ASK { ?report ff:hasMissingDataDespiteConformingFor ff:rpEvalRes_shacl2 . }`
+        strictEqual(await sparqlAsk(query, [reportStore]), true, "The report does not signal missing data despite conforming overall")
+    })
+
+    it("should show missing datafield despite overall conforming when passing flag", async function () {
+        const continueMissingDataDespiteConforming = true
+        let reportStore = await matchingEngine.matching(userProfile1, [expand("ff:shacl2")], MATCHING_MODE.QUIZ, FORMAT.STORE, true, continueMissingDataDespiteConforming)
+        let query = `
+            PREFIX ff: <https://foerderfunke.org/default#>
+            ASK { ?report ff:hasNumberOfMissingDatafields 1 . }`
+        strictEqual(await sparqlAsk(query, [reportStore]), true, "The report does not contain the missing data field even so the flat should cause it to show it despite overall conforming")
     })
 })
