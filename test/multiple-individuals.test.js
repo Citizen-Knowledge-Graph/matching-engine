@@ -7,17 +7,7 @@ import { FORMAT, MATCHING_MODE } from "../src/new/queries.js"
 describe("multiple individuals tests", function () {
     let matchingEngine
 
-    const userProfile1 = `
-            @prefix ff: <https://foerderfunke.org/default#> .        
-            ff:mainPerson a ff:Citizen ;
-                ff:hasChild ff:child0, ff:child1 .
-            ff:child0 a ff:Child ;
-                ff:hasAge 14 .
-            ff:child1 a ff:Child .`
-
-    before(async function () {
-        matchingEngine = globalThis.matchingEngine
-        let shacl1 = `
+    let shacl1 = `
             @prefix ff: <https://foerderfunke.org/default#> .
             @prefix sh: <http://www.w3.org/ns/shacl#> .
             ff:shacl1 a ff:RequirementProfile .
@@ -35,8 +25,7 @@ describe("multiple individuals tests", function () {
                     sh:minInclusive 10 ;
                     sh:minCount 1 ;
                 ] .`
-        matchingEngine.addValidator(shacl1)
-        let shacl2 = `
+    let shacl2 = `
             @prefix ff: <https://foerderfunke.org/default#> .
             @prefix sh: <http://www.w3.org/ns/shacl#> .
             ff:shacl2 a ff:RequirementProfile .
@@ -54,6 +43,17 @@ describe("multiple individuals tests", function () {
                     sh:minInclusive 10 ;
                     sh:minCount 1 ;
                 ] .`
+    const userProfile1 = `
+            @prefix ff: <https://foerderfunke.org/default#> .        
+            ff:mainPerson a ff:Citizen ;
+                ff:hasChild ff:child0, ff:child1 .
+            ff:child0 a ff:Child ;
+                ff:hasAge 14 .
+            ff:child1 a ff:Child .`
+
+    before(async function () {
+        matchingEngine = globalThis.matchingEngine
+        matchingEngine.addValidator(shacl1)
         matchingEngine.addValidator(shacl2)
         await matchingEngine.init()
     })
