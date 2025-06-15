@@ -10,8 +10,9 @@ describe("multiple individuals tests", function () {
     let shacl1 = `
             @prefix ff: <https://foerderfunke.org/default#> .
             @prefix sh: <http://www.w3.org/ns/shacl#> .
-            ff:shacl1 a ff:RequirementProfile .
-            ff:shacl1shape a sh:NodeShape ;
+            ff:shacl1 a ff:RequirementProfile ;
+                ff:hasMainShape ff:shacl1MainShape .
+            ff:shacl1MainShape a sh:NodeShape ;
                 sh:targetClass ff:Citizen ;
                 sh:property [
                     sh:path ff:hasChild ;
@@ -28,8 +29,9 @@ describe("multiple individuals tests", function () {
     let shacl2 = `
             @prefix ff: <https://foerderfunke.org/default#> .
             @prefix sh: <http://www.w3.org/ns/shacl#> .
-            ff:shacl2 a ff:RequirementProfile .
-            ff:shacl2shape a sh:NodeShape ;
+            ff:shacl2 a ff:RequirementProfile ;
+                ff:hasMainShape ff:shacl2MainShape .
+            ff:shacl2MainShape a sh:NodeShape ;
                 sh:targetClass ff:Citizen ;
                 sh:property [
                     sh:path ff:hasChild ;
