@@ -246,7 +246,19 @@ export class MatchingEngine {
     }
 
     async buildRuleGraph(turtle) {
-        let jsonLd = await storeToJsonLdObj(storeFromTurtles([turtle]), ["sh:NodeShape"])
+        let store = storeFromTurtles([turtle])
+        // workaround to pass the main shape info down into the respective sh:NodeShape, otherwise it is lost when
+        // building the JSON-LD with sh:NodeShape in the ROOT_FRAME (and if we don't do that, the parsing gets complicated)
+        let query = `
+            PREFIX ff: <https://foerderfunke.org/default#>
+            INSERT {
+                ?mainShape ff:isMainShape true .
+            } WHERE {
+                ?rp a ff:RequirementProfile ;
+                    ff:hasMainShape ?mainShape .
+            }`
+        await sparqlInsertDelete(query, store)
+        let jsonLd = await storeToJsonLdObj(store, ["sh:NodeShape"])
         return new Graph(ruleGraphFromShacl(jsonLd))
     }
 }

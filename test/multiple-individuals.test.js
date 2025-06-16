@@ -128,7 +128,8 @@ Graph {
                children: [ NodeRULE { type: 'sh:qualifiedValueShape', value: 'ff:ChildShape' } ],
                path: 'ff:hasChild' } ],
           shapeId: 'ff:shacl2MainShape',
-          targetClass: 'ff:Citizen' } ] } }`
+          targetClass: 'ff:Citizen',
+          isMainShape: true } ] } }`
         strictEqual(actual, expected.trim(), "The serialized multi-class rule graph does not match the expected one")
     })
 })

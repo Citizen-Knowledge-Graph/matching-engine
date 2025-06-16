@@ -61,10 +61,11 @@ export class NodeROOT extends Node { static nodeType = "NodeROOT" }
 
 export class NodeCLASS extends Node {
     static nodeType = "NodeCLASS"
-    constructor(shapeId, targetClass, children = []) {
+    constructor(shapeId, targetClass, isMainShape, children = []) {
         super(children)
         this.shapeId = shapeId
         this.targetClass = targetClass
+        if (isMainShape) this.isMainShape = isMainShape
     }
 }
 

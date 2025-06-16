@@ -1,7 +1,12 @@
 import { NodeAND, NodeCLASS, NodeDATAFIELD, NodeNOT, NodeOR, NodeROOT, NodeRULE } from "../Graph.js"
 
 export const ruleGraphFromShacl = shape => {
-    const buildNodeClass = shape => new NodeCLASS(shape["@id"], shape["sh:targetClass"]?.["@id"], [walk(shape)])
+    const buildNodeClass = shape => {
+        const shapeId = shape["@id"]
+        const targetClass = shape["sh:targetClass"]?.["@id"]
+        const isMainShape = shape.hasOwnProperty("ff:isMainShape")
+        return new NodeCLASS(shapeId, targetClass, isMainShape, [walk(shape)])
+    }
     if(!shape["@graph"]) return new NodeROOT([buildNodeClass(shape)])
     let rootChildren = []
     let nodeShapes = shape["@graph"]
