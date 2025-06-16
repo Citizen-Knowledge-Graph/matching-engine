@@ -33,8 +33,8 @@ describe("rule graph", function () {
         @prefix ff: <https://foerderfunke.org/default#> .
         @prefix shn: <https://schemas.link/shacl-next#>.
         
-        ff:uebergangsgeld a ff:RequirementProfile .
-        ff:uebergangsgeldShape a sh:NodeShape ;
+        ff:uebergangsgeldDev a ff:RequirementProfile .
+        ff:uebergangsgeldDevShape a sh:NodeShape ;
             sh:targetClass ff:Citizen ;
 
             sh:property [ sh:path ff:has_disability ; sh:in (true) ] ;
@@ -92,7 +92,7 @@ describe("rule graph", function () {
         matchingEngine.addValidator(shacl1)
         matchingEngine.addValidator(shacl2)
         matchingEngine.addValidator(shacl3)
-        await addRpsFromKnowledgeBase([expand("ff:wohngeld")])
+        await addRpsFromKnowledgeBase([expand("ff:wohngeld"), expand("ff:uebergangsgeld")])
         await matchingEngine.init()
     })
 
@@ -426,7 +426,7 @@ ROOT
             ff:mainPerson a ff:Citizen ;
                 ff:has_disability true ;
                 ff:berufsrueckkehrer true .`
-        let graph = await matchingEngine.detailedSingleRequirementProfileValidation(upSimple, expand("ff:uebergangsgeld"))
+        let graph = await matchingEngine.detailedSingleRequirementProfileValidation(upSimple, expand("ff:uebergangsgeldDev"))
         let mermaid = ruleGraphToMermaid(graph, true)
         // console.log(mermaid)
         // TODO
@@ -457,5 +457,13 @@ ROOT
                 ff:vermoegen 10000 .`
         let graph = await matchingEngine.detailedSingleRequirementProfileValidation(up, expand("ff:wohngeld"))
         strictEqual(graph.conforms, true, "The Wohngeld example should show up as overall conforming in the rule graph")
+    })
+
+    it("Übergangsgeld example as rule graph", async function () {
+        const up = `
+            @prefix ff: <https://foerderfunke.org/default#>.
+            ff:mainPerson a ff:Citizen .`
+        let graph = await matchingEngine.detailedSingleRequirementProfileValidation(up, expand("ff:uebergangsgeld"))
+        // TODO
     })
 })
