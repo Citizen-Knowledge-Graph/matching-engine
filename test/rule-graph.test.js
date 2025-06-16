@@ -104,35 +104,39 @@ Graph {
   root:
    NodeROOT {
      children:
-      [ NodeAND {
+      [ NodeCLASS {
           children:
-           [ NodeNOT {
+           [ NodeAND {
                children:
-                [ NodeDATAFIELD {
-                    children:
-                     [ NodeRULE { type: 'sh:MinInclusiveConstraintComponent', value: 15 },
-                       NodeRULE { type: 'sh:MaxExclusiveConstraintComponent', value: 36 } ],
-                    path: 'ff:foo' } ] },
-             NodeDATAFIELD {
-               children:
-                [ NodeRULE { type: 'sh:InConstraintComponent', value: [ 'ff:blau', 'ff:red' ] } ],
-               path: 'ff:bar' },
-             NodeOR {
-               children:
-                [ NodeAND {
+                [ NodeNOT {
                     children:
                      [ NodeDATAFIELD {
-                         children: [ NodeRULE { type: 'sh:InConstraintComponent', value: [ true ] } ],
-                         path: 'ff:dings' },
+                         children:
+                          [ NodeRULE { type: 'sh:MinInclusiveConstraintComponent', value: 15 },
+                            NodeRULE { type: 'sh:MaxExclusiveConstraintComponent', value: 36 } ],
+                         path: 'ff:foo' } ] },
+                  NodeDATAFIELD {
+                    children:
+                     [ NodeRULE { type: 'sh:InConstraintComponent', value: [ 'ff:blau', 'ff:red' ] } ],
+                    path: 'ff:bar' },
+                  NodeOR {
+                    children:
+                     [ NodeAND {
+                         children:
+                          [ NodeDATAFIELD {
+                              children: [ NodeRULE { type: 'sh:InConstraintComponent', value: [ true ] } ],
+                              path: 'ff:dings' },
+                            NodeDATAFIELD {
+                              children: [ NodeRULE { type: 'sh:InConstraintComponent', value: [ true ] } ],
+                              path: 'ff:hey' } ] },
                        NodeDATAFIELD {
-                         children: [ NodeRULE { type: 'sh:InConstraintComponent', value: [ true ] } ],
-                         path: 'ff:hey' } ] },
-                  NodeDATAFIELD {
-                    children: [ NodeRULE { type: 'sh:InConstraintComponent', value: [ false ] } ],
-                    path: 'ff:jo' },
-                  NodeDATAFIELD {
-                    children: [ NodeRULE { type: 'sh:HasValueConstraintComponent', value: 'ff:something' } ],
-                    path: 'ff:testy' } ] } ] } ] } }`
+                         children: [ NodeRULE { type: 'sh:InConstraintComponent', value: [ false ] } ],
+                         path: 'ff:jo' },
+                       NodeDATAFIELD {
+                         children: [ NodeRULE { type: 'sh:HasValueConstraintComponent', value: 'ff:something' } ],
+                         path: 'ff:testy' } ] } ] } ],
+          shapeId: 'ff:devShape',
+          targetClass: 'ff:Citizen' } ] } }`
         strictEqual(actual, expected.trim(), "The serialized rule graph does not match the expected one")
     })
 
