@@ -1,3 +1,4 @@
+import path from "path"
 import { existsSync, promises } from "fs"
 import simpleGit from "simple-git"
 import { MatchingEngine } from "../../src/new/MatchingEngine.js"
@@ -21,8 +22,10 @@ before(async function () {
 })
 
 export async function addRpsFromKnowledgeBase(rpUris) {
-    for (let file of await promises.readdir(`${repoDir}/shacl`)) {
-        let rpTurtle = await promises.readFile(`${repoDir}/shacl/${file}`, "utf8")
+    const pathsInDir = async (dir) => (await promises.readdir(dir)).map(f => path.join(dir, f))
+    let allRpPaths = [...await pathsInDir(`${repoDir}/shacl`), ...await pathsInDir(`${repoDir}/beta`)]
+    for (let path of allRpPaths) {
+        let rpTurtle = await promises.readFile(path, "utf8")
         let rpUri = extractFirstIndividualUriFromTurtle(rpTurtle, "ff:RequirementProfile")
         if (rpUris.includes(rpUri)) globalThis.matchingEngine.addValidator(rpTurtle)
     }
