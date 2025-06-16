@@ -19,8 +19,8 @@ describe("multiple individuals tests", function () {
                     sh:node ff:ChildShape ;
                     sh:minCount 1 ;
                 ] .
-            ff:ChildShape
-                a sh:NodeShape ;
+            ff:ChildShape a sh:NodeShape ;
+                sh:targetClass ff:Child ;
                 sh:property [
                     sh:path ff:hasAge ;
                     sh:minInclusive 10 ;
@@ -38,8 +38,8 @@ describe("multiple individuals tests", function () {
                     sh:qualifiedValueShape ff:ChildShape ;
                     sh:qualifiedMinCount 1 ;
                 ] .
-            ff:ChildShape
-                a sh:NodeShape ;
+            ff:ChildShape a sh:NodeShape ;
+                sh:targetClass ff:Child ;
                 sh:property [
                     sh:path ff:hasAge ;
                     sh:minInclusive 10 ;
