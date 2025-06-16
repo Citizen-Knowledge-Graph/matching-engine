@@ -211,8 +211,7 @@ export class MatchingEngine {
         let shaclReport = await validator.validate({ dataset: upDataset })
         let rows = await sparqlSelect(FETCH_LEAVE_NODE_EVALS, [storeFromDataset(shaclReport.dataset)])
 
-        let jsonLd = await storeToJsonLdObj(storeFromTurtles([rpTurtle]), ["sh:NodeShape"])
-        let graph = new Graph(ruleGraphFromShacl(jsonLd))
+        let graph = await this.buildRuleGraph(rpTurtle)
 
         function walk(node, pathOnBranch) {
             if (node.children) {
