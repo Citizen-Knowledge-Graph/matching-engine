@@ -58,6 +58,16 @@ export class Node {
 }
 
 export class NodeROOT extends Node { static nodeType = "NodeROOT" }
+
+export class NodeCLASS extends Node {
+    static nodeType = "NodeCLASS"
+    constructor(shapeId, targetClass, children = []) {
+        super(children)
+        this.shapeId = shapeId
+        this.targetClass = targetClass
+    }
+}
+
 export class NodeAND extends Node { static nodeType = "NodeAND" }
 export class NodeDATAFIELD extends Node { static nodeType = "NodeDATAFIELD" }
 

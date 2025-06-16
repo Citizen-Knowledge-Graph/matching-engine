@@ -3,6 +3,7 @@ import { describe } from "mocha"
 import { strictEqual } from "node:assert"
 import { expand, sparqlAsk, sparqlSelect } from "@foerderfunke/sem-ops-utils"
 import { FORMAT, MATCHING_MODE } from "../src/new/queries.js"
+import { inspect } from "util"
 
 describe("multiple individuals tests", function () {
     let matchingEngine
@@ -104,5 +105,30 @@ describe("multiple individuals tests", function () {
             PREFIX ff: <https://foerderfunke.org/default#>
             ASK { ?report ff:hasNumberOfMissingDatafields 1 . }`
         strictEqual(await sparqlAsk(query, [reportStore]), true, "The report does not contain the missing data field even so the flat should cause it to show it despite overall conforming")
+    })
+
+    it("should build correct rule graph for multi-class shape", async function () {
+        let ruleGraph = await matchingEngine.buildRuleGraph(shacl2)
+        let actual = inspect(ruleGraph, { depth: null, compact: true })
+        const expected = `
+Graph {
+  root:
+   NodeROOT {
+     children:
+      [ NodeCLASS {
+          children:
+           [ NodeDATAFIELD {
+               children: [ NodeRULE { type: 'sh:MinInclusiveConstraintComponent', value: 10 } ],
+               path: 'ff:hasAge' } ],
+          shapeId: 'ff:ChildShape',
+          targetClass: 'ff:Child' },
+        NodeCLASS {
+          children:
+           [ NodeDATAFIELD {
+               children: [ NodeRULE { type: 'sh:qualifiedValueShape', value: 'ff:ChildShape' } ],
+               path: 'ff:hasChild' } ],
+          shapeId: 'ff:shacl2MainShape',
+          targetClass: 'ff:Citizen' } ] } }`
+        strictEqual(actual, expected.trim(), "The serialized multi-class rule graph does not match the expected one")
     })
 })

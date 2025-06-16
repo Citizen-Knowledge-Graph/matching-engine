@@ -1,6 +1,13 @@
-import { NodeAND, NodeDATAFIELD, NodeNOT, NodeOR, NodeROOT, NodeRULE } from "../Graph.js"
+import { NodeAND, NodeCLASS, NodeDATAFIELD, NodeNOT, NodeOR, NodeROOT, NodeRULE } from "../Graph.js"
 
-export const ruleGraphFromShacl = shape => new NodeROOT([walk(shape)])
+export const ruleGraphFromShacl = shape => {
+    const buildNodeClass = shape => new NodeCLASS(shape["@id"], shape["sh:targetClass"]?.["@id"], [walk(shape)])
+    if(!shape["@graph"]) return new NodeROOT([buildNodeClass(shape)])
+    let rootChildren = []
+    let nodeShapes = shape["@graph"]
+    for (let nodeShape of nodeShapes) rootChildren.push(buildNodeClass(nodeShape))
+    return new NodeROOT(rootChildren)
+}
 
 function walk(obj, path = null) {
     path = obj["sh:path"]?.["@id"] ?? path
@@ -54,9 +61,15 @@ function buildFacetNodes(o) {
     if (o["sh:maxInclusive"]) leaves.push(ruleNode("sh:MaxInclusiveConstraintComponent", num(o["sh:maxInclusive"])))
     if (o["sh:maxExclusive"]) leaves.push(ruleNode("sh:MaxExclusiveConstraintComponent", num(o["sh:maxExclusive"])))
     if (o["sh:lessThan"])     leaves.push(ruleNode("sh:LessThanConstraintComponent",     atom(o["sh:lessThan"])))
+    if (o["sh:node"])         leaves.push(ruleNode("sh:node",                            atom(o["sh:node"])))
+    if (o["sh:qualifiedValueShape"]) leaves.push(ruleNode("sh:qualifiedValueShape",      atom(o["sh:qualifiedValueShape"])))
     if (o["sh:minCount"]) {
         let numb = num(o["sh:minCount"])
         if (numb !== 1)       leaves.push(ruleNode("sh:MinCountConstraintComponent",     numb))
+    }
+    if (o["sh:qualifiedMinCount"]) {
+        let numb = num(o["sh:qualifiedMinCount"])
+        if (numb !== 1) leaves.push(ruleNode("sh:QualifiedMinCountConstraintComponent",  numb))
     }
     return leaves
 }
