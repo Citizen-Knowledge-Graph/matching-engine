@@ -3,6 +3,7 @@ import { NodeAND, NodeCLASS, NodeDATAFIELD, NodeNOT, NodeOR, NodeROOT, NodeRULE 
 export const ruleGraphFromShacl = shape => {
     const buildNodeClass = shape => {
         const shapeId = shape["@id"]
+        if (shapeId.toLowerCase().includes("flowshape")) return null
         const targetClass = shape["sh:targetClass"]?.["@id"]
         const isMainShape = shape.hasOwnProperty("ff:isMainShape")
         return new NodeCLASS(shapeId, targetClass, isMainShape, [walk(shape)])
@@ -10,7 +11,10 @@ export const ruleGraphFromShacl = shape => {
     if(!shape["@graph"]) return new NodeROOT([buildNodeClass(shape)])
     let rootChildren = []
     let nodeShapes = shape["@graph"]
-    for (let nodeShape of nodeShapes) rootChildren.push(buildNodeClass(nodeShape))
+    for (let nodeShape of nodeShapes) {
+        let nodeClass = buildNodeClass(nodeShape)
+        if (nodeClass) rootChildren.push(nodeClass)
+    }
     return new NodeROOT(rootChildren)
 }
 
