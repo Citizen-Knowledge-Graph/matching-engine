@@ -8,6 +8,17 @@ import { addRpsFromKnowledgeBase } from "./fixtures/common.js"
 
 describe("rule graph", function () {
     let matchingEngine
+    let shacl0 = `
+        @prefix sh: <http://www.w3.org/ns/shacl#> .
+        @prefix ff: <https://foerderfunke.org/default#> .
+        ff:miniDev a ff:RequirementProfile ;
+            ff:hasMainShape ff:miniShape .
+        ff:miniShape a sh:NodeShape ;
+        sh:targetClass ff:Citizen ;
+        sh:property [
+            sh:path ff:foo ;
+            sh:minInclusive 10 ;
+        ] .`
     let shacl1 = `
         @prefix sh: <http://www.w3.org/ns/shacl#> .
         @prefix ff: <https://foerderfunke.org/default#> .
@@ -89,6 +100,7 @@ describe("rule graph", function () {
 
     before(async function () {
         matchingEngine = globalThis.matchingEngine
+        matchingEngine.addValidator(shacl0)
         matchingEngine.addValidator(shacl1)
         matchingEngine.addValidator(shacl2)
         matchingEngine.addValidator(shacl3)
@@ -464,6 +476,11 @@ ROOT
             @prefix ff: <https://foerderfunke.org/default#>.
             ff:mainPerson a ff:Citizen .`
         let graph = await matchingEngine.detailedSingleRequirementProfileValidation(up, expand("ff:uebergangsgeld"))
+        // TODO
+    })
+
+    it("dev: new rule graph construction approach", async function () {
+        let rawGraph = await matchingEngine.buildRawGraph(expand("ff:miniDev"))
         // TODO
     })
 })

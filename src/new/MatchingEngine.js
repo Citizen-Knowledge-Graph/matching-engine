@@ -2,7 +2,8 @@ import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, 
 import { FORMAT, MATCHING_MODE, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_HASVALUE_FIX, QUERY_METADATA_RPS, QUERY_METADATA_DFS, QUERY_METADATA_BCS, QUERY_INSERT_VALIDATION_REPORT_URI, QUERY_DELETE_NON_VIOLATING_VALIDATION_RESULTS, QUERY_LINK_REPORT_ONLY_IF_EXISTS, flattenListWorkaround, FETCH_LEAVE_NODE_EVALS } from "./queries.js"
 import { Graph, STATUS } from "./rule-graph/Graph.js"
 import { ruleGraphFromShacl } from "./rule-graph/import/fromShacl.js"
-// import util from "util"
+import { RawGraph } from "./rule-graph/RawGraph.js"
+import util from "util"
 
 export class MatchingEngine {
 
@@ -259,5 +260,30 @@ export class MatchingEngine {
         await sparqlInsertDelete(query, store)
         let jsonLd = await storeToJsonLdObj(store, ["sh:NodeShape"])
         return new Graph(ruleGraphFromShacl(jsonLd))
+    }
+
+    async buildRawGraph(rpUri) {
+        const rpTurtle = this.requirementProfileTurtles[rpUri]
+        let rpStore = storeFromTurtles([rpTurtle])
+        let rawGraph = new RawGraph(rpStore.getQuads())
+        console.log(util.inspect(rawGraph, false, null, true))
+        console.log(rawGraph.toTGF())
+
+        // let validator = buildValidatorFromDataset(await this.replaceBlankNodesWithUris(rpTurtle), true, true)
+        // const sourceShapeQuads = reportStore.getQuads(null, expand("sh:sourceShape"), null, null)
+    }
+
+    async replaceBlankNodesWithUris(turtle) {
+        // or only those triples where sh:property is the predicate, is that enough?
+        let storeWithBlankNodes = storeFromTurtles([turtle])
+        let store = newStore()
+        for (let quad of storeWithBlankNodes.getQuads()) {
+            let subject = quad.subject
+            if (subject.termType === "BlankNode") subject = expand("ff:blankNode_") + subject.value
+            let object = quad.object
+            if (object.termType === "BlankNode") object = expand("ff:blankNode_") + object.value
+            addTriple(store, subject, quad.predicate, object)
+        }
+        console.log(await storeToTurtle(store))
     }
 }
