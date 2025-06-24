@@ -15,6 +15,9 @@ export async function extractRequirementProfilesMetadata(requirementProfileStrin
             OPTIONAL { ?rpUri ff:category ?category } .
             OPTIONAL { ?rpUri rdfs:seeAlso ?seeAlso } .
             OPTIONAL { ?rpUri ff:validationStage ?validationStage } .
+            OPTIONAL { ?rpUri ff:administrativeLevel ?administrativeLevel } .
+            OPTIONAL { ?rpUri ff:providingAgency ?providingAgency } .
+            OPTIONAL { ?rpUri ff:legalBasis ?legalBasis } .
             OPTIONAL { 
                 ?rpUri ff:benefitInfo ?benefitInfo .
                 FILTER (lang(?benefitInfo) = "${lang}")
@@ -34,6 +37,9 @@ export async function extractRequirementProfilesMetadata(requirementProfileStrin
                 leikaId: row.leikaId ?? "",
                 seeAlso: row.seeAlso ?? "",
                 validationStage: row.validationStage ?? "",
+                administrativeLevel: row.administrativeLevel ?? "",
+                providingAgency: row.providingAgency ?? "",
+                legalBasis: row.legalBasis ?? "",
                 benefitInfo: row.benefitInfo ?? "",
                 ineligibleGeneralExplanation: row.ineligibleGeneralExplanation ?? "",
                 categories: []
