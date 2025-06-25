@@ -218,38 +218,11 @@ export const QUERY_METADATA_DFS = (rootUri, lang) => { return `
         OPTIONAL { 
             ?df ff:hasShaclShape ?shape .
             ?shape sh:property ?ps .
-            ?ps ff:shInListMember ?option .
+            ?ps sh:in/rdf:rest*/rdf:first ?option .
             ?option rdfs:label ?optionLabel .
             FILTER(lang(?optionLabel) = "${lang}")     
         }
     }`
-}
-
-import { DataFactory } from "n3"
-const { namedNode, quad } = DataFactory
-
-// workaround because sh:in/rdf:rest*/rdf:first doesn't work properly: https://github.com/comunica/comunica/issues/1562
-export function flattenListWorkaround(store) {
-    const RDF_FIRST= namedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#first")
-    const RDF_REST = namedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#rest")
-    const RDF_NIL = namedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#nil")
-    const SH_IN = namedNode("http://www.w3.org/ns/shacl#in")
-    const LIST_MEMBER = namedNode("https://foerderfunke.org/default#shInListMember")
-    for (const inQuad of store.getQuads(null, SH_IN, null, null)) {
-        const propShape = inQuad.subject
-        let cursor = inQuad.object
-        while (cursor && !cursor.equals(RDF_NIL)) {
-            const firstQuad = store.getQuads(cursor, RDF_FIRST, null, null)[0]
-            if (!firstQuad) break
-            const item = firstQuad.object
-            if (store.getQuads(propShape, LIST_MEMBER, item, null).length === 0) {
-                store.addQuad(quad(propShape, LIST_MEMBER, item))
-            }
-            const restQuad = store.getQuads(cursor, RDF_REST, null, null)[0]
-            if (!restQuad) break
-            cursor = restQuad.object
-        }
-    }
 }
 
 export const QUERY_METADATA_BCS = (rootUri, lang) => { return `
