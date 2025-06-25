@@ -2,7 +2,7 @@ import "./fixtures/common.js"
 import { describe } from "mocha"
 import { strictEqual } from "node:assert"
 import { expand, sparqlAsk, sparqlSelect } from "@foerderfunke/sem-ops-utils"
-import { FORMAT, MATCHING_MODE } from "../src/new/queries.js"
+import { FORMAT, MATCHING_MODE } from "../src/queries.js"
 import { inspect } from "util"
 
 describe("multiple individuals tests", function () {

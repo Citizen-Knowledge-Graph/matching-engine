@@ -3,7 +3,7 @@ import { describe } from "mocha"
 import { expand } from "@foerderfunke/sem-ops-utils"
 import { inspect } from "util"
 import { strictEqual } from "node:assert"
-import { ruleGraphToMermaid } from "../src/new/rule-graph/export/toMermaid.js"
+import { ruleGraphToMermaid } from "../src/rule-graph/export/toMermaid.js"
 import { addRpsFromKnowledgeBase } from "./fixtures/common.js"
 
 describe.skip("rule graph", function () {

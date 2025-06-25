@@ -1,7 +1,7 @@
 import path from "path"
 import { existsSync, promises } from "fs"
 import simpleGit from "simple-git"
-import { MatchingEngine } from "../../src/new/MatchingEngine.js"
+import { MatchingEngine } from "../../src/MatchingEngine.js"
 import { extractFirstIndividualUriFromTurtle } from "@foerderfunke/sem-ops-utils"
 
 const repoDir = "test/fixtures/knowledge-base"

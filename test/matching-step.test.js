@@ -3,7 +3,7 @@ import { describe } from "mocha"
 import { strictEqual } from "node:assert"
 import { expand, isomorphicTurtles, sparqlSelect, storeFromTurtles, storeToTurtle } from "@foerderfunke/sem-ops-utils"
 import lodash from "lodash"
-import { FORMAT, MATCHING_MODE } from "../src/new/queries.js"
+import { FORMAT, MATCHING_MODE } from "../src/queries.js"
 
 describe("testing matching functionality via single calls", function () {
     let matchingEngine

@@ -1,6 +1,6 @@
 import { describe } from "mocha"
 import { expand, isomorphicTurtles, shrink, sparqlInsertDelete, sparqlSelect, storeFromTurtles, storeToTurtle } from "@foerderfunke/sem-ops-utils"
-import { FORMAT, MATCHING_MODE } from "../src/new/queries.js"
+import { FORMAT, MATCHING_MODE } from "../src/queries.js"
 import { strictEqual } from "node:assert"
 import { addRpsFromKnowledgeBase } from "./fixtures/common.js"
 
