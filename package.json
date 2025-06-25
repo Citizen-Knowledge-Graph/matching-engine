@@ -11,13 +11,12 @@
     "test": "mocha"
   },
   "dependencies": {
-    "@foerderfunke/sem-ops-utils": "^0.2.9",
-    "n3": "^1.23.1"
+    "@foerderfunke/sem-ops-utils": "^0.3.0"
   },
   "devDependencies": {
     "cli-table3": "^0.6.5",
     "lodash": "^4.17.21",
-    "mocha": "^11.1.0",
-    "simple-git": "^3.27.0"
+    "mocha": "^11.7.1",
+    "simple-git": "^3.28.0"
   }
 }
