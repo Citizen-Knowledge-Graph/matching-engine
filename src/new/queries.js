@@ -148,7 +148,10 @@ export const QUERY_METADATA_RPS = (rootUri, lang) => { return `
             rdfs:seeAlso ?seeAlso ;
             ff:validationStage ?validationStage ;
             ff:benefitInfo ?benefitInfo ;
-            ff:ineligibleGeneralExplanation ?ineligibleGeneralExplanation .
+            ff:ineligibleGeneralExplanation ?ineligibleGeneralExplanation ;
+            ff:administrativeLevel ?administrativeLevel ;
+            ff:providingAgency ?providingAgency ;
+            ff:legalBasis ?legalBasis .
     } WHERE {
         ?rpUri a ff:RequirementProfile .
         OPTIONAL { 
@@ -167,6 +170,9 @@ export const QUERY_METADATA_RPS = (rootUri, lang) => { return `
             ?rpUri ff:ineligibleGeneralExplanation ?ineligibleGeneralExplanation  .
             FILTER (lang(?ineligibleGeneralExplanation) = "${lang}")
         } .
+        OPTIONAL { ?rpUri ff:administrativeLevel ?administrativeLevel } .
+        OPTIONAL { ?rpUri ff:providingAgency ?providingAgency } .
+        OPTIONAL { ?rpUri ff:legalBasis ?legalBasis } .
     }`
 }
 
