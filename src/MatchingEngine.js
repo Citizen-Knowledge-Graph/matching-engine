@@ -3,7 +3,7 @@ import { FORMAT, MATCHING_MODE, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIEL
 import { Graph, STATUS } from "./rule-graph/Graph.js"
 import { ruleGraphFromShacl } from "./rule-graph/import/fromShacl.js"
 import { RawGraph } from "./rule-graph/RawGraph.js"
-import util from "util"
+// import util from "util"
 
 export class MatchingEngine {
 
@@ -266,7 +266,7 @@ export class MatchingEngine {
         const rpTurtle = this.requirementProfileTurtles[rpUri]
         let rpStore = storeFromTurtles([rpTurtle])
         let rawGraph = new RawGraph(rpStore.getQuads())
-        console.log(util.inspect(rawGraph, false, null, true))
+        // console.log(util.inspect(rawGraph, false, null, true))
         console.log(rawGraph.toTGF())
 
         // let validator = buildValidatorFromDataset(await this.replaceBlankNodesWithUris(rpTurtle), true, true)
