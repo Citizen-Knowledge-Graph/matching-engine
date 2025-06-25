@@ -12,7 +12,7 @@ describe.skip("rule graph", function () {
         @prefix sh: <http://www.w3.org/ns/shacl#> .
         @prefix ff: <https://foerderfunke.org/default#> .
         ff:miniDev a ff:RequirementProfile ;
-            ff:hasMainShape ff:miniShape .
+            ff:hasMainShape ff:miniShape1 .
         ff:miniShape1 a sh:NodeShape ;
             sh:targetClass ff:Citizen ;
             sh:property [

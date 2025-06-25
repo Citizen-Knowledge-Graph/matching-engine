@@ -1,7 +1,9 @@
 
 export class RuleGraph {
-    constructor(rpUri) {
-        this.rpUri = rpUri
-        this.graphs = {} // number of sh:NodeShape's = number of different sh:targetClass's
+    constructor() {
+        this.rpUri = null
+        this.isMainShape = false
+        this.targetClassUri = null
+        this.classes = {}
     }
 }

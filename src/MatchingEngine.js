@@ -267,7 +267,7 @@ export class MatchingEngine {
         let rawGraph = new RawGraph(rpStore.getQuads())
         // console.log(util.inspect(rawGraph, false, null, true))
         console.log(rawGraph.toTGF())
-        rawGraph.toRuleGraph()
+        console.log(rawGraph.toRuleGraph())
 
         // let validator = buildValidatorFromDataset(await this.replaceBlankNodesWithUris(rpTurtle), true, true)
         // const sourceShapeQuads = reportStore.getQuads(null, expand("sh:sourceShape"), null, null)
