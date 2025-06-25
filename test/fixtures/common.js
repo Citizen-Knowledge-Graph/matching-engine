@@ -8,10 +8,14 @@ const repoDir = "test/fixtures/knowledge-base"
 
 before(async function () {
     const repoUrl = "https://github.com/Citizen-Knowledge-Graph/knowledge-base"
-    if (existsSync(repoDir)) {
-        await simpleGit(repoDir).pull()
-    } else {
-        await simpleGit().clone(repoUrl, repoDir)
+    try {
+        if (existsSync(repoDir)) {
+            await simpleGit(repoDir).pull()
+        } else {
+            await simpleGit().clone(repoUrl, repoDir)
+        }
+    } catch (err) {
+        console.error("common.js: no internet connection, can't pull or clone knowledge-base, continuing though")
     }
     globalThis.matchingEngine = await new MatchingEngine(
         await promises.readFile(`${repoDir}/datafields.ttl`, "utf8"),
