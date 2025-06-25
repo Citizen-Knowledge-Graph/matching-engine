@@ -1,4 +1,5 @@
-import { shrink } from "@foerderfunke/sem-ops-utils"
+import { expand, shrink } from "@foerderfunke/sem-ops-utils"
+import { RuleGraph } from "./RuleGraph.js"
 
 export class RawGraph {
     constructor(quads) {
@@ -29,7 +30,10 @@ export class RawGraph {
             // predicate
             let predicate = quad.predicate
             let predicateId = predicate.value
-            this.edges.push(new RawEdge(subjectId, objectId, predicateId, predicate))
+            this.edges.push(new RawEdge(this.nodes[subjectId], this.nodes[objectId], predicateId, predicate))
+            // incoming/outgoing flags
+            this.nodes[subjectId].hasOutgoing = true
+            this.nodes[objectId].hasIncoming = true
         }
     }
 
@@ -41,9 +45,18 @@ export class RawGraph {
         }
         lines.push("#")
         for (const edge of this.edges) {
-            lines.push(`${edge.sourceId} ${edge.targetId} ${edge.getLabel()}`)
+            lines.push(`${edge.source.id} ${edge.target.id} ${edge.getLabel()}`)
         }
         return lines.join("\n")
+    }
+
+    toRuleGraph() {
+        let rpUri = Object.values(this.edges).find(edge => edge.target.id === expand("ff:RequirementProfile")).source.id
+        let mainShapeUri = Object.values(this.edges).find(edge => edge.id === expand("ff:hasMainShape"))?.target.id
+        let nodeShapeNodes = Object.values(this.edges).filter(edge => edge.target.id === expand("sh:NodeShape")).map(edge => edge.source)
+        let ruleGraph = new RuleGraph(rpUri,)
+        console.log(rpUri, mainShapeUri, nodeShapeNodes)
+        // TODO
     }
 }
 
@@ -51,6 +64,8 @@ export class RawNode {
     constructor(id, quadPart) {
         this.id = id
         this.quadPart = quadPart
+        this.hasIncoming = false
+        this.hasOutgoing = false
     }
     getLabel() {
         if (this.quadPart.termType === "BlankNode") {
@@ -64,9 +79,9 @@ export class RawNode {
 }
 
 export class RawEdge {
-    constructor(sourceId, targetId, id, quadPart) {
-        this.sourceId = sourceId
-        this.targetId = targetId
+    constructor(source, target, id, quadPart) {
+        this.source = source
+        this.target = target
         this.id = id
         this.quadPart = quadPart
     }

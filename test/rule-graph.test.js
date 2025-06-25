@@ -13,12 +13,18 @@ describe.skip("rule graph", function () {
         @prefix ff: <https://foerderfunke.org/default#> .
         ff:miniDev a ff:RequirementProfile ;
             ff:hasMainShape ff:miniShape .
-        ff:miniShape a sh:NodeShape ;
-        sh:targetClass ff:Citizen ;
-        sh:property [
-            sh:path ff:foo ;
-            sh:minInclusive 10 ;
-        ] .`
+        ff:miniShape1 a sh:NodeShape ;
+            sh:targetClass ff:Citizen ;
+            sh:property [
+                sh:path ff:foo ;
+                sh:minInclusive 10 ;
+            ] .
+        ff:miniShape2 a sh:NodeShape ;
+            sh:targetClass ff:Child ;
+            sh:property [
+                sh:path ff:bar ;
+                sh:in (ff:eins ff:zwei) ;
+            ] .`
     let shacl1 = `
         @prefix sh: <http://www.w3.org/ns/shacl#> .
         @prefix ff: <https://foerderfunke.org/default#> .
