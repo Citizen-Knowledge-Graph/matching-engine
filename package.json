@@ -11,11 +11,8 @@
     "test": "mocha"
   },
   "dependencies": {
-    "@comunica/query-sparql-rdfjs": "^4.0.2",
     "@foerderfunke/sem-ops-utils": "^0.2.5",
-    "n3": "^1.23.1",
-    "rdf-ext": "^2.5.2",
-    "shacl-engine": "github:rdf-ext/shacl-engine#experimental"
+    "n3": "^1.23.1"
   },
   "devDependencies": {
     "cli-table3": "^0.6.5",
