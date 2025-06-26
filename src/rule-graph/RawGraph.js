@@ -51,13 +51,13 @@ export class RawGraph {
     }
 
     toRuleGraph() {
-        let rpUri = Object.values(this.edges).find(edge => edge.target.id === expand("ff:RequirementProfile")).source.id
-        let mainShapeUri = Object.values(this.edges).find(edge => edge.id === expand("ff:hasMainShape"))?.target.id
-        let nodeShapes = Object.values(this.edges).filter(edge => edge.target.id === expand("sh:NodeShape")).map(edge => edge.source)
+        let rpUri = this.edges.find(edge => edge.target.id === expand("ff:RequirementProfile")).source.id
+        let mainShapeUri = this.edges.find(edge => edge.id === expand("ff:hasMainShape"))?.target.id
+        let nodeShapes = this.edges.filter(edge => edge.target.id === expand("sh:NodeShape")).map(edge => edge.source)
         let ruleGraph = new RuleGraph()
         ruleGraph.rpUri = rpUri
         for (let nodeShape of nodeShapes) {
-            let targetClass = Object.values(this.edges).find(edge =>
+            let targetClass = this.edges.find(edge =>
                 edge.source === nodeShape && edge.id === expand("sh:targetClass"))?.target.id
             let subgraph = new RuleGraph()
             subgraph.targetClassUri = targetClass
