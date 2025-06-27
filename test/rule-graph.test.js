@@ -96,6 +96,39 @@ describe.skip("rule graph", function () {
                 sh:path ff:hasResidence ;
                 sh:in ("Berlin") ;
             ] .`
+    let shacl4 = `
+        @prefix sh: <http://www.w3.org/ns/shacl#> .
+        @prefix ff: <https://foerderfunke.org/default#> .
+        
+        ff:newRuleGraphDev a ff:RequirementProfile ;
+            ff:hasMainShape ff:devShape1 .
+        
+        ff:devShape1 a sh:NodeShape ;
+            sh:targetClass ff:Citizen ;
+            sh:property [ sh:path ff:foo ; sh:not [ sh:minInclusive 15 ; sh:maxExclusive 36  ] ; sh:minCount 1 ] ;
+            sh:or (
+                [ sh:and (
+                    [ sh:property [ sh:path ff:dings ; sh:in (ff:eins ff:zwei) ] ]
+                    [ sh:property [ sh:path ff:hey ; sh:minExclusive 3 ] ]
+                ) ]
+                [ sh:path ff:testy ; sh:hasValue ff:something ]
+            ) .
+        
+        ff:devShape2 a sh:NodeShape ;
+            sh:targetClass ff:Child ;
+            sh:property [
+                sh:path ff:bar ;
+                sh:in (true) ;
+                sh:minCount 1 ;
+            ] ;
+            sh:property [
+                sh:path ff:bla ;
+                sh:or (
+                    [ sh:in (true) ]
+                    [ sh:minInclusive 10 ]
+                )
+            ] .`
+
     const up = `
         @prefix ff: <https://foerderfunke.org/default#> .
             ff:mainPerson a ff:Citizen ;
@@ -110,6 +143,7 @@ describe.skip("rule graph", function () {
         matchingEngine.addValidator(shacl1)
         matchingEngine.addValidator(shacl2)
         matchingEngine.addValidator(shacl3)
+        matchingEngine.addValidator(shacl4)
         await addRpsFromKnowledgeBase([expand("ff:wohngeld"), expand("ff:uebergangsgeld")])
         await matchingEngine.init()
     })
@@ -486,7 +520,7 @@ ROOT
     })
 
     it("dev: new rule graph construction approach", async function () {
-        let rawGraph = await matchingEngine.buildRawGraph(expand("ff:miniDev"))
+        let rawGraph = await matchingEngine.buildRawGraph(expand("ff:newRuleGraphDev"))
         // TODO
     })
 })
