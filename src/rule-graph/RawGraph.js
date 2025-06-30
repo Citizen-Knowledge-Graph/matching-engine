@@ -31,9 +31,6 @@ export class RawGraph {
             let predicate = quad.predicate
             let predicateId = predicate.value
             this.edges.push(new RawEdge(this.nodes[subjectId], this.nodes[objectId], predicateId, predicate))
-            // incoming/outgoing flags
-            this.nodes[subjectId].hasOutgoing = true
-            this.nodes[objectId].hasIncoming = true
         }
     }
 
@@ -76,8 +73,6 @@ export class RawNode {
     constructor(id, quadPart) {
         this.id = id
         this.quadPart = quadPart
-        this.hasIncoming = false
-        this.hasOutgoing = false
     }
     getLabel() {
         if (this.quadPart.termType === "BlankNode") {
