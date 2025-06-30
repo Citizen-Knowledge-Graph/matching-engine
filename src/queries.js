@@ -14,7 +14,6 @@ export const FORMAT = {
 // for a non-existing triple, sh:hasValue throws two validation errors: sh:MinCountConstraintComponent AND sh:HasValueConstraintComponent
 // this doesn't work with our approach to determine eligibility, that's why we delete the HasValueConstraintComponent validation result in this case
 export const QUERY_HASVALUE_FIX = `
-    PREFIX ff: <https://foerderfunke.org/default#>
     PREFIX sh: <http://www.w3.org/ns/shacl#>
     DELETE {
         ?parentNode sh:result ?result2 ;
@@ -65,7 +64,6 @@ export const QUERY_MISSING_DATAFIELDS = (reportUri, rpEvalUri) => { return `
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     PREFIX ff: <https://foerderfunke.org/default#>
     PREFIX sh: <http://www.w3.org/ns/shacl#>
-    
     CONSTRUCT {
         <${reportUri}> ff:hasMissingDatafield ?indivDfId .
         ?indivDfId ff:isMissedBy <${rpEvalUri}> ;
@@ -86,7 +84,6 @@ export const QUERY_MISSING_DATAFIELDS = (reportUri, rpEvalUri) => { return `
 export const QUERY_TOP_MISSING_DATAFIELD = (reportUri) => { return `
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     PREFIX ff: <https://foerderfunke.org/default#>
-    
     CONSTRUCT {
         <${reportUri}> ff:hasMostMissedDatafield ?dfId .
         ?dfId rdf:subject ?subject ;
@@ -106,9 +103,7 @@ export const QUERY_TOP_MISSING_DATAFIELD = (reportUri) => { return `
 }
 
 export const QUERY_NUMBER_OF_MISSING_DATAFIELDS = (reportUri) => { return `
-    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     PREFIX ff: <https://foerderfunke.org/default#>
-    
     CONSTRUCT {
         <${reportUri}> ff:hasNumberOfMissingDatafields ?missingDfs .
     } WHERE {
@@ -123,7 +118,6 @@ export const QUERY_NUMBER_OF_MISSING_DATAFIELDS = (reportUri) => { return `
 export const QUERY_DELETE_NON_VIOLATING_VALIDATION_RESULTS = `
     PREFIX ff: <https://foerderfunke.org/default#>
     PREFIX sh: <http://www.w3.org/ns/shacl#>
-
     DELETE {
         ?parentNode sh:result ?result ;
             sh:detail ?result .
@@ -227,10 +221,8 @@ export const QUERY_METADATA_DFS = (rootUri, lang) => { return `
 
 export const QUERY_METADATA_BCS = (rootUri, lang) => { return `
     PREFIX ff: <https://foerderfunke.org/default#>
-    PREFIX sh: <http://www.w3.org/ns/shacl#>
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-    PREFIX schema: <http://schema.org/>
     CONSTRUCT {
         <${rootUri}> ff:hasBC ?bc .
         ?bc a ff:BenefitCategory ;
@@ -266,7 +258,6 @@ export const QUERY_LINK_REPORT_ONLY_IF_EXISTS = (reportName, rpEvalUri) => { ret
 }
 
 export const FETCH_LEAVE_NODE_EVALS = `
-    PREFIX ff: <https://foerderfunke.org/default#>
     PREFIX sh: <http://www.w3.org/ns/shacl#>
     SELECT * WHERE {
         ?result sh:focusNode ?focusNode ;

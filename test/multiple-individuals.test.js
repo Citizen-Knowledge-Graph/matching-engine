@@ -77,7 +77,7 @@ describe("multiple individuals tests", function () {
                 ?shape sh:property ?property .
                 OPTIONAL { ?property sh:class ?class }            
             }`
-        let rows = await sparqlSelect(query, [reportStore, matchingEngine.dfMatStore])
+        let rows = await sparqlSelect(query, [reportStore, matchingEngine.defStore])
         strictEqual(rows[0].class, expand("ff:Child"), "ff:hasChild as missing datafield should lead to ff:Child class")
     })
 
