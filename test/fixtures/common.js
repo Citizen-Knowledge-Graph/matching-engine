@@ -19,6 +19,7 @@ before(async function () {
     }
     globalThis.matchingEngine = await new MatchingEngine(
         await promises.readFile(`${repoDir}/datafields.ttl`, "utf8"),
+        await promises.readFile(`${repoDir}/definitions.ttl`, "utf8"),
         await promises.readFile(`${repoDir}/materialization.ttl`, "utf8"),
         await promises.readFile(`${repoDir}/consistency.ttl`, "utf8"),
         []

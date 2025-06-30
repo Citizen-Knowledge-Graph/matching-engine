@@ -12,8 +12,7 @@ describe("basic tests", function () {
 
     it("matchingEngine object should have correct keys", function () {
         const expectedKeys = [
-            "datafieldsTurtle",
-            "dfMatStore",
+            "defStore",
             "datafieldsValidator",
             "consistencyValidator",
             "requirementProfilesStore",

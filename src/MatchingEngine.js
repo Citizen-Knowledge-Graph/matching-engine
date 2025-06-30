@@ -7,9 +7,8 @@ import { RawGraph } from "./rule-graph/RawGraph.js"
 
 export class MatchingEngine {
 
-    constructor(datafieldsTurtle, materializationTurtle, consistencyTurtle, requirementProfilesTurtles) {
-        this.datafieldsTurtle = datafieldsTurtle
-        this.dfMatStore = storeFromTurtles([datafieldsTurtle, materializationTurtle])
+    constructor(datafieldsTurtle, definitionsTurtle, materializationTurtle, consistencyTurtle, requirementProfilesTurtles) {
+        this.defStore = storeFromTurtles([datafieldsTurtle, definitionsTurtle, materializationTurtle])
         this.datafieldsValidator = buildValidator(datafieldsTurtle)
         this.consistencyValidator = buildValidator(consistencyTurtle)
         this.requirementProfilesStore = newStore()
@@ -28,7 +27,7 @@ export class MatchingEngine {
         let query = `
             PREFIX ff: <https://foerderfunke.org/default#>
             SELECT * WHERE { ?uri ff:sparqlConstructQuery ?query . }`
-        let rows = await sparqlSelect(query, [this.dfMatStore])
+        let rows = await sparqlSelect(query, [this.defStore])
         for (let row of rows) {
             this.matQueries[row.uri] = row.query
         }
@@ -38,8 +37,8 @@ export class MatchingEngine {
         addTriple(metadataStore, rootUri, a, expand("ff:MetadataExtraction"))
         addTriple(metadataStore, rootUri, expand("ff:hasLanguage"), this.lang)
         await sparqlConstruct(QUERY_METADATA_RPS(rootUri, this.lang), [this.requirementProfilesStore], metadataStore)
-        await sparqlConstruct(QUERY_METADATA_DFS(rootUri, this.lang), [this.dfMatStore], metadataStore)
-        await sparqlConstruct(QUERY_METADATA_BCS(rootUri, this.lang), [this.dfMatStore], metadataStore)
+        await sparqlConstruct(QUERY_METADATA_DFS(rootUri, this.lang), [this.defStore], metadataStore)
+        await sparqlConstruct(QUERY_METADATA_BCS(rootUri, this.lang), [this.defStore], metadataStore)
         this.metadata = this.metadataFormat === FORMAT.JSON_LD ? await storeToJsonLdObj(metadataStore, ["ff:MetadataExtraction"]) : await storeToTurtle(metadataStore)
         return this
     }
@@ -84,7 +83,7 @@ export class MatchingEngine {
         for (let [ matUri, query ] of Object.entries(this.matQueries)) {
             // do we need an exhausting approach instead until nothing is materialized anymore instead of a one-time for loop?
             // also filling the upStore while also using it as source could create build-ups with side effects?
-            let materializedQuads = await sparqlConstruct(query, [upStore, this.dfMatStore], upStore)
+            let materializedQuads = await sparqlConstruct(query, [upStore, this.defStore], upStore)
             materializedTriples += materializedQuads.length
             if (matchingMode !== MATCHING_MODE.FULL || materializedQuads.length === 0) continue
             let matResultUri = expand("ff:matRes") + count
@@ -203,7 +202,7 @@ export class MatchingEngine {
         const rpTurtle = this.requirementProfileTurtles[rpUri]
         let upStore = storeFromTurtles([upTurtle])
         for (let [, query ] of Object.entries(this.matQueries)) {
-            await sparqlConstruct(query, [upStore, this.dfMatStore], upStore)
+            await sparqlConstruct(query, [upStore, this.defStore], upStore)
         }
         let upDataset = datasetFromStore(upStore)
 
