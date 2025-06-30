@@ -219,18 +219,32 @@ export const QUERY_METADATA_DFS = (rootUri, lang) => { return `
     }`
 }
 
-export const QUERY_METADATA_BCS = (rootUri, lang) => { return `
-    PREFIX ff: <https://foerderfunke.org/default#>
-    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+export const QUERY_METADATA_DEFINITIONS = (rootUri, lang) => { return `
+    PREFIX ff:   <https://foerderfunke.org/default#>
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     CONSTRUCT {
-        <${rootUri}> ff:hasBC ?bc .
-        ?bc a ff:BenefitCategory ;
-            rdfs:label ?label .
+        <${rootUri}> ff:hasDefinition ?def .
+        ?def a ?type ;
+            rdfs:label ?label ;
+            rdfs:comment ?comment ;
+            rdfs:seeAlso ?seeAlso .
     } WHERE {
-        ?bc a ff:BenefitCategory ;
-        rdfs:label ?label .
-        FILTER (lang(?label) = "${lang}")
+        VALUES ?type {
+            ff:BenefitCategory
+            ff:DatafieldCategory
+            ff:ProvidingAgency
+            ff:AdministrativeLevel
+            ff:ValidationStage
+            rdfs:Class
+        }
+        ?def a ?type ;
+            rdfs:label ?label .
+        FILTER(lang(?label) = "${lang}")
+        OPTIONAL { 
+            ?def rdfs:comment ?comment .
+            FILTER(lang(?comment) = "${lang}")
+        }
+        OPTIONAL { ?def rdfs:seeAlso ?seeAlso }
     }`
 }
 
