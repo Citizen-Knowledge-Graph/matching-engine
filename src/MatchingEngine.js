@@ -1,7 +1,5 @@
 import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, newStore, addTurtleToStore, storeFromDataset, sparqlConstruct, storeToTurtle, sparqlSelect, addTriple, expand, a, datasetFromStore, storeToJsonLdObj, sparqlInsertDelete, formatTimestamp, formatTimestampAsLiteral, addStoreToStore, sparqlAsk } from "@foerderfunke/sem-ops-utils"
 import { FORMAT, MATCHING_MODE, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_HASVALUE_FIX, QUERY_METADATA_RPS, QUERY_METADATA_DFS, QUERY_METADATA_DEFINITIONS, QUERY_INSERT_VALIDATION_REPORT_URI, QUERY_DELETE_NON_VIOLATING_VALIDATION_RESULTS, QUERY_LINK_REPORT_ONLY_IF_EXISTS, FETCH_LEAVE_NODE_EVALS } from "./queries.js"
-import { Graph, STATUS } from "./rule-graph/Graph.js"
-import { ruleGraphFromShacl } from "./rule-graph/import/fromShacl.js"
 import { RawGraph } from "./rule-graph/RawGraph.js"
 // import util from "util"
 
@@ -208,56 +206,12 @@ export class MatchingEngine {
 
         let validator = buildValidator(rpTurtle, true, true)
         let shaclReport = await validator.validate({ dataset: upDataset })
-        let rows = await sparqlSelect(FETCH_LEAVE_NODE_EVALS, [storeFromDataset(shaclReport.dataset)])
 
-        let graph = await this.buildRuleGraph(rpTurtle)
+        let graph
 
-        function walk(node, pathOnBranch) {
-            if (node.children) {
-                for (let child of node.children) walk(child, pathOnBranch ?? node.path)
-                return
-            }
-            let path = pathOnBranch // collected it while descending the branch
-            node.shaclEval = { status: STATUS.MISSING }
-            for (let row of rows) {
-                // focusNode other than ff:mainPerson TODO
-                // are these 3 conditions enough for unique attribution?
-                if ((row.resultPath === expand(path) || row.parentResultPath === expand(path))
-                    && (row.type === expand(node.type)))
-                {
-                    let isOk = row.severity !== expand("sh:Violation")
-                    // workaround for the same path being true in one branch and false in another one
-                    if (node.type === "sh:InConstraintComponent" && node.value && (node.value[0] === true || node.value[0] === false)) {
-                        isOk = isOk && node.value[0] === Boolean(row.value)
-                    }
-                    node.shaclEval.status = isOk ? STATUS.OK : STATUS.VIOLATION
-                    if (!isOk && row.resultMessage) node.shaclEval.reason = row.resultMessage
-                    if (row.value) node.shaclEval.actualValue = row.value
-                    break
-                }
-            }
-        }
-        walk(graph.root, null)
-        graph.eval()
-        // console.log(util.inspect(graph, false, null, true))
+        // TODO
+
         return graph
-    }
-
-    async buildRuleGraph(turtle) {
-        let store = storeFromTurtles([turtle])
-        // workaround to pass the main shape info down into the respective sh:NodeShape, otherwise it is lost when
-        // building the JSON-LD with sh:NodeShape in the ROOT_FRAME (and if we don't do that, the parsing gets complicated)
-        let query = `
-            PREFIX ff: <https://foerderfunke.org/default#>
-            INSERT {
-                ?mainShape ff:isMainShape true .
-            } WHERE {
-                ?rp a ff:RequirementProfile ;
-                    ff:hasMainShape ?mainShape .
-            }`
-        await sparqlInsertDelete(query, store)
-        let jsonLd = await storeToJsonLdObj(store, ["sh:NodeShape"])
-        return new Graph(ruleGraphFromShacl(jsonLd))
     }
 
     async buildRawGraph(rpUri) {
