@@ -520,7 +520,7 @@ ROOT
     })
 
     it("dev: new rule graph construction approach", async function () {
-        let rawGraph = await matchingEngine.buildRawGraph(expand("ff:newRuleGraphDev"))
+        let rawGraph = await matchingEngine.buildRuleGraph(expand("ff:newRuleGraphDev"))
         // TODO
     })
 })
