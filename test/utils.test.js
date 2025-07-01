@@ -8,6 +8,9 @@ describe("test utils", function () {
         let userProfile = {
             "@id": "ff:quick-check-user",
             "@type": "ff:Citizen",
+            "ff:kinder_unter_18": "false",
+            "ff:hasAge": "40",
+            "ff:hasIncome": "1234.56",
             "ff:aufenthaltsort": "ff:aufenthaltsort-ao-innerhalb",
             "ff:bezogene_leistungen": [
                 "ff:bezogene_leistungen-keine"
@@ -21,6 +24,9 @@ describe("test utils", function () {
             @prefix dcterms: <http://purl.org/dc/terms/>.
             @prefix ff: <https://foerderfunke.org/default#>.
             ff:quick-check-user a ff:Citizen;
+                ff:kinder_unter_18 false;
+                ff:hasAge 40;
+                ff:hasIncome 1234.56;
                 ff:aufenthaltsort ff:aufenthaltsort-ao-innerhalb;
                 ff:bezogene_leistungen ff:bezogene_leistungen-keine;
                 ff:geburtsdatum "2025-06-30"^^xsd:date.`

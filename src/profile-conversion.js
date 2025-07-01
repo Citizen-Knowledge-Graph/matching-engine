@@ -5,15 +5,19 @@ function isObject(value) {
 }
 
 function convertObjectStr(objectStr) {
-    if (typeof objectStr === "boolean") return getRdf().literal(objectStr)
+    const xsd = prefix => getRdf().namedNode(`http://www.w3.org/2001/XMLSchema#${prefix}`)
+    if (typeof objectStr === "boolean") return getRdf().literal(objectStr, xsd("boolean"))
     objectStr = objectStr.toString()
-    if (objectStr.toLowerCase() === "true") return getRdf().literal(true)
-    if (objectStr.toLowerCase() === "false") return getRdf().literal(false)
+    if (objectStr.toLowerCase() === "true") return getRdf().literal("true", xsd("boolean"))
+    if (objectStr.toLowerCase() === "false") return getRdf().literal("false", xsd("boolean"))
     if (objectStr.startsWith("http")) return getRdf().namedNode(objectStr)
     if (objectStr.startsWith("ff:")) return getRdf().namedNode("https://foerderfunke.org/default#" + objectStr.slice(3))
-    if (/^\d{4}-\d{2}-\d{2}.*$/.test(objectStr)) return getRdf().literal(objectStr.substring(0, 10), getRdf().namedNode("xsd:date"))
+    if (/^\d{4}-\d{2}-\d{2}.*$/.test(objectStr)) return getRdf().literal(objectStr.substring(0, 10), xsd("date"))
     const num = Number(objectStr)
-    if (!isNaN(num)) return getRdf().literal(num)
+    if (!isNaN(num)) {
+        const type = Number.isInteger(num) ? xsd("integer") : xsd("decimal")
+        return getRdf().literal(num.toString(), type)
+    }
     return getRdf().literal(objectStr)
 }
 
