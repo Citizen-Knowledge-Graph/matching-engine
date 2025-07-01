@@ -11,7 +11,7 @@ function convertObjectStr(objectStr) {
     if (objectStr.toLowerCase() === "false") return getRdf().literal(false)
     if (objectStr.startsWith("http")) return getRdf().namedNode(objectStr)
     if (objectStr.startsWith("ff:")) return getRdf().namedNode("https://foerderfunke.org/default#" + objectStr.slice(3))
-    if (/^\d{4}-\d{2}-\d{2}.*$/.test(objectStr)) return getRdf().literal(objectStr.substring(0, 10), { value: "xsd:date" })
+    if (/^\d{4}-\d{2}-\d{2}.*$/.test(objectStr)) return getRdf().literal(objectStr.substring(0, 10), getRdf().namedNode("xsd:date"))
     const num = Number(objectStr)
     if (!isNaN(num)) return getRdf().literal(num)
     return getRdf().literal(objectStr)
