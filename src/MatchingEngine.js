@@ -205,16 +205,43 @@ export class MatchingEngine {
         let upDataset = datasetFromStore(upStore)
         let rpStore = storeFromTurtles([rpTurtle])
         let graph = this.buildRuleGraph(rpUri, rpStore)
-        // console.log(util.inspect(graph, false, null, true))
 
         let validator = buildValidatorFromDataset(datasetFromStore(rpStore), true, true)
         let report = await validator.validate({ dataset: upDataset })
         let reportStore = storeFromDataset(report.dataset)
 
-        // TODO
+        let storeWithoutBNs = this.replaceBlankNodes(reportStore)
+        // console.log(await storeToTurtle(storeWithoutBNs))
+
+        let query = `
+            PREFIX sh: <http://www.w3.org/ns/shacl#>
+            PREFIX ff: <https://foerderfunke.org/default#>
+            SELECT * WHERE {
+                ?result sh:sourceConstraintComponent ?type ;
+                    sh:sourceShape ?sourceShape ;
+                    sh:resultSeverity ?severity .
+            }`
+        let rows = await sparqlSelect(query, [storeWithoutBNs])
+        for (let row of rows) {
+            console.log(row)
+        }
+
         // const sourceShapeQuads = reportStore.getQuads(null, expand("sh:sourceShape"), null, null)
 
         return graph
+    }
+
+    replaceBlankNodes(storeWithBNs) {
+        // or only those triples where sh:property is the predicate, is that enough?
+        let storeWithoutBNs = newStore()
+        for (let quad of storeWithBNs.getQuads()) {
+            let subject = quad.subject
+            if (subject.termType === "BlankNode") subject = expand("ff:BlankNode_") + subject.value
+            let object = quad.object
+            if (object.termType === "BlankNode") object = expand("ff:BlankNode_") + object.value
+            addTriple(storeWithoutBNs, subject, quad.predicate, object)
+        }
+        return storeWithoutBNs
     }
 
     buildRuleGraph(rpUri, rpStore) {

@@ -520,7 +520,11 @@ ROOT
     })
 
     it("dev: new rule graph construction approach", async function () {
-        let rawGraph = await matchingEngine.buildRuleGraph(expand("ff:newRuleGraphDev"))
-        // TODO
+        const up = `
+            @prefix ff: <https://foerderfunke.org/default#>.
+            ff:mainPerson a ff:Citizen .`
+        let graph = await matchingEngine.detailedSingleRequirementProfileValidation(up, expand("ff:newRuleGraphDev"))
+
+        // let graph = await matchingEngine.buildRuleGraph(expand("ff:newRuleGraphDev"))
     })
 })
