@@ -1,7 +1,7 @@
 import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, newStore, addTurtleToStore, storeFromDataset, sparqlConstruct, storeToTurtle, sparqlSelect, addTriple, expand, a, datasetFromStore, storeToJsonLdObj, sparqlInsertDelete, formatTimestamp, formatTimestampAsLiteral, addStoreToStore, sparqlAsk, buildValidatorFromDataset } from "@foerderfunke/sem-ops-utils"
 import { FORMAT, MATCHING_MODE, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_HASVALUE_FIX, QUERY_METADATA_RPS, QUERY_METADATA_DFS, QUERY_METADATA_DEFINITIONS, QUERY_INSERT_VALIDATION_REPORT_URI, QUERY_DELETE_NON_VIOLATING_VALIDATION_RESULTS, QUERY_LINK_REPORT_ONLY_IF_EXISTS } from "./queries.js"
 import { RawGraph } from "./rule-graph/RawGraph.js"
-import util from "util"
+// import util from "util"
 
 export class MatchingEngine {
 
@@ -205,7 +205,7 @@ export class MatchingEngine {
         let upDataset = datasetFromStore(upStore)
         let rpStore = storeFromTurtles([rpTurtle])
         let graph = this.buildRuleGraph(rpUri, rpStore)
-        console.log(util.inspect(graph, false, null, true))
+        // console.log(util.inspect(graph, false, null, true))
 
         let validator = buildValidatorFromDataset(datasetFromStore(rpStore), true, true)
         let report = await validator.validate({ dataset: upDataset })
@@ -221,7 +221,7 @@ export class MatchingEngine {
         if (!rpStore) rpStore = storeFromTurtles([this.requirementProfileTurtles[rpUri]])
         let rawGraph = new RawGraph(rpStore.getQuads())
         let ruleGraph = rawGraph.toRuleGraph()
-        console.log(util.inspect(ruleGraph, false, null, true))
+        // console.log(util.inspect(ruleGraph, false, null, true))
         return ruleGraph
     }
 }
