@@ -234,6 +234,7 @@ export const QUERY_METADATA_DEFINITIONS = (rootUri, lang) => { return `
             ff:DatafieldCategory
             ff:ProvidingAgency
             ff:AdministrativeLevel
+            ff:Law
             ff:ValidationStage
             rdfs:Class
         }
