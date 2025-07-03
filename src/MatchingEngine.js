@@ -1,6 +1,7 @@
 import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, newStore, addTurtleToStore, storeFromDataset, sparqlConstruct, storeToTurtle, sparqlSelect, addTriple, expand, a, datasetFromStore, storeToJsonLdObj, sparqlInsertDelete, formatTimestamp, formatTimestampAsLiteral, addStoreToStore, sparqlAsk, buildValidatorFromDataset } from "@foerderfunke/sem-ops-utils"
 import { FORMAT, MATCHING_MODE, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_HASVALUE_FIX, QUERY_METADATA_RPS, QUERY_METADATA_DFS, QUERY_METADATA_DEFINITIONS, QUERY_INSERT_VALIDATION_REPORT_URI, QUERY_DELETE_NON_VIOLATING_VALIDATION_RESULTS, QUERY_LINK_REPORT_ONLY_IF_EXISTS } from "./queries.js"
 import { RawGraph } from "./rule-graph/RawGraph.js"
+import { EvalGraph } from "./rule-graph/EvalGraph.js"
 // import util from "util" // --> don't commit uncommented, causes "Module not found: Error: Can't resolve util" in the frontend
 
 export class MatchingEngine {
@@ -204,7 +205,19 @@ export class MatchingEngine {
         }
         let upDataset = datasetFromStore(upStore)
         let rpStore = storeFromTurtles([rpTurtle])
-        let graph = this.buildRuleGraph(rpUri, rpStore)
+        let ruleGraph = this.buildRuleGraph(rpUri, rpStore)
+
+        let classes = Object.keys(ruleGraph.rootNodes).map(uri => `<${uri}>`).join("\n")
+        let query = `
+            SELECT * WHERE {
+                VALUES ?class { ${classes} }
+                ?individual a ?class .
+            }`
+        let rows = await sparqlSelect(query, [upStore])
+        let individuals = {}
+        for (let row of rows) individuals[row.individual] = row.class
+        let evalGraph = new EvalGraph(ruleGraph, individuals)
+        // console.log(util.inspect(evalGraph, false, null, true))
 
         let validator = buildValidatorFromDataset(datasetFromStore(rpStore), true, true)
         let report = await validator.validate({ dataset: upDataset })
@@ -213,22 +226,21 @@ export class MatchingEngine {
         let storeWithoutBNs = this.replaceBlankNodes(reportStore)
         // console.log(await storeToTurtle(storeWithoutBNs))
 
-        let query = `
+        query = `
             PREFIX sh: <http://www.w3.org/ns/shacl#>
             PREFIX ff: <https://foerderfunke.org/default#>
             SELECT * WHERE {
-                ?result sh:sourceConstraintComponent ?type ;
+                ?result sh:focusNode ?individual ;
+                    sh:sourceConstraintComponent ?type ;
                     sh:sourceShape ?sourceShape ;
                     sh:resultSeverity ?severity .
             }`
-        let rows = await sparqlSelect(query, [storeWithoutBNs])
+        rows = await sparqlSelect(query, [storeWithoutBNs])
         for (let row of rows) {
             console.log(row)
         }
 
-        // const sourceShapeQuads = reportStore.getQuads(null, expand("sh:sourceShape"), null, null)
-
-        return graph
+        return evalGraph
     }
 
     replaceBlankNodes(storeWithBNs) {
@@ -247,8 +259,6 @@ export class MatchingEngine {
     buildRuleGraph(rpUri, rpStore) {
         if (!rpStore) rpStore = storeFromTurtles([this.requirementProfileTurtles[rpUri]])
         let rawGraph = new RawGraph(rpStore.getQuads())
-        let ruleGraph = rawGraph.toRuleGraph()
-        // console.log(util.inspect(ruleGraph, false, null, true))
-        return ruleGraph
+        return rawGraph.toRuleGraph()
     }
 }

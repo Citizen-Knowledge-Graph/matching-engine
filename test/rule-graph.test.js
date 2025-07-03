@@ -522,7 +522,9 @@ ROOT
     it("dev: new rule graph construction approach", async function () {
         const up = `
             @prefix ff: <https://foerderfunke.org/default#>.
-            ff:mainPerson a ff:Citizen .`
+            ff:mainPerson a ff:Citizen .
+            ff:child0 a ff:Child . 
+            ff:child1 a ff:Child .`
         let graph = await matchingEngine.detailedSingleRequirementProfileValidation(up, expand("ff:newRuleGraphDev"))
 
         // let graph = await matchingEngine.buildRuleGraph(expand("ff:newRuleGraphDev"))

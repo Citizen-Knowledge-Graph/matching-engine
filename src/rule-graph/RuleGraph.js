@@ -49,7 +49,8 @@ export class Node {
 export class RootNode extends Node {
     constructor(id, type, sourceShape, targetClass) {
         super(id, type, sourceShape)
-        this.uri = sourceShape
+        this.nodeShapeUri = sourceShape
         this.targetClass = targetClass
+        this.individualUri = null
     }
 }
