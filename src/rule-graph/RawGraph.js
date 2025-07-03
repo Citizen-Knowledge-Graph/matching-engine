@@ -1,5 +1,5 @@
 import { expand, shrink } from "@foerderfunke/sem-ops-utils"
-import { RuleGraph, Node, TYPE } from "./RuleGraph.js"
+import { RuleGraph, Node, TYPE, RootNode } from "./RuleGraph.js"
 
 const isRdfFirst = id => id === expand("rdf:first")
 const isRdfRest = id => id === expand("rdf:rest")
@@ -53,23 +53,20 @@ export class RawGraph {
     toRuleGraph() {
         let ruleGraph = new RuleGraph()
         ruleGraph.uri = this.edges.find(edge => edge.target.id === expand("ff:RequirementProfile")).source.id
-        ruleGraph.subgraphs = {}
-        let mainShapeUri = this.edges.find(edge => edge.id === expand("ff:hasMainShape"))?.target.id
+        ruleGraph.rootNodes = {}
+        ruleGraph.mainShapeUri = this.edges.find(edge => edge.id === expand("ff:hasMainShape"))?.target.id
         let nodeShapes = this.edges.filter(edge => edge.target.id === expand("sh:NodeShape")).map(edge => edge.source)
         this.count = 0
         for (let nodeShape of nodeShapes) {
-            let subgraph = this.buildSubgraph(nodeShape)
-            subgraph.isMainShape = nodeShape.id === mainShapeUri
-            ruleGraph.subgraphs[subgraph.targetClassUri] = subgraph
+            let rootNode = this.buildSubgraph(nodeShape)
+            ruleGraph.rootNodes[rootNode.targetClass] = rootNode
         }
         return ruleGraph
     }
 
     buildSubgraph(nodeShape) {
-        let subgraph = new RuleGraph()
-        subgraph.uri = nodeShape.id
-        subgraph.targetClassUri = this.edges.find(edge => edge.source === nodeShape && edge.id === expand("sh:targetClass"))?.target.id
-        subgraph.root = new Node(this.count ++, TYPE.ROOT, nodeShape.id)
+        let targetClass = this.edges.find(edge => edge.source === nodeShape && edge.id === expand("sh:targetClass"))?.target.id
+        let rootNode = new RootNode(this.count ++, TYPE.ROOT, nodeShape.id, targetClass)
 
         const walk = (rawNode, viaEdge, parent, parentRawNode) => {
             if (viaEdge) {
@@ -127,8 +124,8 @@ export class RawGraph {
             for (const edge of outgoing) walk(edge.target, edge, parent, rawNode)
         }
 
-        walk(nodeShape, null, subgraph.root, null)
-        return subgraph
+        walk(nodeShape, null, rootNode, null)
+        return rootNode
     }
 
     collectList(head) {

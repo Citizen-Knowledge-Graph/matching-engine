@@ -3,9 +3,8 @@ import { shrink } from "@foerderfunke/sem-ops-utils"
 export class RuleGraph {
     constructor() {
         this.uri = null
-        this.isMainShape = false
-        this.targetClassUri = null
-        this.root = null
+        this.mainShape = null
+        this.rootNodes = {}
     }
     toTGF() {
         let nodeLines = []
@@ -21,9 +20,7 @@ export class RuleGraph {
                 walk(child)
             }
         }
-        for (let subgraph of Object.values(this.subgraphs)) {
-            walk(subgraph.root)
-        }
+        for (let rootNode of Object.values(this.rootNodes)) walk(rootNode)
         return [...nodeLines, "#", ...edgeLines].join("\n")
     }
 }
@@ -46,5 +43,13 @@ export class Node {
     addChild(childNode) {
         if (!this.children) this.children = []
         this.children.push(childNode)
+    }
+}
+
+export class RootNode extends Node {
+    constructor(id, type, sourceShape, targetClass) {
+        super(id, type, sourceShape)
+        this.uri = sourceShape
+        this.targetClass = targetClass
     }
 }
