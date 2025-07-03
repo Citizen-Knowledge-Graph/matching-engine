@@ -18,7 +18,8 @@ export const TYPE = {
 }
 
 export class Node {
-    constructor(type, sourceShape) {
+    constructor(id, type, sourceShape) {
+        this.id = id
         this.type = type
         this.sourceShape = sourceShape
     }

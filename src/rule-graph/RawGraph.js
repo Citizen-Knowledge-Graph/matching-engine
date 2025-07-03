@@ -56,6 +56,7 @@ export class RawGraph {
         ruleGraph.subgraphs = {}
         let mainShapeUri = this.edges.find(edge => edge.id === expand("ff:hasMainShape"))?.target.id
         let nodeShapes = this.edges.filter(edge => edge.target.id === expand("sh:NodeShape")).map(edge => edge.source)
+        this.count = 0
         for (let nodeShape of nodeShapes) {
             let subgraph = this.buildSubgraph(nodeShape)
             subgraph.isMainShape = nodeShape.id === mainShapeUri
@@ -68,12 +69,12 @@ export class RawGraph {
         let subgraph = new RuleGraph()
         subgraph.uri = nodeShape.id
         subgraph.targetClassUri = this.edges.find(edge => edge.source === nodeShape && edge.id === expand("sh:targetClass"))?.target.id
-        subgraph.root = new Node(TYPE.ROOT, nodeShape.id)
+        subgraph.root = new Node(this.count ++, TYPE.ROOT, nodeShape.id)
 
         const walk = (rawNode, viaEdge, parent, parentRawNode) => {
             if (viaEdge) {
                 if (viaEdge.id === expand("sh:in")) {
-                    let node = new Node(TYPE.RULE, parentRawNode.id)
+                    let node = new Node(this.count ++, TYPE.RULE, parentRawNode.id)
                     node.rule = {
                         type: "sh:in",
                         values: this.collectList(rawNode)
@@ -83,12 +84,12 @@ export class RawGraph {
                 if ([expand("sh:or"),
                     expand("sh:and")
                 ].includes(viaEdge.id)) {
-                    let node = new Node(viaEdge.id === expand("sh:or") ? TYPE.OR : TYPE.AND, parentRawNode.id)
+                    let node = new Node(this.count ++, viaEdge.id === expand("sh:or") ? TYPE.OR : TYPE.AND, parentRawNode.id)
                     parent.addChild(node)
                     parent = node
                 }
                 if (viaEdge.id === expand("sh:not")) {
-                    let node = new Node(TYPE.NOT, parentRawNode.id)
+                    let node = new Node(this.count ++, TYPE.NOT, parentRawNode.id)
                     parent.addChild(node)
                     parent = node
                 }
@@ -104,7 +105,7 @@ export class RawGraph {
                     expand("sh:qualifiedValueShape"),
                     expand("sh:qualifiedMinCount")
                 ].includes(viaEdge.id)) {
-                    let node = new Node(TYPE.RULE, parentRawNode.id)
+                    let node = new Node(this.count ++, TYPE.RULE, parentRawNode.id)
                     node.rule = {
                         type: shrink(viaEdge.id),
                         value: rawNode.getLabel()
@@ -117,7 +118,7 @@ export class RawGraph {
 
             let pathEdge = outgoing.find(edge => edge.id === expand("sh:path"))
             if (pathEdge) {
-                let node = new Node(TYPE.DATAFIELD, rawNode.id)
+                let node = new Node(this.count ++, TYPE.DATAFIELD, rawNode.id)
                 node.path = pathEdge.target.id
                 parent.addChild(node)
                 parent = node
