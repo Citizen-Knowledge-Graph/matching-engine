@@ -139,6 +139,32 @@ export class RawGraph {
         }
         return items
     }
+
+    extractValidationResults() {
+        let valiResults = []
+        let sourceShapeEdges = this.edges.filter(edge => edge.id === expand("sh:sourceShape"))
+        for (let edge of sourceShapeEdges) {
+            let valiResultNode = edge.source
+            let siblings = new Map(this.edges.filter(e => e.source === valiResultNode).map(e => [shrink(e.id), e.target]))
+            let valiRes = {
+                sourceShapeUri: edge.target.id,
+                constraintComponent: siblings.get("sh:sourceConstraintComponent").id,
+                severity: siblings.get("sh:resultSeverity").id,
+                focusNode: siblings.get("sh:focusNode")?.id,
+                resultMessage: siblings.get("sh:resultMessage")?.getLabel(),
+                value: siblings.get("sh:value")?.getLabel(),
+                resultPath: siblings.get("sh:resultPath")?.id
+            }
+            if (!siblings.has("sh:focusNode") || siblings.get("sh:focusNode").id.startsWith("Literal")) {
+                let parentValiResultNode = this.edges.find(e => e.target === valiResultNode && e.id === expand("sh:detail"))?.source
+                if (parentValiResultNode) {
+                    valiRes.focusNode = this.edges.find(e => e.source === parentValiResultNode && e.id === expand("sh:focusNode"))?.target.id
+                }
+            }
+            valiResults.push(valiRes)
+        }
+        return valiResults
+    }
 }
 
 export class RawNode {

@@ -223,36 +223,12 @@ export class MatchingEngine {
         let report = await validator.validate({ dataset: upDataset })
         let reportStore = storeFromDataset(report.dataset)
 
-        let storeWithoutBNs = this.replaceBlankNodes(reportStore)
-        // console.log(await storeToTurtle(storeWithoutBNs))
+        let reportRawGraph = new RawGraph(reportStore.getQuads())
+        let validationResults = reportRawGraph.extractValidationResults()
+        // TODO
 
-        query = `
-            PREFIX sh: <http://www.w3.org/ns/shacl#>
-            PREFIX ff: <https://foerderfunke.org/default#>
-            SELECT * WHERE {
-                ?result sh:focusNode ?individual ;
-                    sh:sourceConstraintComponent ?type ;
-                    sh:sourceShape ?sourceShape ;
-                    sh:resultSeverity ?severity .
-            }`
-        rows = await sparqlSelect(query, [storeWithoutBNs])
-        evalGraph.eval(rows)
         // console.log(util.inspect(evalGraph, false, null, true))
-
         return evalGraph
-    }
-
-    replaceBlankNodes(storeWithBNs) {
-        // or only those triples where sh:property is the predicate, is that enough?
-        let storeWithoutBNs = newStore()
-        for (let quad of storeWithBNs.getQuads()) {
-            let subject = quad.subject
-            if (subject.termType === "BlankNode") subject = expand("ff:BlankNode_") + subject.value
-            let object = quad.object
-            if (object.termType === "BlankNode") object = expand("ff:BlankNode_") + object.value
-            addTriple(storeWithoutBNs, subject, quad.predicate, object)
-        }
-        return storeWithoutBNs
     }
 
     buildRuleGraph(rpUri, rpStore) {
