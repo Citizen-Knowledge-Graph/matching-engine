@@ -13,7 +13,7 @@ export class RawGraph {
             let subject = quad.subject
             let subjectId = subject.value
             if (subject.termType === "BlankNode") {
-                subjectId = "BlankNode_" + subjectId
+                subjectId = expand("ff:BlankNode_" + subjectId)
             }
             if (!this.nodes[subjectId]) {
                 this.nodes[subjectId] = new RawNode(subjectId, subject)
@@ -22,7 +22,7 @@ export class RawGraph {
             let object = quad.object
             let objectId = object.value
             if (object.termType === "BlankNode") {
-                objectId = "BlankNode_" + objectId
+                objectId = expand("ff:BlankNode_" + objectId)
             }
             if (object.termType === "Literal") {
                 objectId = "Literal_" + Math.random().toString(36).slice(2, 7)

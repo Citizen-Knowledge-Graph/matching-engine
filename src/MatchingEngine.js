@@ -236,9 +236,8 @@ export class MatchingEngine {
                     sh:resultSeverity ?severity .
             }`
         rows = await sparqlSelect(query, [storeWithoutBNs])
-        for (let row of rows) {
-            console.log(row)
-        }
+        evalGraph.eval(rows)
+        // console.log(util.inspect(evalGraph, false, null, true))
 
         return evalGraph
     }

@@ -1,4 +1,5 @@
 import { shrink } from "@foerderfunke/sem-ops-utils"
+import { STATUS } from "./EvalGraph.js"
 
 export class RuleGraph {
     constructor() {
@@ -27,9 +28,9 @@ export class RuleGraph {
 
 export const TYPE = {
     ROOT: "root",
-    AND: "and",
-    OR: "or",
-    NOT: "not",
+    AND: "sh:and",
+    OR: "sh:or",
+    NOT: "sh:not",
     DATAFIELD: "datafield",
     RULE: "rule",
 }
@@ -39,6 +40,7 @@ export class Node {
         this.id = id
         this.type = type
         this.sourceShape = sourceShape
+        this.eval = STATUS.MISSING
     }
     addChild(childNode) {
         if (!this.children) this.children = []
