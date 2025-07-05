@@ -76,6 +76,24 @@ export const cleanGraph = (graph, isEvalGraph) => {
     delete graph.mainShape
 }
 
+// usable for RuleGraph and EvalGraph
+// to be called after cleanGraph(): rootNodes is expected to be an array
+export const graphToMermaid = graph => {
+    let lines  = ["flowchart TD"]
+    const walk = (node) => {
+        lines.push(`N${node.id}(${node.type})`)
+
+        // TODO
+
+        for (let child of node.children || []) {
+            lines.push(`N${node.id} --> N${child.id}`)
+            walk(child)
+        }
+    }
+    for (let rootNode of graph.rootNodes) walk(rootNode)
+    return lines.join("\n")
+}
+
 export class EvalGraph {
     constructor(ruleGraph, individuals) {
         this.uri = ruleGraph.uri
@@ -132,7 +150,6 @@ export class EvalGraph {
         for (let datafieldNode of datafieldNodes) determineStatusViaChildren(datafieldNode)
         for (let rootNode of Object.values(this.rootNodes)) determineStatusViaChildren(rootNode)
     }
-    clean() {
-        cleanGraph(this, true)
-    }
+    clean() { cleanGraph(this, true) }
+    toMermaid() { return graphToMermaid(this) }
 }

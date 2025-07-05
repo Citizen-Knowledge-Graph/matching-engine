@@ -1,5 +1,5 @@
 import { shrink } from "@foerderfunke/sem-ops-utils"
-import { cleanGraph, STATUS } from "./EvalGraph.js"
+import { cleanGraph, graphToMermaid, STATUS } from "./EvalGraph.js"
 
 export class RuleGraph {
     constructor() {
@@ -23,9 +23,8 @@ export class RuleGraph {
         for (let rootNode of Object.values(this.rootNodes)) walk(rootNode)
         return [...nodeLines, "#", ...edgeLines].join("\n")
     }
-    clean() {
-        cleanGraph(this, false)
-    }
+    clean() { cleanGraph(this, false) }
+    toMermaid() { return graphToMermaid(this) }
 }
 
 export const TYPE = {

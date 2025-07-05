@@ -230,6 +230,8 @@ describe.skip("rule graph", function () {
             ff:child0 a ff:Child . 
             ff:child1 a ff:Child .`
         let graph = await matchingEngine.buildEvaluationGraph(up, expand("ff:newRuleGraphDev"))
+        console.log(graph.toMermaid())
+
         // TODO
     })
 })
