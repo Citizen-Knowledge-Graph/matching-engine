@@ -220,6 +220,7 @@ describe.skip("rule graph", function () {
 
     it("build new rule graph", async function () {
         let ruleGraph = await matchingEngine.buildRuleGraph(expand("ff:newRuleGraphDev"))
+        console.log(ruleGraph.toMermaid())
         // TODO
     })
 
@@ -230,8 +231,6 @@ describe.skip("rule graph", function () {
             ff:child0 a ff:Child . 
             ff:child1 a ff:Child .`
         let graph = await matchingEngine.buildEvaluationGraph(up, expand("ff:newRuleGraphDev"))
-        console.log(graph.toMermaid())
-
         // TODO
     })
 })

@@ -80,13 +80,31 @@ export const cleanGraph = (graph, isEvalGraph) => {
 // to be called after cleanGraph(): rootNodes is expected to be an array
 export const graphToMermaid = graph => {
     let lines  = ["flowchart TD"]
+    const toLabel = (node) => {
+        switch (node.type) {
+            case TYPE.ROOT:
+                return `(${node.class})`
+            case TYPE.AND:
+                return `(AND)`
+            case TYPE.OR:
+                return `(OR)`
+            case TYPE.NOT:
+                return `(NOT)`
+            case TYPE.DATAFIELD:
+                return `(${node.path})`
+            case TYPE.RULE:
+                if (node.rule.type === "sh:in") {
+                    return `("${node.rule.type} [${node.rule.values.join(", ")}]")`
+                }
+                return `(${node.rule.type} ${node.rule.value})`
+            default:
+                throw new Error(`Unknown node type: ${node.type}`)
+        }
+    }
     const walk = (node) => {
-        lines.push(`N${node.id}(${node.type})`)
-
-        // TODO
-
+        lines.push(`${node.id}${toLabel(node)}`)
         for (let child of node.children || []) {
-            lines.push(`N${node.id} --> N${child.id}`)
+            lines.push(`${node.id} --> ${child.id}`)
             walk(child)
         }
     }
