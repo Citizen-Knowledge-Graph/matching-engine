@@ -236,7 +236,7 @@ flowchart TD
     })
 
     it("map validation results into rule graph",async function () {
-        let graph = await matchingEngine.detailedSingleRequirementProfileValidation(up, expand("ff:ruleGraphDev"))
+        let graph = await matchingEngine.buildEvaluationGraph(up, expand("ff:ruleGraphDev"))
         let actual = inspect(graph, { depth: null, compact: true })
         const expected = `
 Graph {
@@ -323,7 +323,7 @@ Graph {
     })
 
     it("build mermaid syntax from rule graph with validation results",async function () {
-        let graph = await matchingEngine.detailedSingleRequirementProfileValidation(up, expand("ff:ruleGraphDev"))
+        let graph = await matchingEngine.buildEvaluationGraph(up, expand("ff:ruleGraphDev"))
         let actual = ruleGraphToMermaid(graph, true)
         const expected = `
 flowchart TD
@@ -387,7 +387,7 @@ class N18 violation`
     })
 
     it("flatten rule graph validation results",async function () {
-        let graph = await matchingEngine.detailedSingleRequirementProfileValidation(up, expand("ff:ruleGraphDev"))
+        let graph = await matchingEngine.buildEvaluationGraph(up, expand("ff:ruleGraphDev"))
         let actual = inspect(graph.flatten(), { depth: null, compact: true })
         const expected = `
 [ NodeROOT { status: 'violation', depth: 0 },
@@ -478,7 +478,7 @@ ROOT
             ff:mainPerson a ff:Citizen ;
                 ff:has_disability true ;
                 ff:berufsrueckkehrer true .`
-        let graph = await matchingEngine.detailedSingleRequirementProfileValidation(upSimple, expand("ff:uebergangsgeldDev"))
+        let graph = await matchingEngine.buildEvaluationGraph(upSimple, expand("ff:uebergangsgeldDev"))
         let mermaid = ruleGraphToMermaid(graph, true)
         // console.log(mermaid)
         // TODO
@@ -489,7 +489,7 @@ ROOT
         @prefix ff: <https://foerderfunke.org/default#> .
             ff:mainPerson a ff:Citizen ;
                 ff:hasAge 17 .`
-        let graph = await matchingEngine.detailedSingleRequirementProfileValidation(upSimple, expand("ff:simpleRp"))
+        let graph = await matchingEngine.buildEvaluationGraph(upSimple, expand("ff:simpleRp"))
         let mermaid = ruleGraphToMermaid(graph, true)
         // console.log(mermaid)
         // TODO
@@ -507,7 +507,7 @@ ROOT
                 ff:experience_financial_difficulties true ;
                 ff:household_members 4 ;
                 ff:vermoegen 10000 .`
-        let graph = await matchingEngine.detailedSingleRequirementProfileValidation(up, expand("ff:wohngeld"))
+        let graph = await matchingEngine.buildEvaluationGraph(up, expand("ff:wohngeld"))
         strictEqual(graph.conforms, true, "The Wohngeld example should show up as overall conforming in the rule graph")
     })
 
@@ -515,7 +515,7 @@ ROOT
         const up = `
             @prefix ff: <https://foerderfunke.org/default#>.
             ff:mainPerson a ff:Citizen .`
-        let graph = await matchingEngine.detailedSingleRequirementProfileValidation(up, expand("ff:uebergangsgeld"))
+        let graph = await matchingEngine.buildEvaluationGraph(up, expand("ff:uebergangsgeld"))
         // TODO
     })
 
@@ -530,6 +530,6 @@ ROOT
             ff:mainPerson a ff:Citizen .
             ff:child0 a ff:Child . 
             ff:child1 a ff:Child .`
-        let graph = await matchingEngine.detailedSingleRequirementProfileValidation(up, expand("ff:newRuleGraphDev"))
+        let graph = await matchingEngine.buildEvaluationGraph(up, expand("ff:newRuleGraphDev"))
     })
 })

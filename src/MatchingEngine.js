@@ -197,7 +197,7 @@ export class MatchingEngine {
         }
     }
 
-    async detailedSingleRequirementProfileValidation(upTurtle, rpUri) {
+    async buildEvaluationGraph(upTurtle, rpUri) {
         const rpTurtle = this.requirementProfileTurtles[rpUri]
         let upStore = storeFromTurtles([upTurtle])
         for (let [, query ] of Object.entries(this.matQueries)) {
