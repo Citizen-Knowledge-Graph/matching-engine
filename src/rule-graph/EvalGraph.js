@@ -56,7 +56,7 @@ export const cleanGraph = (graph, isEvalGraph) => {
             }
         }
         // delete unnecessary properties
-        delete node.id
+        // delete node.id
         delete node.sourceShape
         delete node.nodeShapeUri
         if (node.path) node.path = shrink(node.path)
