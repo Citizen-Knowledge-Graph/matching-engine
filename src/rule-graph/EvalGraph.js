@@ -90,4 +90,29 @@ export class EvalGraph {
         for (let datafieldNode of datafieldNodes) determineStatusViaChildren(datafieldNode)
         for (let rootNode of Object.values(this.rootNodes)) determineStatusViaChildren(rootNode)
     }
+    clean() {
+        const cleanMsg = (msg) => {
+            // Example: Value is not greater than or equal to "15"^^<http://www.w3.org/2001/XMLSchema#integer>
+            msg = msg.replace(/"([^"]+)"\^\^<[^>]+>/g, (_, value) => value)
+            // Example: Missing expected value <https://foerderfunke.org/default#something>
+            msg = msg.replace(/<([^>]+)>/g, (_, url) => shrink(url))
+            return msg
+        }
+        const walk = (node) => {
+            delete node.id
+            delete node.sourceShape
+            delete node.nodeShapeUri
+            if (node.path) node.path = shrink(node.path)
+            if (node.eval.message) node.eval.message = cleanMsg(node.eval.message)
+            for (let child of node.children || []) walk(child)
+        }
+        this.rootNodes = Object.values(this.rootNodes)
+        for (let root of this.rootNodes) {
+            root.class = shrink(root.targetClass)
+            delete root.targetClass
+            root.individual = shrink(root.individualUri)
+            delete root.individualUri
+            walk(root)
+        }
+    }
 }
