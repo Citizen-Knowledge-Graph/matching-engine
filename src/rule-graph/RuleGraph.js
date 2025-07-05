@@ -15,8 +15,7 @@ export class RuleGraph {
             if (node.type === TYPE.DATAFIELD) nodeLine += ` ${shrink(node.path)}`
             if (node.type === TYPE.RULE) nodeLine += ` ${JSON.stringify(node.rule)}` // prettify TODO
             nodeLines.push(nodeLine)
-            if (!node.children) return
-            for (const child of node.children) {
+            for (const child of node.children || []) {
                 edgeLines.push(`${node.id} ${child.id}`)
                 walk(child)
             }

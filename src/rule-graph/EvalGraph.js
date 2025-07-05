@@ -58,8 +58,7 @@ export class EvalGraph {
                     if (valiRes.value) node.eval.value = valiRes.value
                 }
             }
-            if (!node.children) return
-            for (let child of node.children) walk(parent, child, valiRes)
+            for (let child of node.children || []) walk(parent, child, valiRes)
         }
         for (let valiRes of validationResults) {
             if (!valiRes.focusNode) {
