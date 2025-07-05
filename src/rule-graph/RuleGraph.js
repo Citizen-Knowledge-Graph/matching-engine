@@ -24,7 +24,7 @@ export class RuleGraph {
         return [...nodeLines, "#", ...edgeLines].join("\n")
     }
     clean() { cleanGraph(this, false) }
-    toMermaid() { return graphToMermaid(this) }
+    toMermaid() { return graphToMermaid(this, false) }
 }
 
 export const TYPE = {

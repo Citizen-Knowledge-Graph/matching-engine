@@ -78,11 +78,14 @@ export const cleanGraph = (graph, isEvalGraph) => {
 
 // usable for RuleGraph and EvalGraph
 // to be called after cleanGraph(): rootNodes is expected to be an array
-export const graphToMermaid = graph => {
+export const graphToMermaid = (graph, isEvalGraph) => {
     let lines  = ["flowchart TD"]
     const toLabel = (node) => {
         switch (node.type) {
             case TYPE.ROOT:
+                if (isEvalGraph) {
+                    return `("${node.individual} (${node.class})")`
+                }
                 return `(${node.class})`
             case TYPE.AND:
                 return `(AND)`
@@ -101,14 +104,28 @@ export const graphToMermaid = graph => {
                 throw new Error(`Unknown node type: ${node.type}`)
         }
     }
-    const walk = (node) => {
-        lines.push(`${node.id}${toLabel(node)}`)
+    const walk = (node, char) => {
+        let nodeId = `${char}${node.id}`
+        lines.push(`${nodeId}${toLabel(node)}`)
+        if (isEvalGraph && node.eval) lines.push(`class ${nodeId} ${node.eval.status}`)
         for (let child of node.children || []) {
-            lines.push(`${node.id} --> ${child.id}`)
-            walk(child)
+            lines.push(`${nodeId} --> ${char}${child.id}`)
+            walk(child, char)
         }
     }
-    for (let rootNode of graph.rootNodes) walk(rootNode)
+    const incrementChar = (char) => {
+        return String.fromCharCode(char.charCodeAt(0) + 1)
+    }
+    let char = "A"
+    for (let rootNode of graph.rootNodes) {
+        walk(rootNode, char)
+        char = incrementChar(char)
+    }
+    if (isEvalGraph) {
+        lines.push("classDef ok fill:#2ecc71,stroke:#0e8046,stroke-width:2px")
+        lines.push("classDef violation fill:#ff4136,stroke:#ad0e05,stroke-width:2px")
+        lines.push("classDef missing fill:#d9d9d9,stroke:#6e6e6e,stroke-width:2px")
+    }
     return lines.join("\n")
 }
 
@@ -169,5 +186,5 @@ export class EvalGraph {
         for (let rootNode of Object.values(this.rootNodes)) determineStatusViaChildren(rootNode)
     }
     clean() { cleanGraph(this, true) }
-    toMermaid() { return graphToMermaid(this) }
+    toMermaid() { return graphToMermaid(this, true) }
 }
