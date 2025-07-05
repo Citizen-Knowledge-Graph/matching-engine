@@ -225,7 +225,7 @@ export class MatchingEngine {
 
         let reportRawGraph = new RawGraph(reportStore.getQuads())
         let validationResults = reportRawGraph.extractValidationResults()
-        // TODO
+        evalGraph.eval(validationResults)
 
         // console.log(util.inspect(evalGraph, false, null, true))
         return evalGraph

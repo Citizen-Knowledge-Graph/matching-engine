@@ -1,4 +1,5 @@
 import { shrink } from "@foerderfunke/sem-ops-utils"
+import { TYPE } from "./RuleGraph.js"
 
 export const STATUS = {
     OK: "ok",
@@ -44,15 +45,50 @@ export class EvalGraph {
             this.rootNodes[indiv] = clonedRootNode
         }
     }
-    eval(rows) {
-        const walk = (parent, node, row) => {
-            let constraintComponent = constraintComponentMapping[node.type === "rule" ? node.rule.type : node.type]
-            if (node.sourceShape === row.sourceShape && constraintComponent === shrink(row.type)) {
-                node.eval = getStatus(row.severity)
+    eval(validationResults) {
+        let datafieldNodes = []
+        const walk = (parent, node, valiRes) => {
+            if (node.type === TYPE.DATAFIELD) datafieldNodes.push(node)
+            let thisConstraintComponent = constraintComponentMapping[node.type === "rule" ? node.rule.type : node.type]
+            if (node.sourceShape === valiRes.sourceShapeUri && thisConstraintComponent === shrink(valiRes.constraintComponent)) {
+                let status = getStatus(valiRes.severity)
+                node.eval.status = status
+                if (status === STATUS.VIOLATION) {
+                    if (valiRes.resultMessage) node.eval.message = valiRes.resultMessage
+                    if (valiRes.value) node.eval.value = valiRes.value
+                }
             }
             if (!node.children) return
-            for (let child of node.children) walk(parent, child, row)
+            for (let child of node.children) walk(parent, child, valiRes)
         }
-        for (let row of rows) walk(null, this.rootNodes[row.individual], row)
+        for (let valiRes of validationResults) {
+            if (!valiRes.focusNode) {
+                console.error(`Missing focusNode: ${JSON.stringify(valiRes)}, skipping validation result`)
+                continue
+            }
+            let individualRootNode = this.rootNodes[valiRes.focusNode]
+            if (!individualRootNode) {
+                console.error(`No root node found for focusNode ${valiRes.focusNode}, skipping validation result`)
+                continue
+            }
+            walk(null, individualRootNode, valiRes)
+        }
+        // postprocessing
+        const determineStatusViaChildren = node => {
+            let status = STATUS.OK
+            for (let child of node.children || []) {
+                // this is our indicator for missing data, it does not count as violation
+                if (child.rule && child.rule.type === "sh:minCount" && child.rule.value.toString() === "1") continue
+                if (child.eval.status === STATUS.VIOLATION) {
+                    status = STATUS.VIOLATION
+                    break
+                } else if (child.eval.status === STATUS.MISSING) {
+                    status = STATUS.MISSING
+                }
+            }
+            node.eval.status = status
+        }
+        for (let datafieldNode of datafieldNodes) determineStatusViaChildren(datafieldNode)
+        for (let rootNode of Object.values(this.rootNodes)) determineStatusViaChildren(rootNode)
     }
 }

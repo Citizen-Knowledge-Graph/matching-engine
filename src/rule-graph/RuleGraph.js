@@ -40,7 +40,7 @@ export class Node {
         this.id = id
         this.type = type
         this.sourceShape = sourceShape
-        this.eval = STATUS.MISSING
+        this.eval = { status: STATUS.MISSING }
     }
     addChild(childNode) {
         if (!this.children) this.children = []
