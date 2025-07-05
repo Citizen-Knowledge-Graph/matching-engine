@@ -519,14 +519,17 @@ ROOT
         // TODO
     })
 
-    it("dev: new rule graph construction approach", async function () {
+    it("build new rule graph", async function () {
+        let ruleGraph = await matchingEngine.buildRuleGraph(expand("ff:newRuleGraphDev"))
+        // TODO
+    })
+
+    it("build new eval graph", async function () {
         const up = `
             @prefix ff: <https://foerderfunke.org/default#>.
             ff:mainPerson a ff:Citizen .
             ff:child0 a ff:Child . 
             ff:child1 a ff:Child .`
         let graph = await matchingEngine.detailedSingleRequirementProfileValidation(up, expand("ff:newRuleGraphDev"))
-
-        // let graph = await matchingEngine.buildRuleGraph(expand("ff:newRuleGraphDev"))
     })
 })

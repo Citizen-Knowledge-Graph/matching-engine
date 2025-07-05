@@ -36,8 +36,49 @@ const constraintComponentMapping = {
     "sh:not": "sh:NotConstraintComponent"
 }
 
+export const clean = graph => {
+    const cleanMsg = (msg) => {
+        // Example: Value is not greater than or equal to "15"^^<http://www.w3.org/2001/XMLSchema#integer>
+        msg = msg.replace(/"([^"]+)"\^\^<[^>]+>/g, (_, value) => value)
+        // Example: Missing expected value <https://foerderfunke.org/default#something>
+        msg = msg.replace(/<([^>]+)>/g, (_, url) => shrink(url))
+        return msg
+    }
+    const walk = (node) => {
+        // delete "sh:minCount 1" rule nodes
+        if (node.children && node.children.length) {
+            for (let i = node.children.length - 1; i >= 0; i--) {
+                const child = node.children[i]
+                if (child.rule && child.rule.type === "sh:minCount" && child.rule.value.toString() === "1") {
+                    node.children.splice(i, 1)
+                }
+            }
+        }
+        // delete unnecessary properties
+        delete node.id
+        delete node.sourceShape
+        delete node.nodeShapeUri
+        if (node.path) node.path = shrink(node.path)
+        if (node.eval.message) node.eval.message = cleanMsg(node.eval.message)
+        if (!graph.isEvalGraph) delete node.eval
+        for (let child of node.children || []) walk(child)
+    }
+    graph.rootNodes = Object.values(graph.rootNodes)
+    for (let root of graph.rootNodes) {
+        root.class = shrink(root.targetClass)
+        delete root.targetClass
+        if (graph.isEvalGraph) root.individual = shrink(root.individualUri)
+        delete root.individualUri
+        walk(root)
+    }
+    delete graph.isEvalGraph
+    delete graph.mainShape
+}
+
 export class EvalGraph {
     constructor(ruleGraph, individuals) {
+        this.uri = ruleGraph.uri
+        this.isEvalGraph = true
         this.rootNodes = {}
         for (let [indiv, cls] of Object.entries(individuals)) {
             let clonedRootNode = structuredClone(ruleGraph.rootNodes[cls])
@@ -89,40 +130,5 @@ export class EvalGraph {
         }
         for (let datafieldNode of datafieldNodes) determineStatusViaChildren(datafieldNode)
         for (let rootNode of Object.values(this.rootNodes)) determineStatusViaChildren(rootNode)
-    }
-    clean() {
-        const cleanMsg = (msg) => {
-            // Example: Value is not greater than or equal to "15"^^<http://www.w3.org/2001/XMLSchema#integer>
-            msg = msg.replace(/"([^"]+)"\^\^<[^>]+>/g, (_, value) => value)
-            // Example: Missing expected value <https://foerderfunke.org/default#something>
-            msg = msg.replace(/<([^>]+)>/g, (_, url) => shrink(url))
-            return msg
-        }
-        const walk = (node) => {
-            // delete "sh:minCount 1" rule nodes
-            if (node.children && node.children.length) {
-                for (let i = node.children.length - 1; i >= 0; i--) {
-                    const child = node.children[i]
-                    if (child.rule && child.rule.type === "sh:minCount" && child.rule.value.toString() === "1") {
-                        node.children.splice(i, 1)
-                    }
-                }
-            }
-            // delete unnecessary properties
-            delete node.id
-            delete node.sourceShape
-            delete node.nodeShapeUri
-            if (node.path) node.path = shrink(node.path)
-            if (node.eval.message) node.eval.message = cleanMsg(node.eval.message)
-            for (let child of node.children || []) walk(child)
-        }
-        this.rootNodes = Object.values(this.rootNodes)
-        for (let root of this.rootNodes) {
-            root.class = shrink(root.targetClass)
-            delete root.targetClass
-            root.individual = shrink(root.individualUri)
-            delete root.individualUri
-            walk(root)
-        }
     }
 }
