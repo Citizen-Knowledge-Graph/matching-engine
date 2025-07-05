@@ -36,7 +36,8 @@ const constraintComponentMapping = {
     "sh:not": "sh:NotConstraintComponent"
 }
 
-export const clean = graph => {
+// usable for RuleGraph and EvalGraph
+export const cleanGraph = (graph, isEvalGraph) => {
     const cleanMsg = (msg) => {
         // Example: Value is not greater than or equal to "15"^^<http://www.w3.org/2001/XMLSchema#integer>
         msg = msg.replace(/"([^"]+)"\^\^<[^>]+>/g, (_, value) => value)
@@ -60,14 +61,14 @@ export const clean = graph => {
         delete node.nodeShapeUri
         if (node.path) node.path = shrink(node.path)
         if (node.eval.message) node.eval.message = cleanMsg(node.eval.message)
-        if (!graph.isEvalGraph) delete node.eval
+        if (!isEvalGraph) delete node.eval
         for (let child of node.children || []) walk(child)
     }
     graph.rootNodes = Object.values(graph.rootNodes)
     for (let root of graph.rootNodes) {
         root.class = shrink(root.targetClass)
         delete root.targetClass
-        if (graph.isEvalGraph) root.individual = shrink(root.individualUri)
+        if (isEvalGraph) root.individual = shrink(root.individualUri)
         delete root.individualUri
         walk(root)
     }
@@ -130,5 +131,8 @@ export class EvalGraph {
         }
         for (let datafieldNode of datafieldNodes) determineStatusViaChildren(datafieldNode)
         for (let rootNode of Object.values(this.rootNodes)) determineStatusViaChildren(rootNode)
+    }
+    clean() {
+        cleanGraph(this, true)
     }
 }

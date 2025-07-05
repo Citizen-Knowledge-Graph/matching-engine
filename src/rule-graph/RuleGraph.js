@@ -1,5 +1,5 @@
 import { shrink } from "@foerderfunke/sem-ops-utils"
-import { STATUS } from "./EvalGraph.js"
+import { cleanGraph, STATUS } from "./EvalGraph.js"
 
 export class RuleGraph {
     constructor() {
@@ -22,6 +22,9 @@ export class RuleGraph {
         }
         for (let rootNode of Object.values(this.rootNodes)) walk(rootNode)
         return [...nodeLines, "#", ...edgeLines].join("\n")
+    }
+    clean() {
+        cleanGraph(this, false)
     }
 }
 

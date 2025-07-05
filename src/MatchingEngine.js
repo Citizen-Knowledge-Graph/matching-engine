@@ -1,7 +1,7 @@
 import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, newStore, addTurtleToStore, storeFromDataset, sparqlConstruct, storeToTurtle, sparqlSelect, addTriple, expand, a, datasetFromStore, storeToJsonLdObj, sparqlInsertDelete, formatTimestamp, formatTimestampAsLiteral, addStoreToStore, sparqlAsk, buildValidatorFromDataset } from "@foerderfunke/sem-ops-utils"
 import { FORMAT, MATCHING_MODE, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_HASVALUE_FIX, QUERY_METADATA_RPS, QUERY_METADATA_DFS, QUERY_METADATA_DEFINITIONS, QUERY_INSERT_VALIDATION_REPORT_URI, QUERY_DELETE_NON_VIOLATING_VALIDATION_RESULTS, QUERY_LINK_REPORT_ONLY_IF_EXISTS } from "./queries.js"
 import { RawGraph } from "./rule-graph/RawGraph.js"
-import { clean, EvalGraph } from "./rule-graph/EvalGraph.js"
+import { EvalGraph } from "./rule-graph/EvalGraph.js"
 // import util from "util" // --> don't commit uncommented, causes "Module not found: Error: Can't resolve util" in the frontend
 
 export class MatchingEngine {
@@ -227,7 +227,7 @@ export class MatchingEngine {
         let reportRawGraph = new RawGraph(reportStore.getQuads())
         let validationResults = reportRawGraph.extractValidationResults()
         evalGraph.eval(validationResults)
-        clean(evalGraph)
+        evalGraph.clean()
         // console.log(util.inspect(evalGraph, false, null, true))
         return evalGraph
     }
@@ -236,7 +236,7 @@ export class MatchingEngine {
         let rpStore = storeFromTurtles([this.requirementProfileTurtles[rpUri]])
         let rawGraph = new RawGraph(rpStore.getQuads())
         let ruleGraph = rawGraph.toRuleGraph()
-        clean(ruleGraph)
+        ruleGraph.clean()
         // console.log(util.inspect(ruleGraph, false, null, true))
         return ruleGraph
     }
