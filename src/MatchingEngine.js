@@ -226,7 +226,7 @@ export class MatchingEngine {
         evalGraph.validationReportTurtle = await storeToTurtle(reportStore) // for debugging
 
         let reportRawGraph = new RawGraph(reportStore.getQuads())
-        let validationResults = reportRawGraph.extractValidationResults()
+        let validationResults = reportRawGraph.extractValidationResults(Object.keys(individuals))
         evalGraph.eval(validationResults)
         evalGraph.clean()
         // console.log(util.inspect(evalGraph, false, null, true))

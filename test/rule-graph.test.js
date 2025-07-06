@@ -239,8 +239,16 @@ describe.skip("rule graph", function () {
 
     it("should build eval graph for Bafög", async function () {
         const up = `
+            @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+            @prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
             @prefix ff: <https://foerderfunke.org/default#>.
-            ff:mainPerson a ff:Citizen .`
+            ff:quick-check-user a ff:Citizen ;
+                ff:aufenthaltsort ff:aufenthaltsort-ao-innerhalb ;
+                ff:bezogene_leistungen ff:bezogene_leistungen-keine ;
+                ff:geburtsdatum "1991-07-01"^^xsd:date ;
+                ff:beruf_neu ff:beruf_neu-ao-selbstaendig ;
+                ff:kinder_unter_18 false ;
+                ff:kinder_18_25 true .`
         let evalGraph = await matchingEngine.buildEvaluationGraph(up, expand("ff:bafoeg"))
         console.log(evalGraph.toMermaid())
     })

@@ -137,7 +137,7 @@ export class RawGraph {
         return items
     }
 
-    extractValidationResults() {
+    extractValidationResults(individualUris) {
         let valiResults = []
         let sourceShapeEdges = this.edges.filter(edge => edge.id === expand("sh:sourceShape"))
         for (let edge of sourceShapeEdges) {
@@ -152,7 +152,7 @@ export class RawGraph {
                 value: siblings.get("sh:value")?.getLabel(),
                 resultPath: siblings.get("sh:resultPath")?.id
             }
-            if (!siblings.has("sh:focusNode") || siblings.get("sh:focusNode").id.startsWith("Literal")) {
+            if (!siblings.has("sh:focusNode") || !individualUris.includes(siblings.get("sh:focusNode").id)) {
                 let parentValiResultNode = this.edges.find(e => e.target === valiResultNode && e.id === expand("sh:detail"))?.source
                 if (parentValiResultNode) {
                     valiRes.focusNode = this.edges.find(e => e.source === parentValiResultNode && e.id === expand("sh:focusNode"))?.target.id
