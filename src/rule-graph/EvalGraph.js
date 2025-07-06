@@ -161,7 +161,6 @@ export const graphToMermaid = (graph, isEvalGraph) => {
 export class EvalGraph {
     constructor(ruleGraph, individuals) {
         this.uri = ruleGraph.uri
-        this.isEvalGraph = true
         this.rootNodes = {}
         for (let [indiv, cls] of Object.entries(individuals)) {
             let clonedRootNode = structuredClone(ruleGraph.rootNodes[cls])
@@ -195,6 +194,7 @@ export class EvalGraph {
             walk(null, individualRootNode, valiRes)
         }
         // postprocessing
+        // can't do this as function on the Node, because the functions get lost during structuredClone()
         const recursiveEval = node => {
             switch(node.type) {
                 case TYPE.ROOT:
