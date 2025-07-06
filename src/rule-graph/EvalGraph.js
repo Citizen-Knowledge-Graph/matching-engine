@@ -66,7 +66,7 @@ export const cleanGraph = (graph, isEvalGraph) => {
         return msg
     }
     const walk = (node) => {
-        /*// delete "sh:minCount 1" rule nodes
+        // delete "sh:minCount 1" rule nodes
         if (node.children && node.children.length) {
             for (let i = node.children.length - 1; i >= 0; i--) {
                 const child = node.children[i]
@@ -74,7 +74,7 @@ export const cleanGraph = (graph, isEvalGraph) => {
                     node.children.splice(i, 1)
                 }
             }
-        }*/
+        }
         // delete unnecessary properties
         // delete node.id
         delete node.sourceShape
@@ -199,21 +199,24 @@ export class EvalGraph {
         // postprocessing
         // can't do this as function on the Node, because the functions get lost during structuredClone()
         const recursiveEval = node => {
+            let children = node.children || []
+            children = children.filter(child => !(child.rule && child.rule.type === "sh:minCount" && child.rule.value.toString() === "1"))
+            let hasChildren = children.length > 0
             switch(node.type) {
                 case TYPE.ROOT:
                 case TYPE.DATAFIELD:
                 case TYPE.AND:
-                    node.eval = { status: OK }
-                    for (const child of node.children) node.eval.status = andStatus(node.eval.status, recursiveEval(child))
+                    node.eval = { status: hasChildren ? OK : MISSING }
+                    for (const child of children) node.eval.status = andStatus(node.eval.status, recursiveEval(child))
                     break;
                 case TYPE.OR:
-                    node.eval = { status: VIOLATION }
-                    for (const child of node.children) node.eval.status = orStatus(node.eval.status, recursiveEval(child))
+                    node.eval = { status: hasChildren ? VIOLATION : MISSING }
+                    for (const child of children) node.eval.status = orStatus(node.eval.status, recursiveEval(child))
                     break
                 case TYPE.NOT:
                     // do the same as AND, but then invert
-                    node.eval = { status: OK }
-                    for (const child of node.children) node.eval.status = andStatus(node.eval.status, recursiveEval(child))
+                    node.eval = { status: hasChildren ? OK : MISSING }
+                    for (const child of children) node.eval.status = andStatus(node.eval.status, recursiveEval(child))
                     node.eval.status = notStatus(node.eval.status)
                     break
                 case TYPE.RULE:

@@ -102,13 +102,9 @@ export class RawGraph {
                     expand("sh:qualifiedValueShape"),
                     expand("sh:qualifiedMinCount")
                 ].includes(viaEdge.id)) {
-                    let type = shrink(viaEdge.id)
-                    let value = rawNode.getLabel()
-                    if (!(type === "sh:minCount" && value.toString() === "1")) { // do not add "sh:minCount 1" nodes, we use them as missing data markers
-                        let node = new Node(this.count ++, TYPE.RULE, parentRawNode.id)
-                        node.rule = { type: type, value: value }
-                        parent.addChild(node)
-                    }
+                    let node = new Node(this.count ++, TYPE.RULE, parentRawNode.id)
+                    node.rule = { type: shrink(viaEdge.id), value: rawNode.getLabel() }
+                    parent.addChild(node)
                 }
             }
 

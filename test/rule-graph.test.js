@@ -143,7 +143,7 @@ describe.skip("rule graph", function () {
         matchingEngine.addValidator(shacl2)
         matchingEngine.addValidator(shacl3)
         matchingEngine.addValidator(shacl4)
-        await addRpsFromKnowledgeBase([expand("ff:wohngeld"), expand("ff:uebergangsgeld")])
+        await addRpsFromKnowledgeBase([expand("ff:wohngeld"), expand("ff:uebergangsgeld"), expand("ff:bafoeg")])
         await matchingEngine.init()
     })
 
@@ -227,11 +227,21 @@ describe.skip("rule graph", function () {
     it("build new eval graph", async function () {
         const up = `
             @prefix ff: <https://foerderfunke.org/default#>.
-            ff:mainPerson a ff:Citizen .
-            ff:child0 a ff:Child . 
+            ff:mainPerson a ff:Citizen ;
+                ff:foo 7 .
+            ff:child0 a ff:Child ;
+                ff:bar true .
             ff:child1 a ff:Child .`
         let evalGraph = await matchingEngine.buildEvaluationGraph(up, expand("ff:newRuleGraphDev"))
         console.log(evalGraph.toMermaid())
         // TODO
+    })
+
+    it("should build eval graph for Bafög", async function () {
+        const up = `
+            @prefix ff: <https://foerderfunke.org/default#>.
+            ff:mainPerson a ff:Citizen .`
+        let evalGraph = await matchingEngine.buildEvaluationGraph(up, expand("ff:bafoeg"))
+        console.log(evalGraph.toMermaid())
     })
 })
