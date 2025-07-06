@@ -201,13 +201,14 @@ export class EvalGraph {
         // can't do this as function on the Node, because the functions get lost during structuredClone()
         const recursiveEval = node => {
             let children = node.children || []
+            let minCount1ChildIsOk = children.some(child => child.rule && child.rule.type === "sh:minCount" && child.rule.value.toString() === "1" && child.eval.status === OK)
             children = children.filter(child => !(child.rule && child.rule.type === "sh:minCount" && child.rule.value.toString() === "1"))
             let hasChildren = children.length > 0
             switch(node.type) {
                 case TYPE.ROOT:
                 case TYPE.DATAFIELD:
                 case TYPE.AND:
-                    node.eval = { status: hasChildren ? OK : MISSING }
+                    node.eval = { status: hasChildren || minCount1ChildIsOk ? OK : MISSING }
                     for (const child of children) node.eval.status = andStatus(node.eval.status, recursiveEval(child))
                     break;
                 case TYPE.OR:
