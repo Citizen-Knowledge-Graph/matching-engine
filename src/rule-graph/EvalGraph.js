@@ -96,10 +96,19 @@ export const graphToMermaid = (graph, isEvalGraph) => {
             case TYPE.DATAFIELD:
                 return `(${node.path})`
             case TYPE.RULE:
+                let label
                 if (node.rule.type === "sh:in") {
-                    return `("${node.rule.type} [${node.rule.values.join(", ")}]")`
+                    label = `("${node.rule.type} [${node.rule.values.join(", ")}]"`
+                } else {
+                    label = `(${node.rule.type} ${node.rule.value}`
                 }
-                return `(${node.rule.type} ${node.rule.value})`
+                if (!node.eval) return label + ")"
+                if (node.eval.message) {
+                    label += `</br><span style="font-size:0.8em">${node.eval.message}`
+                    if (node.eval.value) label += `: ${node.eval.value}`
+                    label += "</span>"
+                }
+                return label + ")"
             default:
                 throw new Error(`Unknown node type: ${node.type}`)
         }
