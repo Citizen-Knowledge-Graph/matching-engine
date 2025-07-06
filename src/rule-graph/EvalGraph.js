@@ -196,7 +196,6 @@ export class EvalGraph {
         }
         // postprocessing
         const recursiveEval = node => {
-            console.log("calling recursiveEval on node", node.id, node.type)
             switch(node.type) {
                 case TYPE.ROOT:
                 case TYPE.DATAFIELD:
@@ -206,13 +205,16 @@ export class EvalGraph {
                     break;
                 case TYPE.OR:
                     node.eval = { status: VIOLATION }
-                    for (const child of node.children) this.eval.status = orStatus(node.eval.status, recursiveEval(child))
+                    for (const child of node.children) node.eval.status = orStatus(node.eval.status, recursiveEval(child))
                     break
                 case TYPE.NOT:
-                    node.eval.status = notStatus(recursiveEval(node.children[0]))
+                    // do the same as AND, but then invert
+                    node.eval = { status: OK }
+                    for (const child of node.children) node.eval.status = andStatus(node.eval.status, recursiveEval(child))
+                    node.eval.status = notStatus(node.eval.status)
                     break
                 case TYPE.RULE:
-                    break // no children, so no recursive eval
+                    break // no children & eval was set above via validationResults
                 default:
                     throw new Error(`Unknown node type: ${node.type}`)
             }
