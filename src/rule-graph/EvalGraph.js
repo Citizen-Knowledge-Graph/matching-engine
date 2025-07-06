@@ -66,7 +66,7 @@ export const cleanGraph = (graph, isEvalGraph) => {
         return msg
     }
     const walk = (node) => {
-        // delete "sh:minCount 1" rule nodes
+        /*// delete "sh:minCount 1" rule nodes
         if (node.children && node.children.length) {
             for (let i = node.children.length - 1; i >= 0; i--) {
                 const child = node.children[i]
@@ -74,7 +74,7 @@ export const cleanGraph = (graph, isEvalGraph) => {
                     node.children.splice(i, 1)
                 }
             }
-        }
+        }*/
         // delete unnecessary properties
         // delete node.id
         delete node.sourceShape
