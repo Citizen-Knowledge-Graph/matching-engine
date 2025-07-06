@@ -223,6 +223,7 @@ export class MatchingEngine {
         let validator = buildValidatorFromDataset(datasetFromStore(rpStore), true, true)
         let report = await validator.validate({ dataset: upDataset })
         let reportStore = storeFromDataset(report.dataset)
+        evalGraph.validationReportTurtle = await storeToTurtle(reportStore) // for debugging
 
         let reportRawGraph = new RawGraph(reportStore.getQuads())
         let validationResults = reportRawGraph.extractValidationResults()

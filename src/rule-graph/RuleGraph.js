@@ -23,7 +23,7 @@ export class RuleGraph {
         for (let rootNode of Object.values(this.rootNodes)) walk(rootNode)
         return [...nodeLines, "#", ...edgeLines].join("\n")
     }
-    clean() { cleanGraph(this, false) }
+    clean() { return cleanGraph(this, false) }
     toMermaid() { return graphToMermaid(this, false) }
 }
 

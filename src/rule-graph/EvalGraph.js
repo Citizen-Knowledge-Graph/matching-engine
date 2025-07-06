@@ -94,6 +94,7 @@ export const cleanGraph = (graph, isEvalGraph) => {
     }
     delete graph.isEvalGraph
     delete graph.mainShape
+    return graph
 }
 
 // usable for RuleGraph and EvalGraph
@@ -167,6 +168,8 @@ export class EvalGraph {
             clonedRootNode.individualUri = indiv
             this.rootNodes[indiv] = clonedRootNode
         }
+        this.ruleGraph = ruleGraph.clean()
+        this.validationReportTurtle = null
     }
     eval(validationResults) {
         const walk = (parent, node, valiRes) => {
@@ -223,6 +226,6 @@ export class EvalGraph {
         // this will overwrite eval of all non-rule nodes, might skip those in walk() already above?
         for (let root of Object.values(this.rootNodes)) recursiveEval(root)
     }
-    clean() { cleanGraph(this, true) }
+    clean() { return cleanGraph(this, true) }
     toMermaid() { return graphToMermaid(this, true) }
 }
