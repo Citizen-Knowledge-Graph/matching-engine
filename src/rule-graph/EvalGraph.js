@@ -125,7 +125,8 @@ export const graphToMermaid = (graph, isEvalGraph) => {
                 }
                 if (!node.eval) return label + ")"
                 if (node.eval.message) {
-                    label += `</br><span style="font-size:0.8em">${node.eval.message}`
+                    let msg = node.eval.message.replaceAll("https://foerderfunke.org/default#", "ff:")
+                    label += `</br><span style="font-size:0.8em">${msg}`
                     if (node.eval.value) label += `: ${node.eval.value}`
                     label += "</span>"
                 }
