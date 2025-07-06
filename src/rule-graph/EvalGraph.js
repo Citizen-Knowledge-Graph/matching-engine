@@ -7,6 +7,26 @@ export const STATUS = {
     MISSING: "missing"
 }
 
+const { OK, VIOLATION, MISSING } = STATUS
+
+function andStatus(a, b) {
+    if (a === VIOLATION || b === VIOLATION) return VIOLATION
+    if (a === MISSING || b === MISSING) return MISSING
+    return OK
+}
+
+function orStatus(a, b) {
+    if (a === OK || b === OK) return OK
+    if (a === MISSING || b === MISSING) return MISSING
+    return VIOLATION
+}
+
+function notStatus(a) {
+    if (a === OK) return VIOLATION
+    if (a === VIOLATION) return OK
+    return MISSING
+}
+
 export const getStatus = (severity) => {
     switch (severity) {
         case "https://schemas.link/shacl-next#Debug":
@@ -150,9 +170,7 @@ export class EvalGraph {
         }
     }
     eval(validationResults) {
-        let datafieldNodes = []
         const walk = (parent, node, valiRes) => {
-            if (node.type === TYPE.DATAFIELD) datafieldNodes.push(node)
             let thisConstraintComponent = constraintComponentMapping[node.type === "rule" ? node.rule.type : node.type]
             if (node.sourceShape === valiRes.sourceShapeUri && thisConstraintComponent === shrink(valiRes.constraintComponent)) {
                 let status = getStatus(valiRes.severity)
@@ -177,22 +195,31 @@ export class EvalGraph {
             walk(null, individualRootNode, valiRes)
         }
         // postprocessing
-        const determineStatusViaChildren = node => {
-            let status = STATUS.OK
-            for (let child of node.children || []) {
-                // this is our indicator for missing data, it does not count as violation
-                if (child.rule && child.rule.type === "sh:minCount" && child.rule.value.toString() === "1") continue
-                if (child.eval.status === STATUS.VIOLATION) {
-                    status = STATUS.VIOLATION
+        const recursiveEval = node => {
+            console.log("calling recursiveEval on node", node.id, node.type)
+            switch(node.type) {
+                case TYPE.ROOT:
+                case TYPE.DATAFIELD:
+                case TYPE.AND:
+                    node.eval = { status: OK }
+                    for (const child of node.children) node.eval.status = andStatus(node.eval.status, recursiveEval(child))
+                    break;
+                case TYPE.OR:
+                    node.eval = { status: VIOLATION }
+                    for (const child of node.children) this.eval.status = orStatus(node.eval.status, recursiveEval(child))
                     break
-                } else if (child.eval.status === STATUS.MISSING) {
-                    status = STATUS.MISSING
-                }
+                case TYPE.NOT:
+                    node.eval.status = notStatus(recursiveEval(node.children[0]))
+                    break
+                case TYPE.RULE:
+                    break // no children, so no recursive eval
+                default:
+                    throw new Error(`Unknown node type: ${node.type}`)
             }
-            node.eval.status = status
+            return node.eval.status
         }
-        for (let datafieldNode of datafieldNodes) determineStatusViaChildren(datafieldNode)
-        for (let rootNode of Object.values(this.rootNodes)) determineStatusViaChildren(rootNode)
+        // this will overwrite eval of all non-rule nodes, might skip those in walk() already above?
+        for (let root of Object.values(this.rootNodes)) recursiveEval(root)
     }
     clean() { cleanGraph(this, true) }
     toMermaid() { return graphToMermaid(this, true) }
