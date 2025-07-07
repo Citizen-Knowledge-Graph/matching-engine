@@ -58,13 +58,13 @@ export class RawGraph {
         let nodeShapes = this.edges.filter(edge => edge.target.id === expand("sh:NodeShape")).map(edge => edge.source)
         this.count = 0
         for (let nodeShape of nodeShapes) {
-            let rootNode = this.buildSubgraph(nodeShape)
+            let rootNode = this.buildSubgraph(nodeShape, ruleGraph)
             ruleGraph.rootNodes[rootNode.targetClass] = rootNode
         }
         return ruleGraph
     }
 
-    buildSubgraph(nodeShape) {
+    buildSubgraph(nodeShape, ruleGraph) {
         let targetClass = this.edges.find(edge => edge.source === nodeShape && edge.id === expand("sh:targetClass"))?.target.id
         let rootNode = new RootNode(this.count ++, TYPE.ROOT, nodeShape.id, targetClass)
 
@@ -118,6 +118,11 @@ export class RawGraph {
                 parent = node
             }
 
+            // if we reach a node via sh:node/sh:qualifiedValueShape, we don't traverse further as this goes into their "own NodeShape territory" that we'll get too anyway - otherwise we'd duplicate that NodeShape content
+            if (viaEdge && [expand("sh:node"), expand("sh:qualifiedValueShape")].includes(viaEdge.id)) {
+                ruleGraph.containsPointersToTheseShapes.push(rawNode.id)
+                return
+            }
             for (const edge of outgoing) walk(edge.target, edge, parent, rawNode)
         }
 

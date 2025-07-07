@@ -6,6 +6,7 @@ export class RuleGraph {
         this.uri = null
         this.mainShape = null
         this.rootNodes = {}
+        this.containsPointersToTheseShapes = [] // objects of sh:node or sh:qualifiedValueShape predicates
     }
     toTGF() {
         let nodeLines = []

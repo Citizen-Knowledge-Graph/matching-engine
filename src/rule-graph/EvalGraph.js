@@ -80,7 +80,7 @@ export const cleanGraph = (graph, isEvalGraph) => {
         // delete unnecessary properties
         // delete node.id
         delete node.sourceShape
-        delete node.nodeShapeUri
+        // delete node.nodeShapeUri
         if (node.path) node.path = shrink(node.path)
         if (node.eval.message) node.eval.message = cleanMsg(node.eval.message)
         if (!isEvalGraph) delete node.eval
@@ -106,10 +106,10 @@ export const graphToMermaid = (graph, isEvalGraph) => {
     const toLabel = (node) => {
         switch (node.type) {
             case TYPE.ROOT:
-                if (isEvalGraph) {
-                    return `("${node.individual} (${node.class})")`
-                }
-                return `(${node.class})`
+                let classLabel = `${node.class}`
+                if (graph.containsPointersToTheseShapes.includes(node.nodeShapeUri)) classLabel += ` | ${shrink(node.nodeShapeUri)}`
+                if (isEvalGraph) return `("${node.individual} (${classLabel})")`
+                return `(${classLabel})`
             case TYPE.AND:
                 return `(AND)`
             case TYPE.OR:
@@ -165,6 +165,7 @@ export class EvalGraph {
     constructor(ruleGraph, individuals) {
         this.uri = ruleGraph.uri
         this.rootNodes = {}
+        this.containsPointersToTheseShapes = ruleGraph.containsPointersToTheseShapes
         for (let [indiv, cls] of Object.entries(individuals)) {
             let clonedRootNode = structuredClone(ruleGraph.rootNodes[cls])
             clonedRootNode.individualUri = indiv
