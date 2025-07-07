@@ -56,15 +56,17 @@ const constraintComponentMapping = {
     "sh:not": "sh:NotConstraintComponent"
 }
 
+const cleanMsg = (msg) => {
+    // Example: Value is not greater than or equal to "15"^^<http://www.w3.org/2001/XMLSchema#integer>
+    msg = msg.replace(/"([^"]+)"\^\^<[^>]+>/g, (_, value) => value)
+    // Example: Missing expected value <https://foerderfunke.org/default#something>
+    msg = msg.replace(/<([^>]+)>/g, (_, url) => shrink(url))
+    msg = msg.replaceAll("https://foerderfunke.org/default#", "ff:")
+    return msg
+}
+
 // usable for RuleGraph and EvalGraph
 export const cleanGraph = (graph, isEvalGraph) => {
-    const cleanMsg = (msg) => {
-        // Example: Value is not greater than or equal to "15"^^<http://www.w3.org/2001/XMLSchema#integer>
-        msg = msg.replace(/"([^"]+)"\^\^<[^>]+>/g, (_, value) => value)
-        // Example: Missing expected value <https://foerderfunke.org/default#something>
-        msg = msg.replace(/<([^>]+)>/g, (_, url) => shrink(url))
-        return msg
-    }
     const walk = (node) => {
         // delete "sh:minCount 1" rule nodes
         if (node.children && node.children.length) {
@@ -125,8 +127,7 @@ export const graphToMermaid = (graph, isEvalGraph) => {
                 }
                 if (!node.eval) return label + ")"
                 if (node.eval.message) {
-                    let msg = node.eval.message.replaceAll("https://foerderfunke.org/default#", "ff:")
-                    label += `</br><span style="font-size:0.8em">${msg}`
+                    label += `</br><span style="font-size:0.8em">${cleanMsg(node.eval.message)}`
                     if (node.eval.value) label += `: ${node.eval.value}`
                     label += "</span>"
                 }
