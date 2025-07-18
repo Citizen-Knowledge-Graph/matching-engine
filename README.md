@@ -31,3 +31,12 @@ npm install --save @foerderfunke/matching-engine
 
 import { ValidationResult } from "@foerderfunke/matching-engine"
 ```
+
+## Assumptions about requirement profiles this engine makes
+
+- Every requirement profile must start with the triple: `<rpUri> a ff:RequirementProfile`
+- Mandatory: `<rpUri> ff:hasMainShape` points to one main shape
+- Optional: `<rpUri> ff:hasFlowShape` points to decision tree logic
+- Multiple `sh:NodeShape`s are allowed (e.g. for `ff:Citizen` and `ff:Child`), but not for the same `sh:targetClass`. The only exception is for the shapes that `ff:hasMainShape` and `ff:hasFlowShape` point to
+- If a `sh:node` or `sh:qualifiedValueShape` are pointing to another `sh:NodeShape`, that shape must have a `sh:targetClass`
+- Every `sh:PropertyShape` must have `sh:minCount 1` (higher values are allowed), otherwise we can't recognize if that datapoint is missing
