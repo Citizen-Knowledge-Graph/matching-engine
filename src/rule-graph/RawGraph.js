@@ -61,6 +61,9 @@ export class RawGraph {
         for (let nodeShape of nodeShapes) {
             if (flowShape && nodeShape.id === flowShape) continue // skip decision tree logic entirely
             let rootNode = this.buildSubgraph(nodeShape, ruleGraph)
+            if (ruleGraph.rootNodes[rootNode.targetClass]) {
+                console.error(`Duplicate sh:NodeShape for sh:targetClass ${rootNode.targetClass} found, overwriting it`)
+            }
             ruleGraph.rootNodes[rootNode.targetClass] = rootNode
         }
         return ruleGraph
