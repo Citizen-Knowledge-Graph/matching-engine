@@ -55,9 +55,11 @@ export class RawGraph {
         ruleGraph.uri = this.edges.find(edge => edge.target.id === expand("ff:RequirementProfile")).source.id
         ruleGraph.rootNodes = {}
         ruleGraph.mainShapeUri = this.edges.find(edge => edge.id === expand("ff:hasMainShape"))?.target.id
+        let flowShape = this.edges.find(edge => edge.id === expand("ff:hasFlowShape"))?.target.id
         let nodeShapes = this.edges.filter(edge => edge.target.id === expand("sh:NodeShape")).map(edge => edge.source)
         this.count = 0
         for (let nodeShape of nodeShapes) {
+            if (flowShape && nodeShape.id === flowShape) continue // skip decision tree logic entirely
             let rootNode = this.buildSubgraph(nodeShape, ruleGraph)
             ruleGraph.rootNodes[rootNode.targetClass] = rootNode
         }
