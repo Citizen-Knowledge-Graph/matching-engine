@@ -1,4 +1,4 @@
-import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, newStore, addTurtleToStore, storeFromDataset, sparqlConstruct, storeToTurtle, sparqlSelect, addTriple, expand, a, datasetFromStore, storeToJsonLdObj, sparqlInsertDelete, formatTimestamp, formatTimestampAsLiteral, addStoreToStore, sparqlAsk, buildValidatorFromDataset } from "@foerderfunke/sem-ops-utils"
+import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, newStore, addTurtleToStore, storeFromDataset, sparqlConstruct, storeToTurtle, sparqlSelect, addTriple, expand, a, datasetFromStore, storeToJsonLdObj, sparqlInsertDelete, formatTimestamp, formatTimestampAsLiteral, addStoreToStore, sparqlAsk, buildValidatorFromDataset, datasetFromTurtles } from "@foerderfunke/sem-ops-utils"
 import { FORMAT, MATCHING_MODE, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_HASVALUE_FIX, QUERY_METADATA_RPS, QUERY_METADATA_DFS, QUERY_METADATA_DEFINITIONS, QUERY_INSERT_VALIDATION_REPORT_URI, QUERY_DELETE_NON_VIOLATING_VALIDATION_RESULTS, QUERY_LINK_REPORT_ONLY_IF_EXISTS } from "./queries.js"
 import { RawGraph } from "./rule-graph/RawGraph.js"
 import { EvalGraph } from "./rule-graph/EvalGraph.js"
@@ -6,23 +6,30 @@ import { EvalGraph } from "./rule-graph/EvalGraph.js"
 
 export class MatchingEngine {
 
-    constructor(datafieldsTurtle, definitionsTurtle, materializationTurtle, consistencyTurtle, requirementProfilesTurtles) {
-        this.defStore = storeFromTurtles([datafieldsTurtle, definitionsTurtle, materializationTurtle])
-        this.datafieldsValidator = buildValidator(datafieldsTurtle)
-        this.consistencyValidator = buildValidator(consistencyTurtle)
-        this.requirementProfilesStore = newStore()
-        this.requirementProfileTurtles = {}
-        this.validators = {}
-        for (let rpTurtle of requirementProfilesTurtles) this.addValidator(rpTurtle)
-        this.matQueries = {}
-        this.metadata = {}
+    constructor() {
+        this.turtles = {
+            datafields: [], definitions: [], materialization: [], consistency: [],
+            requirementProfilesArr: [], requirementProfiles: {}
+        }
     }
+    addDatafieldsTurtle(turtle) { this.turtles.datafields.push(turtle) }
+    addDefinitionsTurtle(turtle) { this.turtles.definitions.push(turtle) }
+    addMaterializationTurtle(turtle) { this.turtles.materialization.push(turtle) }
+    addConsistencyTurtle(turtle) { this.turtles.consistency.push(turtle) }
+    addRequirementProfileTurtle(turtle) { this.turtles.requirementProfilesArr.push(turtle) }
 
     // no more addValidator() after calling init()
     async init(lang = "en", metadataFormat = FORMAT.JSON_LD) {
         this.lang = lang
         this.metadataFormat = metadataFormat
+        this.defStore = storeFromTurtles([...this.turtles.datafields, ...this.turtles.definitions, ...this.turtles.materialization,])
+        this.datafieldsValidator = buildValidatorFromDataset(datasetFromTurtles(this.turtles.datafields))
+        this.consistencyValidator = buildValidatorFromDataset(datasetFromTurtles(this.turtles.consistency))
+        let requirementProfilesStore = newStore()
+        this.requirementProfileValidators = {}
+        for (let rpTurtle of this.turtles.requirementProfilesArr) this.addValidator(rpTurtle, requirementProfilesStore)
         // materialization queries
+        this.matQueries = {}
         let query = `
             PREFIX ff: <https://foerderfunke.org/default#>
             SELECT * WHERE { ?uri ff:sparqlConstructQuery ?query . }`
@@ -31,35 +38,36 @@ export class MatchingEngine {
             this.matQueries[row.uri] = row.query
         }
         // metadata
+        this.metadata = {}
         let metadataStore = newStore()
         let rootUri = expand("ff:metadata")
         addTriple(metadataStore, rootUri, a, expand("ff:MetadataExtraction"))
         addTriple(metadataStore, rootUri, expand("ff:hasLanguage"), this.lang)
-        await sparqlConstruct(QUERY_METADATA_RPS(rootUri, this.lang), [this.requirementProfilesStore], metadataStore)
+        await sparqlConstruct(QUERY_METADATA_RPS(rootUri, this.lang), [requirementProfilesStore], metadataStore)
         await sparqlConstruct(QUERY_METADATA_DFS(rootUri, this.lang), [this.defStore], metadataStore)
         await sparqlConstruct(QUERY_METADATA_DEFINITIONS(rootUri, this.lang), [this.defStore], metadataStore)
         this.metadata = this.metadataFormat === FORMAT.JSON_LD ? await storeToJsonLdObj(metadataStore, ["ff:MetadataExtraction"]) : await storeToTurtle(metadataStore)
         return this
     }
 
-    addValidator(rpTurtle) {
-        addTurtleToStore(this.requirementProfilesStore, rpTurtle)
+    addValidator(rpTurtle, rpStore) {
+        addTurtleToStore(rpStore, rpTurtle)
         let rpUri = extractFirstIndividualUriFromTurtle(rpTurtle, "ff:RequirementProfile")
         if (!rpUri) {
             console.error("No ff:RequirementProfile individual found in the provided turtle file")
             return
         }
-        this.requirementProfileTurtles[rpUri] = rpTurtle
+        this.turtles.requirementProfiles[rpUri] = rpTurtle
         const debugOn = rpTurtle.includes("sh:qualifiedValueShape")
-        this.validators[rpUri] = buildValidator(rpTurtle, debugOn, true)
+        this.requirementProfileValidators[rpUri] = buildValidator(rpTurtle, debugOn, true)
     }
 
     getAllRpUris() {
-        return Object.keys(this.validators)
+        return Object.keys(this.requirementProfileValidators)
     }
 
     async basicValidation(upTurtle, rpUri) {
-        return await this.validators[rpUri].validate({ dataset: turtleToDataset(upTurtle) })
+        return await this.requirementProfileValidators[rpUri].validate({ dataset: turtleToDataset(upTurtle) })
     }
 
     async enrichAndValidateUserProfile(upTurtle, reportUri, reportStore, matchingMode) {
@@ -147,7 +155,7 @@ export class MatchingEngine {
             // addTriple(reportStore, rpEvalUri, a, expand("ff:RequirementProfileEvaluationResult"))
             addTriple(reportStore, rpEvalUri, expand("ff:hasRpUri"), rpUri)
 
-            let shaclReport = await this.validators[rpUri].validate({ dataset: upDataset })
+            let shaclReport = await this.requirementProfileValidators[rpUri].validate({ dataset: upDataset })
             let sourceStore = storeFromDataset(shaclReport.dataset) // store this in class object for reuse until overwritten again?
 
             await sparqlInsertDelete(QUERY_HASVALUE_FIX, sourceStore)
@@ -198,7 +206,7 @@ export class MatchingEngine {
     }
 
     async buildEvaluationGraph(upTurtle, rpUri) {
-        const rpTurtle = this.requirementProfileTurtles[rpUri]
+        const rpTurtle = this.turtles.requirementProfiles[rpUri]
         let upStore = storeFromTurtles([upTurtle])
         for (let [, query ] of Object.entries(this.matQueries)) {
             await sparqlConstruct(query, [upStore, this.defStore], upStore)
@@ -234,7 +242,7 @@ export class MatchingEngine {
     }
 
     buildRuleGraph(rpUri) {
-        let rpStore = storeFromTurtles([this.requirementProfileTurtles[rpUri]])
+        let rpStore = storeFromTurtles([this.turtles.requirementProfiles[rpUri]])
         let rawGraph = new RawGraph(rpStore.getQuads())
         let ruleGraph = rawGraph.toRuleGraph()
         ruleGraph.clean()

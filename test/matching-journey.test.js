@@ -131,7 +131,7 @@ describe("testing matching functionality via journey calls", function () {
                 sh:property [ sh:path ff:sozialversichert12	; sh:minCount 1 ] ;
                 sh:property [ sh:path ff:anspruchAlg ; sh:minCount 1 ] ;
                 sh:property [ sh:path ff:anspruchSoldaten ; sh:minCount 1 ] .`
-        matchingEngine.addValidator(shacl)
+        matchingEngine.addRequirementProfileTurtle(shacl)
         await addRpsFromKnowledgeBase(familienleistungenRpUris)
         await matchingEngine.init()
     })

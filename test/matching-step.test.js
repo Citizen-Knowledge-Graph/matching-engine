@@ -29,7 +29,7 @@ describe("testing matching functionality via single calls", function () {
                     sh:minInclusive 18 ;
                     sh:minCount 1 ;
                 ] .`
-        matchingEngine.addValidator(shacl)
+        matchingEngine.addRequirementProfileTurtle(shacl)
         shacl = `
             @prefix sh: <http://www.w3.org/ns/shacl#> .
             @prefix ff: <https://foerderfunke.org/default#> .
@@ -41,7 +41,7 @@ describe("testing matching functionality via single calls", function () {
                     sh:maxInclusive 3000 ;
                     sh:minCount 1 ;
                 ] .`
-        matchingEngine.addValidator(shacl)
+        matchingEngine.addRequirementProfileTurtle(shacl)
         shacl = `
             @prefix ff: <https://foerderfunke.org/default#> .
             @prefix sh: <http://www.w3.org/ns/shacl#> .
@@ -92,7 +92,7 @@ describe("testing matching functionality via single calls", function () {
                     sh:in (ff:electrical) ;
                     sh:minCount 1 ;     
                 ] .`
-        matchingEngine.addValidator(shacl)
+        matchingEngine.addRequirementProfileTurtle(shacl)
         shacl = `
             @prefix sh: <http://www.w3.org/ns/shacl#> .
             @prefix ff: <https://foerderfunke.org/default#> .
@@ -128,7 +128,7 @@ describe("testing matching functionality via single calls", function () {
                         ]
                     )
                 ] .`
-        matchingEngine.addValidator(shacl)
+        matchingEngine.addRequirementProfileTurtle(shacl)
         await matchingEngine.init()
     })
 

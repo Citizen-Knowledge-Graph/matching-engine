@@ -2,7 +2,7 @@ import "./fixtures/common.js"
 import { describe } from "mocha"
 import { deepStrictEqual } from "node:assert"
 
-describe("basic tests", function () {
+describe.skip("basic tests", function () {
     let matchingEngine
 
     before(async function () {

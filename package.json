@@ -1,6 +1,6 @@
 {
   "name": "@foerderfunke/matching-engine",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "Checks eligibilities by validating a user profile against requirement profiles",
   "author": "@foerderfunke",
   "repository": "github:Citizen-Knowledge-Graph/matching-engine",
@@ -11,7 +11,7 @@
     "test": "mocha"
   },
   "dependencies": {
-    "@foerderfunke/sem-ops-utils": "^0.3.0"
+    "@foerderfunke/sem-ops-utils": "^0.3.1"
   },
   "devDependencies": {
     "lodash": "^4.17.21",

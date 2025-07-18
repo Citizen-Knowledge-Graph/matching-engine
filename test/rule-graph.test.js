@@ -138,11 +138,11 @@ describe.skip("rule graph", function () {
 
     before(async function () {
         matchingEngine = globalThis.matchingEngine
-        matchingEngine.addValidator(shacl0)
-        matchingEngine.addValidator(shacl1)
-        matchingEngine.addValidator(shacl2)
-        matchingEngine.addValidator(shacl3)
-        matchingEngine.addValidator(shacl4)
+        matchingEngine.addRequirementProfileTurtle(shacl0)
+        matchingEngine.addRequirementProfileTurtle(shacl1)
+        matchingEngine.addRequirementProfileTurtle(shacl2)
+        matchingEngine.addRequirementProfileTurtle(shacl3)
+        matchingEngine.addRequirementProfileTurtle(shacl4)
         await addRpsFromKnowledgeBase([expand("ff:wohngeld"), expand("ff:uebergangsgeld"), expand("ff:bafoeg")])
         await matchingEngine.init()
     })

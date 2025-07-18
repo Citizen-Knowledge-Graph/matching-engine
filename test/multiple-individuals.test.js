@@ -56,8 +56,8 @@ describe("multiple individuals tests", function () {
 
     before(async function () {
         matchingEngine = globalThis.matchingEngine
-        matchingEngine.addValidator(shacl1)
-        matchingEngine.addValidator(shacl2)
+        matchingEngine.addRequirementProfileTurtle(shacl1)
+        matchingEngine.addRequirementProfileTurtle(shacl2)
         await matchingEngine.init()
     })
 
