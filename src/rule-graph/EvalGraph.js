@@ -95,7 +95,6 @@ export const cleanGraph = (graph, isEvalGraph) => {
         walk(root)
     }
     delete graph.isEvalGraph
-    delete graph.mainShape
     return graph
 }
 

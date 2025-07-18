@@ -4,7 +4,6 @@ import { cleanGraph, graphToMermaid, STATUS } from "./EvalGraph.js"
 export class RuleGraph {
     constructor() {
         this.uri = null
-        this.mainShape = null
         this.rootNodes = {}
         this.containsPointersToTheseShapes = [] // objects of sh:node or sh:qualifiedValueShape predicates
     }
