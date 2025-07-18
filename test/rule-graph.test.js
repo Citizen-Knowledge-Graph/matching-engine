@@ -143,7 +143,12 @@ describe.skip("rule graph", function () {
         matchingEngine.addRequirementProfileTurtle(shacl2)
         matchingEngine.addRequirementProfileTurtle(shacl3)
         matchingEngine.addRequirementProfileTurtle(shacl4)
-        await addRpsFromKnowledgeBase([expand("ff:wohngeld"), expand("ff:uebergangsgeld"), expand("ff:bafoeg")])
+        await addRpsFromKnowledgeBase([
+            expand("ff:wohngeld"),
+            expand("ff:uebergangsgeld"),
+            expand("ff:bafoeg"),
+            expand("ff:schwerbehindertenausweis")
+        ])
         await matchingEngine.init()
     })
 
@@ -251,5 +256,14 @@ describe.skip("rule graph", function () {
                 ff:kinder_18_25 true .`
         let evalGraph = await matchingEngine.buildEvaluationGraph(up, expand("ff:bafoeg"))
         console.log(evalGraph.toMermaid())
+    })
+
+    it("should build correct graphs for ff:schwerbehindertenausweis", async function () {
+        const up = `
+            @prefix ff: <https://foerderfunke.org/default#> .
+            ff:mainPerson a ff:Citizen .`
+        let evalGraph = await matchingEngine.buildEvaluationGraph(up, expand("ff:schwerbehindertenausweis"))
+        console.log(evalGraph.toMermaid())
+        // TODO
     })
 })
