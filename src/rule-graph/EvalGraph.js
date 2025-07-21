@@ -126,7 +126,7 @@ export const graphToMermaid = (graph, matchingEngine = null, isEvalGraph) => {
                     let localName = node.path.split(":").pop()
                     let label = grapoi({ dataset: matchingEngine.defDataset, term: ns.ff[localName] })
                         .out(ns.rdfs.label)
-                        .terms.find(term => term.language === matchingEngine.lang)?.value
+                        .best(getRdf().score.language([matchingEngine.lang]))?.value
                     if (label) return `(${label})`
                 }
                 return `(${node.path})`
