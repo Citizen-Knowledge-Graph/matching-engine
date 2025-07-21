@@ -2,6 +2,11 @@ import { shrink, getRdf, expand } from "@foerderfunke/sem-ops-utils"
 import { TYPE } from "./RuleGraph.js"
 import grapoi from "grapoi"
 
+const ns = {
+    rdfs: getRdf().namespace("http://www.w3.org/2000/01/rdf-schema#"),
+    ff: getRdf().namespace("https://foerderfunke.org/default#")
+}
+
 export const STATUS = {
     OK: "ok",
     VIOLATION: "violation",
@@ -118,8 +123,9 @@ export const graphToMermaid = (graph, matchingEngine = null, isEvalGraph) => {
                 return `(NOT)`
             case TYPE.DATAFIELD:
                 if (matchingEngine) {
-                    let label = grapoi({ dataset: matchingEngine.defDataset, term: getRdf().namedNode(expand(node.path)) })
-                        .out(getRdf().namedNode("http://www.w3.org/2000/01/rdf-schema#label"))
+                    let localName = node.path.split(":").pop()
+                    let label = grapoi({ dataset: matchingEngine.defDataset, term: ns.ff[localName] })
+                        .out(ns.rdfs.label)
                         .terms.find(term => term.language === matchingEngine.lang)?.value
                     if (label) return `(${label})`
                 }
