@@ -1,5 +1,6 @@
-import { shrink } from "@foerderfunke/sem-ops-utils"
+import { shrink, getRdf, expand } from "@foerderfunke/sem-ops-utils"
 import { TYPE } from "./RuleGraph.js"
+import grapoi from "grapoi"
 
 export const STATUS = {
     OK: "ok",
@@ -100,8 +101,8 @@ export const cleanGraph = (graph, isEvalGraph) => {
 
 // usable for RuleGraph and EvalGraph
 // to be called after cleanGraph(): rootNodes is expected to be an array
-export const graphToMermaid = (graph, isEvalGraph) => {
-    let lines  = ["flowchart TD"]
+export const graphToMermaid = (graph, matchingEngine = null, isEvalGraph) => {
+    let lines = ["flowchart TD"]
     const toLabel = (node) => {
         switch (node.type) {
             case TYPE.ROOT:
@@ -116,6 +117,12 @@ export const graphToMermaid = (graph, isEvalGraph) => {
             case TYPE.NOT:
                 return `(NOT)`
             case TYPE.DATAFIELD:
+                if (matchingEngine) {
+                    let label = grapoi({ dataset: matchingEngine.defDataset, term: getRdf().namedNode(expand(node.path)) })
+                        .out(getRdf().namedNode("http://www.w3.org/2000/01/rdf-schema#label"))
+                        .terms.find(term => term.language === matchingEngine.lang)?.value
+                    if (label) return `(${label})`
+                }
                 return `(${node.path})`
             case TYPE.RULE:
                 let label
@@ -233,5 +240,5 @@ export class EvalGraph {
         for (let root of Object.values(this.rootNodes)) recursiveEval(root)
     }
     clean() { return cleanGraph(this, true) }
-    toMermaid() { return graphToMermaid(this, true) }
+    toMermaid(matchingEngine) { return graphToMermaid(this, matchingEngine, true) }
 }

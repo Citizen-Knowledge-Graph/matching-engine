@@ -22,7 +22,8 @@ export class MatchingEngine {
     async init(lang = "en", metadataFormat = FORMAT.JSON_LD) {
         this.lang = lang
         this.metadataFormat = metadataFormat
-        this.defStore = storeFromTurtles([...this.turtles.datafields, ...this.turtles.definitions, ...this.turtles.materialization,])
+        this.defStore = storeFromTurtles([...this.turtles.datafields, ...this.turtles.definitions, ...this.turtles.materialization])
+        this.defDataset = datasetFromStore(this.defStore)
         this.datafieldsValidator = buildValidatorFromDataset(datasetFromTurtles(this.turtles.datafields))
         this.consistencyValidator = buildValidatorFromDataset(datasetFromTurtles(this.turtles.consistency))
         let requirementProfilesStore = newStore()
