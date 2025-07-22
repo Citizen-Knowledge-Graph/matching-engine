@@ -106,6 +106,7 @@ export const cleanGraph = (graph, isEvalGraph) => {
 
 // usable for RuleGraph and EvalGraph
 // to be called after cleanGraph(): rootNodes is expected to be an array
+// feature wish list: dotted lines around sh:deactivated shapes
 export const graphToMermaid = (graph, matchingEngine = null, isEvalGraph) => {
     let lines = ["flowchart TD"]
     const toLabel = (node) => {
