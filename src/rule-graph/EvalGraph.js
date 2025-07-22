@@ -106,8 +106,8 @@ export const cleanGraph = (graph) => {
 // usable for RuleGraph and EvalGraph
 // to be called after cleanGraph(): rootNodes is expected to be an array
 // feature wish list: dotted lines around sh:deactivated shapes
-export const graphToMermaid = (graph, matchingEngine = null) => {
-    let lines = ["flowchart TD"]
+export const graphToMermaid = (graph, matchingEngine = null, printLabels = false, orientationVertical = true) => {
+    let lines = ["flowchart " + (orientationVertical ? "TD" : "LR")]
     const toLabel = (node) => {
         switch (node.type) {
             case TYPE.ROOT:
@@ -122,7 +122,7 @@ export const graphToMermaid = (graph, matchingEngine = null) => {
             case TYPE.NOT:
                 return `(NOT)`
             case TYPE.DATAFIELD:
-                if (matchingEngine) {
+                if (printLabels && matchingEngine) {
                     let localName = node.path.split(":").pop()
                     let label = grapoi({ dataset: matchingEngine.defDataset, term: ns.ff[localName] })
                         .out(ns.rdfs.label)
