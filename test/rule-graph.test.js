@@ -4,6 +4,7 @@ import { expand } from "@foerderfunke/sem-ops-utils"
 import { inspect } from "util"
 import { strictEqual } from "node:assert"
 import { addRpsFromKnowledgeBase } from "./fixtures/common.js"
+import { graphToMermaid } from "../src/rule-graph/EvalGraph.js"
 
 describe.skip("rule graph", function () {
     let matchingEngine
@@ -225,7 +226,7 @@ describe.skip("rule graph", function () {
 
     it("build new rule graph", async function () {
         let ruleGraph = await matchingEngine.buildRuleGraph(expand("ff:newRuleGraphDev"))
-        console.log(ruleGraph.toMermaid())
+        console.log(graphToMermaid(ruleGraph))
         // TODO
     })
 
@@ -238,7 +239,7 @@ describe.skip("rule graph", function () {
                 ff:bar true .
             ff:child1 a ff:Child .`
         let evalGraph = await matchingEngine.buildEvaluationGraph(up, expand("ff:newRuleGraphDev"))
-        console.log(evalGraph.toMermaid())
+        console.log(graphToMermaid(evalGraph))
         // TODO
     })
 
@@ -255,7 +256,7 @@ describe.skip("rule graph", function () {
                 ff:kinder_unter_18 false ;
                 ff:kinder_18_25 true .`
         let evalGraph = await matchingEngine.buildEvaluationGraph(up, expand("ff:bafoeg"))
-        console.log(evalGraph.toMermaid())
+        console.log(graphToMermaid(evalGraph))
     })
 
     it("should build correct graphs for ff:schwerbehindertenausweis", async function () {
@@ -263,7 +264,7 @@ describe.skip("rule graph", function () {
             @prefix ff: <https://foerderfunke.org/default#> .
             ff:mainPerson a ff:Citizen .`
         let evalGraph = await matchingEngine.buildEvaluationGraph(up, expand("ff:schwerbehindertenausweis"))
-        console.log(evalGraph.toMermaid())
+        console.log(graphToMermaid(evalGraph))
         // TODO
     })
 })

@@ -72,7 +72,7 @@ const cleanMsg = (msg) => {
 }
 
 // usable for RuleGraph and EvalGraph
-export const cleanGraph = (graph, isEvalGraph) => {
+export const cleanGraph = (graph) => {
     const walk = (node) => {
         // delete "sh:minCount 1" rule nodes
         if (node.children && node.children.length) {
@@ -89,32 +89,31 @@ export const cleanGraph = (graph, isEvalGraph) => {
         // delete node.nodeShapeUri
         if (node.path) node.path = shrink(node.path)
         if (node.eval.message) node.eval.message = cleanMsg(node.eval.message)
-        if (!isEvalGraph) delete node.eval
+        if (!graph.isEvalGraph) delete node.eval
         for (let child of node.children || []) walk(child)
     }
     graph.rootNodes = Object.values(graph.rootNodes)
     for (let root of graph.rootNodes) {
         root.class = shrink(root.targetClass)
         delete root.targetClass
-        if (isEvalGraph) root.individual = shrink(root.individualUri)
+        if (graph.isEvalGraph) root.individual = shrink(root.individualUri)
         delete root.individualUri
         walk(root)
     }
-    delete graph.isEvalGraph
     return graph
 }
 
 // usable for RuleGraph and EvalGraph
 // to be called after cleanGraph(): rootNodes is expected to be an array
 // feature wish list: dotted lines around sh:deactivated shapes
-export const graphToMermaid = (graph, matchingEngine = null, isEvalGraph) => {
+export const graphToMermaid = (graph, matchingEngine = null) => {
     let lines = ["flowchart TD"]
     const toLabel = (node) => {
         switch (node.type) {
             case TYPE.ROOT:
                 let classLabel = `${node.class}`
                 if (graph.containsPointersToTheseShapes.includes(node.nodeShapeUri)) classLabel += ` | ${shrink(node.nodeShapeUri)}`
-                if (isEvalGraph) return `("${node.individual} (${classLabel})")`
+                if (graph.isEvalGraph) return `("${node.individual} (${classLabel})")`
                 return `(${classLabel})`
             case TYPE.AND:
                 return `(AND)`
@@ -152,7 +151,7 @@ export const graphToMermaid = (graph, matchingEngine = null, isEvalGraph) => {
     const walk = (node, char) => {
         let nodeId = `${char}${node.id}`
         lines.push(`${nodeId}${toLabel(node)}`)
-        if (isEvalGraph && node.eval) lines.push(`class ${nodeId} ${node.eval.status}`)
+        if (graph.isEvalGraph && node.eval) lines.push(`class ${nodeId} ${node.eval.status}`)
         for (let child of node.children || []) {
             lines.push(`${nodeId} --> ${char}${child.id}`)
             walk(child, char)
@@ -166,7 +165,7 @@ export const graphToMermaid = (graph, matchingEngine = null, isEvalGraph) => {
         walk(rootNode, char)
         char = incrementChar(char)
     }
-    if (isEvalGraph) {
+    if (graph.isEvalGraph) {
         lines.push("classDef ok fill:#2ecc71,stroke:#0e8046,stroke-width:2px")
         lines.push("classDef violation fill:#ff4136,stroke:#ad0e05,stroke-width:2px")
         lines.push("classDef missing fill:#d9d9d9,stroke:#6e6e6e,stroke-width:2px")
@@ -176,6 +175,7 @@ export const graphToMermaid = (graph, matchingEngine = null, isEvalGraph) => {
 
 export class EvalGraph {
     constructor(ruleGraph, individuals) {
+        this.isEvalGraph = true
         this.uri = ruleGraph.uri
         this.rootNodes = {}
         this.containsPointersToTheseShapes = ruleGraph.containsPointersToTheseShapes
@@ -184,7 +184,7 @@ export class EvalGraph {
             clonedRootNode.individualUri = indiv
             this.rootNodes[indiv] = clonedRootNode
         }
-        this.ruleGraph = ruleGraph.clean()
+        this.ruleGraph = cleanGraph(ruleGraph)
         this.validationReportTurtle = null
     }
     eval(validationResults) {
@@ -246,6 +246,4 @@ export class EvalGraph {
         // this will overwrite eval of all non-rule nodes, might skip those in walk() already above?
         for (let root of Object.values(this.rootNodes)) recursiveEval(root)
     }
-    clean() { return cleanGraph(this, true) }
-    toMermaid(matchingEngine) { return graphToMermaid(this, matchingEngine, true) }
 }
