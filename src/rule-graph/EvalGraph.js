@@ -103,6 +103,16 @@ export const cleanGraph = (graph) => {
     return graph
 }
 
+const datafieldToLabel = (shortenedDf, matchingEngine) => {
+    if (!matchingEngine) return shortenedDf
+    if (!shortenedDf.startsWith("ff:")) return shortenedDf // then it's a literal and not a datafield
+    let localName = shortenedDf.split(":").pop()
+    let label = grapoi({ dataset: matchingEngine.defDataset, term: ns.ff[localName] })
+        .out(ns.rdfs.label)
+        .best(getRdf().score.language([matchingEngine.lang]))?.value
+    return label
+}
+
 // usable for RuleGraph and EvalGraph
 // to be called after cleanGraph(): rootNodes is expected to be an array
 // feature wish list: dotted lines around sh:deactivated shapes
@@ -122,18 +132,15 @@ export const graphToMermaid = (graph, matchingEngine = null, printLabels = false
             case TYPE.NOT:
                 return `(NOT)`
             case TYPE.DATAFIELD:
-                if (printLabels && matchingEngine) {
-                    let localName = node.path.split(":").pop()
-                    let label = grapoi({ dataset: matchingEngine.defDataset, term: ns.ff[localName] })
-                        .out(ns.rdfs.label)
-                        .best(getRdf().score.language([matchingEngine.lang]))?.value
+                if (printLabels) {
+                    let label = datafieldToLabel(node.path, matchingEngine)
                     if (label) return `(${label})`
                 }
                 return `(${node.path})`
             case TYPE.RULE:
                 let label
                 if (node.rule.type === "sh:in") {
-                    label = `("${node.rule.type} [${node.rule.values.join(", ")}]"`
+                    label = `("${node.rule.type} [${node.rule.values.map(val => datafieldToLabel(val, matchingEngine)).join(", ")}]"`
                 } else {
                     label = `(${node.rule.type} ${node.rule.value}`
                 }
