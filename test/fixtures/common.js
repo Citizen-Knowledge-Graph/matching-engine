@@ -3,7 +3,7 @@ import { existsSync, promises } from "fs"
 import simpleGit from "simple-git"
 import { MatchingEngine } from "../../src/MatchingEngine.js"
 import { extractFirstIndividualUriFromTurtle } from "@foerderfunke/sem-ops-utils"
-import { UserManager } from "../../src/UserManager.js"
+import { ProfileManager } from "../../src/ProfileManager.js"
 
 const repoDir = "test/fixtures/knowledge-base"
 
@@ -25,7 +25,7 @@ before(async function () {
     me.addMaterializationTurtle(await promises.readFile(`${repoDir}/materialization.ttl`, "utf8"))
     me.addConsistencyTurtle(await promises.readFile(`${repoDir}/consistency.ttl`, "utf8"))
     globalThis.matchingEngine = me
-    globalThis.userManager = new UserManager(me)
+    globalThis.profileManager = new ProfileManager()
 })
 
 export async function addRpsFromKnowledgeBase(rpUris) {
