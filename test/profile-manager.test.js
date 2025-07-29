@@ -7,12 +7,12 @@ describe("profile manager tests", function () {
 
     before(async function () {
         profileManager = globalThis.profileManager
-        profileManager.newProfile()
         await profileManager.init()
     })
 
     it("test basic triple functions", async function () {
-        let profile = profileManager.profiles["profile1"]
+        let id = profileManager.newProfile()
+        let profile = profileManager.profiles[id]
         profile.addEntry("ff:user", "ff:hasName", "John")
         profile.addEntry("ff:user", "ff:hasAge", 30)
         profile.changeEntry("ff:user", "ff:hasAge", 30, 40)
@@ -24,5 +24,15 @@ describe("profile manager tests", function () {
             ff:user a ff:Citizen ; ff:hasAge 40 .
             ff:child1 a ff:Child .`
         strictEqual(isomorphicTurtles(actualTurtle, expectedTurtle), true, "The turtles are not the same")
+    })
+
+    it("test profile import", async function () {
+        let turtleToImport = `
+            @prefix ff: <https://foerderfunke.org/default#>.
+            ff:user a ff:Citizen ; ff:hasAge 40 .`
+        let id = profileManager.importProfileTurtle(turtleToImport)
+        let profile = profileManager.profiles[id]
+        let exportedTurtle = await profile.toTurtle()
+        strictEqual(isomorphicTurtles(turtleToImport, exportedTurtle), true, "The turtles are not the same")
     })
 })
