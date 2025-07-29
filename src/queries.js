@@ -1,8 +1,3 @@
-export const MATCHING_MODE = {
-    QUIZ: "ff:quiz",
-    FULL: "ff:full"
-}
-
 export const FORMAT = {
     TURTLE: 1,
     JSON_LD: 2,
@@ -114,20 +109,6 @@ export const QUERY_NUMBER_OF_MISSING_DATAFIELDS = (reportUri) => { return `
         }
     }`
 }
-
-export const QUERY_DELETE_NON_VIOLATING_VALIDATION_RESULTS = `
-    PREFIX ff: <https://foerderfunke.org/default#>
-    PREFIX sh: <http://www.w3.org/ns/shacl#>
-    DELETE {
-        ?parentNode sh:result ?result ;
-            sh:detail ?result .
-        ?result ?p ?o .
-    } WHERE { 
-        ?parentNode (sh:result | sh:detail) ?result .
-        ?result sh:sourceConstraintComponent ?type ;
-            ?p ?o .
-        FILTER(?type = sh:MinCountConstraintComponent || ?type = sh:QualifiedMinCountConstraintComponent || ?type = sh:OrConstraintComponent || ?type = sh:AndConstraintComponent || ?type = sh:NodeConstraintComponent)
-    }`
 
 // metadata
 
@@ -259,15 +240,5 @@ export const QUERY_INSERT_VALIDATION_REPORT_URI = (validationReportUri) => { ret
     } WHERE {
         ?reportBlankNode a sh:ValidationReport ;
             ?p ?o .
-    }`
-}
-
-export const QUERY_LINK_REPORT_ONLY_IF_EXISTS = (reportName, rpEvalUri) => { return `
-    PREFIX ff: <https://foerderfunke.org/default#>
-    PREFIX sh: <http://www.w3.org/ns/shacl#>
-    CONSTRUCT {
-        <${rpEvalUri}> ff:hasValidationReport ${reportName} .
-    } WHERE {
-        ?result a sh:ValidationResult .
     }`
 }

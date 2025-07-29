@@ -1,6 +1,6 @@
 import { describe } from "mocha"
 import { expand, isomorphicTurtles, shrink, sparqlInsertDelete, sparqlSelect, storeFromTurtles, storeToTurtle } from "@foerderfunke/sem-ops-utils"
-import { FORMAT, MATCHING_MODE } from "../src/queries.js"
+import { FORMAT } from "../src/queries.js"
 import { strictEqual } from "node:assert"
 import { addRpsFromKnowledgeBase } from "./fixtures/common.js"
 
@@ -141,7 +141,7 @@ describe("testing matching functionality via journey calls", function () {
         let reportStore
         let keepGoing = true
         while (keepGoing) {
-            reportStore = await matchingEngine.matching(await storeToTurtle(upStore), rpUris, MATCHING_MODE.QUIZ, FORMAT.STORE, true)
+            reportStore = await matchingEngine.matching(await storeToTurtle(upStore), rpUris, FORMAT.STORE, true)
             let query = `
                 PREFIX ff: <https://foerderfunke.org/default#>
                 SELECT ?subject ?df WHERE {

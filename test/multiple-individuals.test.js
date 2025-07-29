@@ -2,7 +2,7 @@ import "./fixtures/common.js"
 import { describe } from "mocha"
 import { strictEqual } from "node:assert"
 import { expand, sparqlAsk, sparqlSelect } from "@foerderfunke/sem-ops-utils"
-import { FORMAT, MATCHING_MODE } from "../src/queries.js"
+import { FORMAT } from "../src/queries.js"
 import { inspect } from "util"
 
 describe("multiple individuals tests", function () {
@@ -65,7 +65,7 @@ describe("multiple individuals tests", function () {
         const up = `
             @prefix ff: <https://foerderfunke.org/default#> .        
             ff:mainPerson a ff:Citizen .`
-        let reportStore = await matchingEngine.matching(up, [expand("ff:shacl1")], MATCHING_MODE.QUIZ, FORMAT.STORE, true)
+        let reportStore = await matchingEngine.matching(up, [expand("ff:shacl1")], FORMAT.STORE, true)
         let query = `
             PREFIX ff: <https://foerderfunke.org/default#>
             PREFIX sh: <http://www.w3.org/ns/shacl#>
@@ -82,7 +82,7 @@ describe("multiple individuals tests", function () {
     })
 
     it("missing datafields in simple multi-individual case", async function () {
-        let reportStore = await matchingEngine.matching(userProfile1, [expand("ff:shacl1")], MATCHING_MODE.QUIZ, FORMAT.STORE, true)
+        let reportStore = await matchingEngine.matching(userProfile1, [expand("ff:shacl1")], FORMAT.STORE, true)
         let query = `
             PREFIX ff: <https://foerderfunke.org/default#>
             ASK { ?report ff:hasMostMissedDatafield ff:child1_hasAge . }`
@@ -91,7 +91,7 @@ describe("multiple individuals tests", function () {
 
     it("signal more missing datafields when already overall conforming if sh:qualifiedValueShape is present", async function () {
         const continueMissingDataDespiteConforming = false
-        let reportStore = await matchingEngine.matching(userProfile1, [expand("ff:shacl2")], MATCHING_MODE.QUIZ, FORMAT.STORE, true, continueMissingDataDespiteConforming)
+        let reportStore = await matchingEngine.matching(userProfile1, [expand("ff:shacl2")], FORMAT.STORE, true, continueMissingDataDespiteConforming)
         let query = `
             PREFIX ff: <https://foerderfunke.org/default#>
             ASK { ?report ff:hasMissingDataDespiteConformingFor ff:rpEvalRes_shacl2 . }`
@@ -100,7 +100,7 @@ describe("multiple individuals tests", function () {
 
     it("should show missing datafield despite overall conforming when passing flag", async function () {
         const continueMissingDataDespiteConforming = true
-        let reportStore = await matchingEngine.matching(userProfile1, [expand("ff:shacl2")], MATCHING_MODE.QUIZ, FORMAT.STORE, true, continueMissingDataDespiteConforming)
+        let reportStore = await matchingEngine.matching(userProfile1, [expand("ff:shacl2")], FORMAT.STORE, true, continueMissingDataDespiteConforming)
         let query = `
             PREFIX ff: <https://foerderfunke.org/default#>
             ASK { ?report ff:hasNumberOfMissingDatafields 1 . }`

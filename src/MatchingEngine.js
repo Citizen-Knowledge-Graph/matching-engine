@@ -1,5 +1,5 @@
 import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, newStore, addTurtleToStore, storeFromDataset, sparqlConstruct, storeToTurtle, sparqlSelect, addTriple, expand, a, datasetFromStore, storeToJsonLdObj, sparqlInsertDelete, formatTimestamp, formatTimestampAsLiteral, addStoreToStore, sparqlAsk, buildValidatorFromDataset, datasetFromTurtles } from "@foerderfunke/sem-ops-utils"
-import { FORMAT, MATCHING_MODE, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_HASVALUE_FIX, QUERY_METADATA_RPS, QUERY_METADATA_DFS, QUERY_METADATA_DEFINITIONS, QUERY_INSERT_VALIDATION_REPORT_URI, QUERY_DELETE_NON_VIOLATING_VALIDATION_RESULTS, QUERY_LINK_REPORT_ONLY_IF_EXISTS } from "./queries.js"
+import { FORMAT, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_HASVALUE_FIX, QUERY_METADATA_RPS, QUERY_METADATA_DFS, QUERY_METADATA_DEFINITIONS, QUERY_INSERT_VALIDATION_REPORT_URI } from "./queries.js"
 import { RawGraph } from "./rule-graph/RawGraph.js"
 import { cleanGraph, EvalGraph } from "./rule-graph/EvalGraph.js"
 // import util from "util" // --> don't commit uncommented, causes "Module not found: Error: Can't resolve util" in the frontend
@@ -71,7 +71,7 @@ export class MatchingEngine {
         return await this.requirementProfileValidators[rpUri].validate({ dataset: turtleToDataset(upTurtle) })
     }
 
-    async enrichAndValidateUserProfile(upTurtle, reportUri, reportStore, matchingMode) {
+    async enrichAndValidateUserProfile(upTurtle, reportUri, reportStore) {
         let upStore = storeFromTurtles([upTurtle])
 
         let query = `
@@ -83,7 +83,6 @@ export class MatchingEngine {
 
         reportUri = reportUri ?? expand("ff:userProfileValidationReport")
         reportStore = reportStore ?? newStore()
-        matchingMode = matchingMode ?? MATCHING_MODE.QUIZ
 
         // materialization
         let count = 0
@@ -93,8 +92,8 @@ export class MatchingEngine {
             // also filling the upStore while also using it as source could create build-ups with side effects?
             let materializedQuads = await sparqlConstruct(query, [upStore, this.defStore], upStore)
             materializedTriples += materializedQuads.length
-            if (matchingMode !== MATCHING_MODE.FULL || materializedQuads.length === 0) continue
-            let matResultUri = expand("ff:matRes") + count
+            // if (matchingMode !== MATCHING_MODE.FULL || materializedQuads.length === 0) continue
+            /*let matResultUri = expand("ff:matRes") + count
             addTriple(reportStore, reportUri, expand("ff:hasMaterializationResult"), matResultUri)
             // addTriple(reportStore, matResultUri, a, expand("ff:MaterializationResult"))
             addTriple(reportStore, matResultUri, expand("ff:fromRule"), matUri)
@@ -107,7 +106,7 @@ export class MatchingEngine {
                 addTriple(reportStore, matTripleUri, expand("rdf:predicate"), quad.predicate)
                 addTriple(reportStore, matTripleUri, expand("rdf:object"), quad.object)
             }
-            count ++
+            count ++*/
         }
         if (materializedTriples > 0) {
             addTriple(reportStore, reportUri, expand("ff:materializedTriples"), materializedTriples)
@@ -138,18 +137,17 @@ export class MatchingEngine {
         return { upStore, upDataset, reportStore }
     }
 
-    async matching(upTurtle, rpUris, matchingMode, format, testMode = false, continueMissingDataDespiteConforming = false) {
+    async matching(upTurtle, rpUris, format, testMode = false, continueMissingDataDespiteConforming = false) {
         let reportStore = newStore()
 
         const now = new Date()
         let reportUri = expand("ff:matchingReport") + (testMode ? "_STATIC_TEST_URI" : formatTimestamp(now, true))
         addTriple(reportStore, reportUri, a, expand("ff:MatchingReport"))
-        addTriple(reportStore, reportUri, expand("ff:hasMode"), expand(matchingMode))
         addTriple(reportStore, reportUri, expand("ff:hasTimestamp"), (testMode ? "STATIC_TEST_VALUE" : formatTimestampAsLiteral(now)))
 
-        let { upStore, upDataset } = await this.enrichAndValidateUserProfile(upTurtle, reportUri, reportStore, matchingMode)
+        let { upStore, upDataset } = await this.enrichAndValidateUserProfile(upTurtle, reportUri, reportStore)
 
-        let missingDfStore = matchingMode === MATCHING_MODE.QUIZ ? newStore() : reportStore
+        let missingDfStore = newStore()
         for (let rpUri of rpUris) {
             let rpEvalUri = expand("ff:rpEvalRes") + "_" + rpUri.split("#").pop()
             addTriple(reportStore, reportUri, expand("ff:hasEvaluatedRequirementProfile"), rpEvalUri)
@@ -178,16 +176,6 @@ export class MatchingEngine {
                     }
                 }
                 await handleMissingDataQuerying() // move more logic from javascript to semantic operations TODO
-            }
-
-            if (matchingMode === MATCHING_MODE.FULL) {
-                let reportName = "ff:SubjectSpecificViolationsReport" + "_" + rpUri.split("#").pop()
-                await sparqlInsertDelete(QUERY_DELETE_NON_VIOLATING_VALIDATION_RESULTS, sourceStore)
-                await sparqlInsertDelete(QUERY_INSERT_VALIDATION_REPORT_URI(reportName), sourceStore)
-                let constructedQuads = await sparqlConstruct(QUERY_LINK_REPORT_ONLY_IF_EXISTS(reportName, rpEvalUri), [sourceStore], reportStore)
-                if (constructedQuads.length > 0) {
-                    addStoreToStore(sourceStore, reportStore)
-                }
             }
         }
 
