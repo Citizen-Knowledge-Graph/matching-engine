@@ -8,6 +8,7 @@ describe("profile manager tests", function () {
     before(async function () {
         profileManager = globalThis.profileManager
         profileManager.newProfile()
+        await profileManager.init()
     })
 
     it("test basic triple functions", async function () {

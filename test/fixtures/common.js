@@ -18,6 +18,7 @@ before(async function () {
     } catch (err) {
         console.error("common.js: no internet connection, can't pull or clone knowledge-base, continuing though")
     }
+
     let me = await new MatchingEngine()
     me.addDatafieldsTurtle(await promises.readFile(`${repoDir}/datafields.ttl`, "utf8"))
     me.addDatafieldsTurtle(await promises.readFile(`${repoDir}/bielefeld/datafields-bielefeld.ttl`, "utf8"))
@@ -25,7 +26,14 @@ before(async function () {
     me.addMaterializationTurtle(await promises.readFile(`${repoDir}/materialization.ttl`, "utf8"))
     me.addConsistencyTurtle(await promises.readFile(`${repoDir}/consistency.ttl`, "utf8"))
     globalThis.matchingEngine = me
-    globalThis.profileManager = new ProfileManager()
+
+    let pm = new ProfileManager()
+    pm.addDatafieldsTurtle(await promises.readFile(`${repoDir}/datafields.ttl`, "utf8"))
+    pm.addDatafieldsTurtle(await promises.readFile(`${repoDir}/bielefeld/datafields-bielefeld.ttl`, "utf8"))
+    pm.addDefinitionsTurtle(await promises.readFile(`${repoDir}/definitions.ttl`, "utf8"))
+    pm.addMaterializationTurtle(await promises.readFile(`${repoDir}/materialization.ttl`, "utf8"))
+    pm.addConsistencyTurtle(await promises.readFile(`${repoDir}/consistency.ttl`, "utf8"))
+    globalThis.profileManager = pm
 })
 
 export async function addRpsFromKnowledgeBase(rpUris) {
