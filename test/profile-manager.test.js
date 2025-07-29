@@ -13,17 +13,16 @@ describe("profile manager tests", function () {
 
     it("test basic triple functions", async function () {
         let profile = profileManager.profiles["profile1"]
-        profile.addIndividual("ff:Citizen")
-        profile.addEntry("ff:citizen1", "ff:hasName", "John")
-        profile.addEntry("ff:citizen1", "ff:hasAge", 30)
-        profile.changeEntry("ff:citizen1", "ff:hasAge", 30, 40)
-        profile.removeEntry("ff:citizen1", "ff:hasName", "John")
-        profile.addIndividual("ff:Citizen")
+        profile.addEntry("ff:user", "ff:hasName", "John")
+        profile.addEntry("ff:user", "ff:hasAge", 30)
+        profile.changeEntry("ff:user", "ff:hasAge", 30, 40)
+        profile.removeEntry("ff:user", "ff:hasName", "John")
+        profile.addIndividual("ff:Child")
         let actualTurtle = await profile.toTurtle()
         let expectedTurtle = `
             @prefix ff: <https://foerderfunke.org/default#>.
-            ff:citizen1 a ff:Citizen ; ff:hasAge 40 .
-            ff:citizen2 a ff:Citizen .`
+            ff:user a ff:Citizen ; ff:hasAge 40 .
+            ff:child1 a ff:Child .`
         strictEqual(isomorphicTurtles(actualTurtle, expectedTurtle), true, "The turtles are not the same")
     })
 })

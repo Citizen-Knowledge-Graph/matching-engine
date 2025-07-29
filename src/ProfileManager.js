@@ -23,12 +23,21 @@ export class ProfileManager {
             this.matQueries[quad.subject.value] = quad.object.value.trim()
         }
     }
+    generateProfileId() {
+        return "profile" + (Object.keys(this.profiles).length + 1)
+    }
     newProfile() {
-        let id = "profile" + (Object.keys(this.profiles).length + 1)
+        let id = this.generateProfileId()
         this.profiles[id] = new Profile(id)
+        this.profiles[id].addEntry("ff:user", "rdf:type", "ff:Citizen")
         return id
     }
-    import() {}
+    importProfileTurtle(turtle) {
+        let id = this.generateProfileId()
+        this.profiles[id] = new Profile(id)
+        this.profiles[id].importTurtle(turtle)
+        return id
+    }
     exportAll() {}
     serializeAll() {}
     duplicateProfile() {}
@@ -59,6 +68,9 @@ class Profile {
     }
     materialize() {}
     validate() {}
+    importTurtle(turtle) {
+        this.store = storeFromTurtles([turtle])
+    }
     export() {}
     async toTurtle() {
         return await storeToTurtle(this.store)
