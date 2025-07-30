@@ -23,6 +23,12 @@ export class ProfileManager {
             this.matQueries[quad.subject.value] = quad.object.value.trim()
         }
     }
+    getProfilesInfo() {
+        return Object.entries(this.profiles).map(([id, profile]) => { return { id: id, nickname: profile.nickname }})
+    }
+    getProfile(id) {
+        return this.profiles[id]
+    }
     generateProfileId() {
         return "profile" + (Object.keys(this.profiles).length + 1)
     }
@@ -38,8 +44,6 @@ export class ProfileManager {
         this.profiles[id].importTurtle(turtle)
         return id
     }
-    exportAll() {}
-    serializeAll() {}
     duplicateProfile() {}
 }
 
@@ -55,7 +59,6 @@ class Profile {
         this.store.addQuad(nnExpand(individual), nnExpand(datafield), parseObject(value))
     }
     changeEntry(individual, datafield, oldValue, newValue) {
-        if (oldValue === newValue) return
         this.removeEntry(individual, datafield, oldValue)
         this.addEntry(individual, datafield, newValue)
     }
@@ -103,7 +106,6 @@ class Profile {
     importTurtle(turtle) {
         this.store = storeFromTurtles([turtle])
     }
-    export() {}
     async toTurtle() {
         return await storeToTurtle(this.store)
     }
