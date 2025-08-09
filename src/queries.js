@@ -203,7 +203,7 @@ export const QUERY_METADATA_DFS = (rootUri, lang) => { return `
 }
 
 export const QUERY_METADATA_DEFINITIONS = (rootUri, lang) => { return `
-    PREFIX ff:   <https://foerderfunke.org/default#>
+    PREFIX ff: <https://foerderfunke.org/default#>
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     CONSTRUCT {
         <${rootUri}> ff:hasDefinition ?def .
@@ -218,6 +218,7 @@ export const QUERY_METADATA_DEFINITIONS = (rootUri, lang) => { return `
             ff:ProvidingAgency
             ff:AdministrativeLevel
             ff:Law
+            ff:Tag
             ff:ValidationStage
             rdfs:Class
         }
