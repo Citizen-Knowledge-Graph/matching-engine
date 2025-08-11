@@ -36,6 +36,19 @@ describe("profile manager tests", function () {
         strictEqual(isomorphicTurtles(profileTurtleToImport, exportedTurtle), true, "The turtles are not the same")
     })
 
+    it("should throw error if base triple does not exist", async function () {
+        let profile = profileManager.profiles[profileManager.newProfile()]
+        profile.removeEntry("ff:user", "rdf:type", "ff:Citizen")
+        let errThrown = false
+        try {
+            await profile.materializeAndValidate();
+        } catch (err) {
+            errThrown = err.message === "User profile does not contain an individual of class ff:Citizen"
+        } finally {
+            strictEqual(errThrown, true, "The error expected for missing individual was not thrown")
+        }
+    })
+
     it("test materializeAndValidate()", async function () {
         let profileTurtleToImport = `
             @prefix ff: <https://foerderfunke.org/default#> .
