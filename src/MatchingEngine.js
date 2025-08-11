@@ -159,24 +159,25 @@ export class MatchingEngine {
 
             await sparqlInsertDelete(QUERY_HASVALUE_FIX, sourceStore)
             let eligibilityQuad = await sparqlConstruct(QUERY_ELIGIBILITY_STATUS(rpEvalUri), [sourceStore], reportStore)
-            if (eligibilityQuad.length > 0) {
-                let status = eligibilityQuad[0].object.value
-                const handleMissingDataQuerying = async () => {
-                    if (status === expand("ff:ineligible")) return
-                    let missingDataQuads = await sparqlConstruct(QUERY_MISSING_DATAFIELDS(reportUri, rpEvalUri), [sourceStore])
-                    if (missingDataQuads.length === 0) return // must be ff:eligible then
-                    const addQuadsToMissingDfStore = () => missingDataQuads.forEach(quad => missingDfStore.addQuad(quad))
-                    if (status === expand("ff:missingData")) {
-                        addQuadsToMissingDfStore()
-                        return
-                    }
-                    if (status === expand("ff:eligible")) {
-                        addTriple(reportStore, reportUri, expand("ff:hasMissingDataDespiteConformingFor"), rpEvalUri)
-                        if (continueMissingDataDespiteConforming) addQuadsToMissingDfStore()
-                    }
+            if (eligibilityQuad.length === 0) continue
+            let status = eligibilityQuad[0].object.value
+            const handleMissingDataQuerying = async () => {
+                if (status === expand("ff:ineligible")) return
+                let missingDataQuads = await sparqlConstruct(QUERY_MISSING_DATAFIELDS(reportUri, rpEvalUri), [sourceStore])
+                if (missingDataQuads.length === 0) return // must be ff:eligible then
+                const addQuadsToMissingDfStore = () => missingDataQuads.forEach(quad => missingDfStore.addQuad(quad))
+                if (status === expand("ff:missingData")) {
+                    addQuadsToMissingDfStore()
+                    return
                 }
-                await handleMissingDataQuerying() // move more logic from javascript to semantic operations TODO
+                if (status === expand("ff:eligible")) {
+                    addTriple(reportStore, reportUri, expand("ff:hasMissingDataDespiteConformingFor"), rpEvalUri)
+                    // this is in case of a conforming sh:qualifiedValueShape where the user wants to keep investigating
+                    // e.g.: already eligible for child allowance because of one eligible child, but let's check the other two children as well
+                    if (continueMissingDataDespiteConforming) addQuadsToMissingDfStore()
+                }
             }
+            await handleMissingDataQuerying() // move more logic from javascript to semantic operations TODO
         }
 
         await sparqlConstruct(QUERY_TOP_MISSING_DATAFIELD(reportUri), [missingDfStore], reportStore)
