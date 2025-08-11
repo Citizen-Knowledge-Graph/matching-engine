@@ -20,19 +20,18 @@ describe("profile manager tests", function () {
         profile.addIndividual("ff:Child")
         let actualTurtle = await profile.toTurtle()
         let expectedTurtle = `
-            @prefix ff: <https://foerderfunke.org/default#>.
+            @prefix ff: <https://foerderfunke.org/default#> .
             ff:user a ff:Citizen ; ff:hasAge 40 .
             ff:child1 a ff:Child .`
         strictEqual(isomorphicTurtles(actualTurtle, expectedTurtle), true, "The turtles are not the same")
     })
 
     it("test profile import", async function () {
-        let turtleToImport = `
-            @prefix ff: <https://foerderfunke.org/default#>.
+        let profileTurtleToImport = `
+            @prefix ff: <https://foerderfunke.org/default#> .
             ff:user a ff:Citizen ; ff:hasAge 40 .`
-        let id = profileManager.importProfileTurtle(turtleToImport)
-        let profile = profileManager.profiles[id]
+        let profile = profileManager.profiles[profileManager.importProfileTurtle(profileTurtleToImport)]
         let exportedTurtle = await profile.toTurtle()
-        strictEqual(isomorphicTurtles(turtleToImport, exportedTurtle), true, "The turtles are not the same")
+        strictEqual(isomorphicTurtles(profileTurtleToImport, exportedTurtle), true, "The turtles are not the same")
     })
 })
