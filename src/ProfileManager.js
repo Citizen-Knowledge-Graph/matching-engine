@@ -1,5 +1,5 @@
-import { getRdf, buildValidatorFromDataset, datasetFromStore, datasetFromTurtles, expand, newStore, nnExpand, parseObject, storeFromTurtles, storeToTurtle, sparqlConstruct, sparqlAsk, datasetToTurtle, addTriple, storeToJsonLdObj, formatTimestamp, a } from "@foerderfunke/sem-ops-utils"
-import { FORMAT } from "./queries.js"
+import { getRdf, buildValidatorFromDataset, datasetFromStore, datasetFromTurtles, expand, newStore, nnExpand, parseObject, storeFromTurtles, storeToTurtle, sparqlConstruct, sparqlAsk, addTriple, storeToJsonLdObj, formatTimestamp, a, sparqlInsertDelete, storeFromDataset, addStoreToStore } from "@foerderfunke/sem-ops-utils"
+import { FORMAT, QUERY_INSERT_VALIDATION_REPORT_URI } from "./queries.js"
 
 const ns = {
     ff: getRdf().namespace("https://foerderfunke.org/default#")
@@ -91,36 +91,66 @@ class Profile {
     }
     async materialize(reportStore, reportUri) {
         this.enrichedStore = newStore()
-        for (let query of Object.values(this.profileManager.matQueries)) {
-            // do we need an exhausting approach instead until nothing is materialized anymore instead of a one-time for loop?
-            // also filling the upStore while also using it as source could create build-ups with side effects?
-            await sparqlConstruct(query, [this.store, this.profileManager.defStore], this.enrichedStore)
+        addStoreToStore(this.store, this.enrichedStore)
+        let count = 0
+        let materializedTriples = 0
+        for (let [ matRuleUri, query ] of Object.entries(this.profileManager.matQueries)) {
+            // eventually we need an exhaustive approach: materialize until nothing new gets materialized
+            // filling the store while also using it as source could create build-ups with side effects?
+            let materializedQuads = await sparqlConstruct(query, [this.store, this.profileManager.defStore], this.enrichedStore)
+            if (materializedQuads.length === 0) continue
+            materializedTriples += materializedQuads.length
+            let matUri = expand("ff:materialization") + count
+            addTriple(reportStore, reportUri, expand("ff:hasMaterialization"), matUri)
+            addTriple(reportStore, matUri, expand("ff:fromRule"), matRuleUri)
+            let c = 0
+            for (let quad of materializedQuads) {
+                let matTripleUri = matUri + "triple" + (c ++)
+                addTriple(reportStore, matUri, expand("ff:generatedTriple"), matTripleUri)
+                addTriple(reportStore, matTripleUri, expand("rdf:subject"), quad.subject)
+                addTriple(reportStore, matTripleUri, expand("rdf:predicate"), quad.predicate)
+                addTriple(reportStore, matTripleUri, expand("rdf:object"), quad.object)
+            }
+            count ++
         }
+        addTriple(reportStore, reportUri, expand("ff:hasNumberOfMaterializedTriples"), materializedTriples)
     }
     async validate(reportStore, reportUri) {
         let query = `
             PREFIX ff: <https://foerderfunke.org/default#>
             ASK { ?user a ff:Citizen . }`
         if (!await sparqlAsk(query, [this.enrichedStore])) {
-            return { conforms: false, report: "User profile does not contain an individual of class ff:Citizen" }
+            throw new Error("User profile does not contain an individual of class ff:Citizen")
         }
         let ds = datasetFromStore(this.enrichedStore)
         // plausibility validation
         let pReport = await this.profileManager.datafieldsValidator.validate({ dataset: ds })
+        addTriple(reportStore, reportUri, expand("ff:passesPlausibilityValidation"), pReport.conforms)
         if (!pReport.conforms) {
-            return { conforms: false, report: await datasetToTurtle(pReport.dataset) }
+            let pReportStore = storeFromDataset(pReport.dataset)
+            let reportName = "ff:plausibilityValidationReport"
+            addTriple(reportStore, reportUri, expand("ff:hasValidationReport"), expand(reportName))
+            await sparqlInsertDelete(QUERY_INSERT_VALIDATION_REPORT_URI(reportName), pReportStore)
+            addStoreToStore(pReportStore, reportStore)
         }
         // logical consistency validation
         let lcReport = await this.profileManager.consistencyValidator.validate({ dataset: ds })
+        addTriple(reportStore, reportUri, expand("ff:passesLogicalConsistencyValidation"), lcReport.conforms)
         if (!lcReport.conforms) {
-            return { conforms: false, report: await datasetToTurtle(lcReport.dataset) }
+            let lcReportStore = storeFromDataset(lcReport.dataset)
+            let reportName = "ff:logicalConsistencyValidationReport"
+            addTriple(reportStore, reportUri, expand("ff:hasValidationReport"), expand(reportName))
+            await sparqlInsertDelete(QUERY_INSERT_VALIDATION_REPORT_URI(reportName), lcReportStore)
+            addStoreToStore(lcReportStore, reportStore)
         }
-        return { conforms: true, dataset: ds }
     }
     importTurtle(turtle) {
         this.store = storeFromTurtles([turtle])
     }
     async toTurtle() {
         return await storeToTurtle(this.store)
+    }
+    async enrichedToTurtle() {
+        return await storeToTurtle(this.enrichedStore)
     }
 }
