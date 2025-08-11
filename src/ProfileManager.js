@@ -1,4 +1,5 @@
-import { getRdf, buildValidatorFromDataset, datasetFromStore, datasetFromTurtles, expand, newStore, nnExpand, parseObject, storeFromTurtles, storeToTurtle, sparqlConstruct, sparqlAsk, datasetToTurtle } from "@foerderfunke/sem-ops-utils"
+import { getRdf, buildValidatorFromDataset, datasetFromStore, datasetFromTurtles, expand, newStore, nnExpand, parseObject, storeFromTurtles, storeToTurtle, sparqlConstruct, sparqlAsk, datasetToTurtle, addTriple, storeToJsonLdObj, formatTimestamp, a } from "@foerderfunke/sem-ops-utils"
+import { FORMAT } from "./queries.js"
 
 const ns = {
     ff: getRdf().namespace("https://foerderfunke.org/default#")
@@ -71,11 +72,24 @@ class Profile {
         this.addEntry(uri, "rdf:type", clazz)
         return uri
     }
-    async materializeAndValidate() {
-        await this.materialize()
-        return await this.validate()
+    async materializeAndValidate(format = FORMAT.TURTLE, testMode = false) {
+        let reportStore = newStore()
+        let reportUri = expand("ff:profileReport") + (testMode ? "_STATIC_TEST_URI" : formatTimestamp(new Date(), true))
+        addTriple(reportStore, reportUri, a, expand("ff:MaterializeAndValidateProfileReport"))
+        await this.materialize(reportStore, reportUri)
+        await this.validate(reportStore, reportUri)
+        switch (format) {
+            case FORMAT.STORE:
+                return reportStore
+            case FORMAT.JSON_LD:
+                return await storeToJsonLdObj(reportStore, ["ff:MaterializeAndValidateProfileReport"])
+            case FORMAT.TURTLE:
+                return await storeToTurtle(reportStore)
+            default:
+                throw new Error("Unknown format: " + format)
+        }
     }
-    async materialize() {
+    async materialize(reportStore, reportUri) {
         this.enrichedStore = newStore()
         for (let query of Object.values(this.profileManager.matQueries)) {
             // do we need an exhausting approach instead until nothing is materialized anymore instead of a one-time for loop?
@@ -83,7 +97,7 @@ class Profile {
             await sparqlConstruct(query, [this.store, this.profileManager.defStore], this.enrichedStore)
         }
     }
-    async validate() {
+    async validate(reportStore, reportUri) {
         let query = `
             PREFIX ff: <https://foerderfunke.org/default#>
             ASK { ?user a ff:Citizen . }`
