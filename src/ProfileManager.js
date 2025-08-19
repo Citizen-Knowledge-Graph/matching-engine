@@ -1,4 +1,4 @@
-import { getRdf, buildValidatorFromDataset, datasetFromStore, datasetFromTurtles, expand, newStore, nnExpand, parseObject, storeFromTurtles, storeToTurtle, sparqlConstruct, sparqlAsk, addTriple, storeToJsonLdObj, formatTimestamp, a, sparqlInsertDelete, storeFromDataset, addStoreToStore } from "@foerderfunke/sem-ops-utils"
+import { getRdf, buildValidatorFromDataset, datasetFromStore, datasetFromTurtles, expand, newStore, nnExpand, parseObject, storeFromTurtles, storeToTurtle, sparqlConstruct, sparqlAsk, addTriple, storeToJsonLdObj, formatTimestamp, a, sparqlInsertDelete, storeFromDataset, addStoreToStore, datasetToTurtle } from "@foerderfunke/sem-ops-utils"
 import { FORMAT, QUERY_INSERT_VALIDATION_REPORT_URI } from "./queries.js"
 
 const ns = {
@@ -54,7 +54,7 @@ class Profile {
         this.profileManager = profileManager
         this.nickname = null
         this.store = newStore()
-        this.enrichedStore = null
+        this.enrichedDataset = null
     }
     addEntry(individual, datafield, value) {
         this.store.addQuad(nnExpand(individual), nnExpand(datafield), parseObject(value))
@@ -73,6 +73,12 @@ class Profile {
         return uri
     }
     async materializeAndValidate(format = FORMAT.TURTLE, testMode = false) {
+        let query = `
+            PREFIX ff: <https://foerderfunke.org/default#>
+            ASK { ?user a ff:Citizen . }`
+        if (!await sparqlAsk(query, [this.store])) {
+            throw new Error("User profile does not contain an individual of class ff:Citizen")
+        }
         let reportStore = newStore()
         let reportUri = expand("ff:profileReport") + (testMode ? "_STATIC_TEST_URI" : formatTimestamp(new Date(), true))
         addTriple(reportStore, reportUri, a, expand("ff:MaterializeAndValidateProfileReport"))
@@ -90,14 +96,14 @@ class Profile {
         }
     }
     async materialize(reportStore, reportUri) {
-        this.enrichedStore = newStore()
-        addStoreToStore(this.store, this.enrichedStore)
+        let enrichedStore = newStore()
+        addStoreToStore(this.store, enrichedStore)
         let count = 0
         let materializedTriples = 0
         for (let [ matRuleUri, query ] of Object.entries(this.profileManager.matQueries)) {
             // eventually we need an exhaustive approach: materialize until nothing new gets materialized
             // filling the store while also using it as source could create build-ups with side effects?
-            let materializedQuads = await sparqlConstruct(query, [this.store, this.profileManager.defStore], this.enrichedStore)
+            let materializedQuads = await sparqlConstruct(query, [this.store, this.profileManager.defStore], enrichedStore)
             if (materializedQuads.length === 0) continue
             materializedTriples += materializedQuads.length
             let matUri = expand("ff:materialization") + count
@@ -114,17 +120,11 @@ class Profile {
             count ++
         }
         addTriple(reportStore, reportUri, expand("ff:hasNumberOfMaterializedTriples"), materializedTriples)
+        this.enrichedDataset = datasetFromStore(enrichedStore)
     }
     async validate(reportStore, reportUri) {
-        let query = `
-            PREFIX ff: <https://foerderfunke.org/default#>
-            ASK { ?user a ff:Citizen . }`
-        if (!await sparqlAsk(query, [this.enrichedStore])) {
-            throw new Error("User profile does not contain an individual of class ff:Citizen")
-        }
-        let ds = datasetFromStore(this.enrichedStore)
         // plausibility validation
-        let pReport = await this.profileManager.datafieldsValidator.validate({ dataset: ds })
+        let pReport = await this.profileManager.datafieldsValidator.validate({ dataset: this.enrichedDataset })
         addTriple(reportStore, reportUri, expand("ff:passesPlausibilityValidation"), pReport.conforms)
         if (!pReport.conforms) {
             let pReportStore = storeFromDataset(pReport.dataset)
@@ -134,7 +134,7 @@ class Profile {
             addStoreToStore(pReportStore, reportStore)
         }
         // logical consistency validation
-        let lcReport = await this.profileManager.consistencyValidator.validate({ dataset: ds })
+        let lcReport = await this.profileManager.consistencyValidator.validate({ dataset: this.enrichedDataset })
         addTriple(reportStore, reportUri, expand("ff:passesLogicalConsistencyValidation"), lcReport.conforms)
         if (!lcReport.conforms) {
             let lcReportStore = storeFromDataset(lcReport.dataset)
@@ -151,6 +151,6 @@ class Profile {
         return await storeToTurtle(this.store)
     }
     async enrichedToTurtle() {
-        return await storeToTurtle(this.enrichedStore)
+        return await datasetToTurtle(this.enrichedDataset)
     }
 }
