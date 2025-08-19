@@ -134,18 +134,18 @@ export class MatchingEngine {
             await sparqlInsertDelete(QUERY_INSERT_VALIDATION_REPORT_URI(reportName), lcReportStore)
             addStoreToStore(lcReportStore, reportStore)
         }
-        return { upStore, upDataset, reportStore }
+        return upDataset
     }
 
-    async matching(upTurtle, rpUris, format, testMode = false, continueMissingDataDespiteConforming = false) {
+    async matching(upTurtleOrDataset, rpUris, format, testMode = false, continueMissingDataDespiteConforming = false) {
         let reportStore = newStore()
 
-        const now = new Date()
-        let reportUri = expand("ff:matchingReport") + (testMode ? "_STATIC_TEST_URI" : formatTimestamp(now, true))
+        let reportUri = expand("ff:matchingReport") + (testMode ? "_STATIC_TEST_URI" : formatTimestamp(new Date(), true))
         addTriple(reportStore, reportUri, a, expand("ff:MatchingReport"))
-        addTriple(reportStore, reportUri, expand("ff:hasTimestamp"), (testMode ? "STATIC_TEST_VALUE" : formatTimestampAsLiteral(now)))
 
-        let { upStore, upDataset } = await this.enrichAndValidateUserProfile(upTurtle, reportUri, reportStore)
+        let upDataset = typeof upTurtleOrDataset === "object"
+            ? upTurtleOrDataset
+            : await this.enrichAndValidateUserProfile(upTurtleOrDataset, reportUri, reportStore) // temporarily keep legacy approach
 
         let missingDfStore = newStore()
         for (let rpUri of rpUris) {
@@ -193,10 +193,6 @@ export class MatchingEngine {
             default:
                 throw new Error("Unknown format: " + format)
         }
-    }
-
-    async matching_new(upDataset, rpUris, format, testMode = false, continueMissingDataDespiteConforming = false) {
-        // TODO
     }
 
     async buildEvaluationGraph(upTurtle, rpUri) {
