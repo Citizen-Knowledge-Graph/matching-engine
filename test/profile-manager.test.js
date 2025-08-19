@@ -83,37 +83,6 @@ describe("profile manager tests", function () {
               rdf:predicate ff:pensionable;
               rdf:subject ff:user.
             
-            ff:materialization2
-              ff:fromRule ff:InterestedInBuildingActivatorRule;
-              ff:generatedTriple ff:materialization2triple0.
-            
-            ff:materialization2triple0
-              rdf:object false;
-              rdf:predicate ff:interested_in_building_renovation_FLAG;
-              rdf:subject ff:user.
-            
-            ff:materialization3
-              ff:fromRule ff:UebergangsGeldAgenturFuerArbeit;
-              ff:generatedTriple
-                ff:materialization3triple0,
-                ff:materialization3triple1,
-                ff:materialization3triple2.
-            
-            ff:materialization3triple0
-              rdf:object true;
-              rdf:predicate ff:vocational_returnee_deactivated;
-              rdf:subject ff:user.
-            
-            ff:materialization3triple1
-              rdf:object true;
-              rdf:predicate ff:vocationalReturneeShape_deactivated;
-              rdf:subject ff:user.
-            
-            ff:materialization3triple2
-              rdf:object true;
-              rdf:predicate ff:nonVocationalReturneeShape_deactivated;
-              rdf:subject ff:user.
-            
             ff:plausibilityValidationReport a sh:ValidationReport;
               sh:conforms false;
               sh:result [ a sh:ValidationResult;
@@ -129,10 +98,8 @@ describe("profile manager tests", function () {
             ff:profileReport_STATIC_TEST_URI a ff:MaterializeAndValidateProfileReport;
               ff:hasMaterialization
                 ff:materialization0,
-                ff:materialization1,
-                ff:materialization2,
-                ff:materialization3;
-              ff:hasNumberOfMaterializedTriples 6;
+                ff:materialization1;
+              ff:hasNumberOfMaterializedTriples 2;
               ff:hasValidationReport ff:plausibilityValidationReport;
               ff:passesLogicalConsistencyValidation true;
               ff:passesPlausibilityValidation false.`
@@ -142,18 +109,13 @@ describe("profile manager tests", function () {
         let actualEnrichedProfile = await profile.enrichedToTurtle()
         let expectedEnrichedProfile = `
             @prefix ff: <https://foerderfunke.org/default#>.
-            @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
             @prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
             
             ff:user a ff:Citizen;
               ff:geburtsdatum "1992-05-17"^^xsd:date;
               ff:hasAge 33;
-              ff:interested_in_building_renovation_FLAG false;
-              ff:nonVocationalReturneeShape_deactivated true;
               ff:pensionable false;
-              ff:staatsbuergerschaft ff:staatsbuergerschaft-ao-usa;
-              ff:vocational_returnee_deactivated true;
-              ff:vocationalReturneeShape_deactivated true.`
+              ff:staatsbuergerschaft ff:staatsbuergerschaft-ao-usa.`
         strictEqual(isomorphicTurtles(actualEnrichedProfile, expectedEnrichedProfile), true, "The enriched profile is not as expected")
     })
 })
