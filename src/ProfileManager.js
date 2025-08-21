@@ -56,6 +56,10 @@ class Profile {
         this.store = newStore()
         this.enrichedDataset = null
     }
+    isEmpty() {
+        return this.store.size === 1 &&
+            this.store.match(null, nnExpand("rdf:type"), nnExpand("ff:Citizen")).size === 1
+    }
     addEntry(individual, datafield, value) {
         this.store.addQuad(nnExpand(individual), nnExpand(datafield), parseObject(value))
     }

@@ -27,6 +27,11 @@ describe("profile manager tests", function () {
         strictEqual(isomorphicTurtles(actualTurtle, expectedTurtle), true, "The turtles are not the same")
     })
 
+    it("test empty profile detection", async function () {
+        let profile = profileManager.profiles[profileManager.newProfile()]
+        strictEqual(profile.isEmpty(), true, "The profile was not correctly identified as empty")
+    })
+
     it("test profile import", async function () {
         let profileTurtleToImport = `
             @prefix ff: <https://foerderfunke.org/default#> .
