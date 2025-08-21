@@ -14,15 +14,15 @@ describe("profile manager tests", function () {
     it("test basic triple functions", async function () {
         let id = profileManager.newProfile()
         let profile = profileManager.profiles[id]
-        profile.addEntry("ff:user", "ff:hasName", "John")
-        profile.addEntry("ff:user", "ff:hasAge", 30)
-        profile.changeEntry("ff:user", "ff:hasAge", 30, 40)
-        profile.removeEntry("ff:user", "ff:hasName", "John")
+        profile.addEntry("ff:citizen1", "ff:hasName", "John")
+        profile.addEntry("ff:citizen1", "ff:hasAge", 30)
+        profile.changeEntry("ff:citizen1", "ff:hasAge", 30, 40)
+        profile.removeEntry("ff:citizen1", "ff:hasName", "John")
         profile.addIndividual("ff:Child")
         let actualTurtle = await profile.toTurtle()
         let expectedTurtle = `
             @prefix ff: <https://foerderfunke.org/default#> .
-            ff:user a ff:Citizen ; ff:hasAge 40 .
+            ff:citizen1 a ff:Citizen ; ff:hasAge 40 .
             ff:child1 a ff:Child .`
         strictEqual(isomorphicTurtles(actualTurtle, expectedTurtle), true, "The turtles are not the same")
     })
@@ -30,15 +30,15 @@ describe("profile manager tests", function () {
     it("test profile import", async function () {
         let profileTurtleToImport = `
             @prefix ff: <https://foerderfunke.org/default#> .
-            ff:user a ff:Citizen ; ff:hasAge 40 .`
-        let profile = profileManager.profiles[profileManager.importProfileTurtle(profileTurtleToImport)]
+            ff:citizen1 a ff:Citizen ; ff:hasAge 40 .`
+        let profile = profileManager.profiles[profileManager.importProfileTurtle("ff:citizen1", profileTurtleToImport)]
         let exportedTurtle = await profile.toTurtle()
         strictEqual(isomorphicTurtles(profileTurtleToImport, exportedTurtle), true, "The turtles are not the same")
     })
 
     it("should throw error if base triple does not exist", async function () {
         let profile = profileManager.profiles[profileManager.newProfile()]
-        profile.removeEntry("ff:user", "rdf:type", "ff:Citizen")
+        profile.removeEntry(profile.id, "rdf:type", "ff:Citizen")
         let errThrown = false
         try {
             await profile.materializeAndValidate();
@@ -53,10 +53,10 @@ describe("profile manager tests", function () {
         let profileTurtleToImport = `
             @prefix ff: <https://foerderfunke.org/default#> .
             @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-            ff:user a ff:Citizen ; 
+            ff:citizen1 a ff:Citizen ; 
                 ff:geburtsdatum "1992-05-17"^^xsd:date ;
                 ff:staatsbuergerschaft ff:staatsbuergerschaft-ao-usa .`
-        let profile = profileManager.profiles[profileManager.importProfileTurtle(profileTurtleToImport)]
+        let profile = profileManager.profiles[profileManager.importProfileTurtle("ff:citizen1", profileTurtleToImport)]
 
         // report
         let actualReport = await profile.materializeAndValidate(FORMAT.TURTLE, true)
@@ -72,7 +72,7 @@ describe("profile manager tests", function () {
             ff:materialization0triple0
               rdf:object 33;
               rdf:predicate ff:hasAge;
-              rdf:subject ff:user.
+              rdf:subject ff:citizen1.
             
             ff:materialization1
               ff:fromRule ff:PensionableFromBirthdate;
@@ -81,12 +81,12 @@ describe("profile manager tests", function () {
             ff:materialization1triple0
               rdf:object false;
               rdf:predicate ff:pensionable;
-              rdf:subject ff:user.
+              rdf:subject ff:citizen1.
             
             ff:plausibilityValidationReport a sh:ValidationReport;
               sh:conforms false;
               sh:result [ a sh:ValidationResult;
-                  sh:focusNode ff:user;
+                  sh:focusNode ff:citizen1;
                   sh:resultMessage "Value is not in https://foerderfunke.org/default#staatsbuergerschaft-ao-ger, https://foerderfunke.org/default#staatsbuergerschaft-ao-eu, https://foerderfunke.org/default#staatsbuergerschaft-ao-3rd";
                   sh:resultPath ff:staatsbuergerschaft;
                   sh:resultSeverity sh:Violation;
@@ -111,7 +111,7 @@ describe("profile manager tests", function () {
             @prefix ff: <https://foerderfunke.org/default#>.
             @prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
             
-            ff:user a ff:Citizen;
+            ff:citizen1 a ff:Citizen;
               ff:geburtsdatum "1992-05-17"^^xsd:date;
               ff:hasAge 33;
               ff:pensionable false;

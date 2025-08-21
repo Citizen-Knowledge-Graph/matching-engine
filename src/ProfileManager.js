@@ -31,16 +31,16 @@ export class ProfileManager {
         return this.profiles[id]
     }
     generateProfileId() {
-        return "profile" + (Object.keys(this.profiles).length + 1)
+        return "ff:citizen" + (Object.keys(this.profiles).length + 1)
     }
-    newProfile() {
-        let id = this.generateProfileId()
+    newProfile(id) {
+        if (!id) id = this.generateProfileId()
         this.profiles[id] = new Profile(id, this)
-        this.profiles[id].addEntry("ff:user", "rdf:type", "ff:Citizen")
+        this.profiles[id].addEntry(id, "rdf:type", "ff:Citizen")
         return id
     }
-    importProfileTurtle(turtle) {
-        let id = this.generateProfileId()
+    importProfileTurtle(id, turtle) {
+        if (!id) id = this.generateProfileId()
         this.profiles[id] = new Profile(id, this)
         this.profiles[id].importTurtle(turtle)
         return id
