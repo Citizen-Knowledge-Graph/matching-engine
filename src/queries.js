@@ -153,7 +153,7 @@ export const QUERY_METADATA_RPS = (rootUri, lang) => { return `
     }`
 }
 
-export const QUERY_METADATA_DFS = (rootUri, lang) => { return `
+export const QUERY_METADATA_DFS = (rootUri, lang, specialLang) => { return `
     PREFIX ff: <https://foerderfunke.org/default#>
     PREFIX sh: <http://www.w3.org/ns/shacl#>
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -176,11 +176,16 @@ export const QUERY_METADATA_DFS = (rootUri, lang) => { return `
         FILTER (lang(?label) = "${lang}")
         OPTIONAL {
             ?df schema:category ?category .
-        }  
-        OPTIONAL {
+        }
+        # treat schema:question as optional?  
+        {
             ?df schema:question ?question .
-            FILTER (lang(?question) = "${lang}")
-        }  
+            FILTER(LANG(?question) = "${specialLang}")
+        } UNION { 
+            ?df schema:question ?question .
+            FILTER(LANG(?question) = "${lang}")
+            FILTER NOT EXISTS { ?df schema:question ?q . FILTER(LANG(?q) = "${specialLang}") }
+        }
         OPTIONAL { 
           ?df rdfs:comment ?comment .
           FILTER (lang(?comment) = "${lang}")

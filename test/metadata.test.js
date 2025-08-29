@@ -7,7 +7,7 @@ describe("testing metadata functionality", function () {
 
     before(async function () {
         matchingEngine = globalThis.matchingEngine
-        await matchingEngine.init()
+        await matchingEngine.init("de_es")
     })
 
     it.skip("should generate the correct metadata", async function () {

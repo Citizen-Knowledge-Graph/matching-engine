@@ -21,6 +21,11 @@ export class MatchingEngine {
     // no more addValidator() after calling init()
     async init(lang = "en", metadataFormat = FORMAT.JSON_LD) {
         this.lang = lang
+        this.specialLang = lang // workaround
+        if (lang === "de_es") {
+            this.lang = "de"
+            this.specialLang = "de-x-es"
+        }
         this.metadataFormat = metadataFormat
         this.defStore = storeFromTurtles([...this.turtles.datafields, ...this.turtles.definitions, ...this.turtles.materialization])
         this.defDataset = datasetFromStore(this.defStore) // for grapoi
@@ -45,7 +50,7 @@ export class MatchingEngine {
         addTriple(metadataStore, rootUri, a, expand("ff:MetadataExtraction"))
         addTriple(metadataStore, rootUri, expand("ff:hasLanguage"), this.lang)
         await sparqlConstruct(QUERY_METADATA_RPS(rootUri, this.lang), [requirementProfilesStore], metadataStore)
-        await sparqlConstruct(QUERY_METADATA_DFS(rootUri, this.lang), [this.defStore], metadataStore)
+        await sparqlConstruct(QUERY_METADATA_DFS(rootUri, this.lang, this.specialLang), [this.defStore], metadataStore)
         await sparqlConstruct(QUERY_METADATA_DEFINITIONS(rootUri, this.lang), [this.defStore], metadataStore)
         this.metadata = this.metadataFormat === FORMAT.JSON_LD ? await storeToJsonLdObj(metadataStore, ["ff:MetadataExtraction"]) : await storeToTurtle(metadataStore)
         return this
