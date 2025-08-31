@@ -177,18 +177,25 @@ export const QUERY_METADATA_DFS = (rootUri, lang, specialLang) => { return `
         OPTIONAL {
             ?df schema:category ?category .
         }
-        # treat schema:question as optional?  
-        {
-            ?df schema:question ?question .
-            FILTER(LANG(?question) = "${specialLang}")
-        } UNION { 
-            ?df schema:question ?question .
-            FILTER(LANG(?question) = "${lang}")
-            FILTER NOT EXISTS { ?df schema:question ?q . FILTER(LANG(?q) = "${specialLang}") }
+        OPTIONAL {
+            {
+                ?df schema:question ?question .
+                FILTER(LANG(?question) = "${specialLang}")
+            } UNION { 
+                ?df schema:question ?question .
+                FILTER(LANG(?question) = "${lang}")
+                FILTER NOT EXISTS { ?df schema:question ?q . FILTER(LANG(?q) = "${specialLang}") }
+            }
         }
-        OPTIONAL { 
-          ?df rdfs:comment ?comment .
-          FILTER (lang(?comment) = "${lang}")
+        OPTIONAL {
+            {
+                ?df rdfs:comment ?comment .
+                FILTER(LANG(?comment) = "${specialLang}")
+            } UNION { 
+                ?df rdfs:comment ?comment .
+                FILTER(LANG(?comment) = "${lang}")
+                FILTER NOT EXISTS { ?df rdfs:comment ?q . FILTER(LANG(?q) = "${specialLang}") }
+            }
         }
         OPTIONAL { 
             ?df ff:hasShaclShape ?shape .
