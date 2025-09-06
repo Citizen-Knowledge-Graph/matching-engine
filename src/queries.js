@@ -186,7 +186,8 @@ export const QUERY_METADATA_DFS = (rootUri, lang) => { return `
             ff:datatype ?datatype ;
             ff:hasAnswerOption ?option .
         ?option a ff:AnswerOption ;
-            rdfs:label ?optionLabel .
+            rdfs:label ?optionLabel ;
+            rdfs:comment ?optionComment .
     } WHERE {
         ?df a ff:DataField ;
             rdfs:label ?label .
@@ -214,7 +215,16 @@ export const QUERY_METADATA_DFS = (rootUri, lang) => { return `
             ?shape sh:property ?ps .
             ?ps sh:in/rdf:rest*/rdf:first ?option .
             ?option rdfs:label ?optionLabel .
-            FILTER(lang(?optionLabel) = "${lang}")     
+            FILTER(lang(?optionLabel) = "${lang}")
+        }
+        OPTIONAL { 
+            ?df ff:hasShaclShape ?shape .
+            ?shape sh:property ?ps .
+            ?ps sh:in/rdf:rest*/rdf:first ?option .
+            ?option rdfs:label ?optionLabel .
+            FILTER(lang(?optionLabel) = "${lang}")
+            ?option rdfs:comment ?optionComment .
+            FILTER(lang(?optionComment) = "${lang}")
         }
     }`
 }
