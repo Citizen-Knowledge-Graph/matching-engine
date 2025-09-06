@@ -11,7 +11,7 @@ describe("testing metadata functionality", function () {
     before(async function () {
         matchingEngine = globalThis.matchingEngine
         await addAllRpsFromKnowledgeBase()
-        await matchingEngine.init("de-x-es", FORMAT.TURTLE)
+        await matchingEngine.init("de_es", FORMAT.TURTLE)
     })
 
     it.skip("should generate the correct metadata", async function () {

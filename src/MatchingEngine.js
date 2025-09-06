@@ -23,6 +23,7 @@ export class MatchingEngine {
 
     // no more addValidator() after calling init()
     async init(lang = "en", metadataFormat = FORMAT.JSON_LD) {
+        if (lang === "de_es") lang = "de-x-es"
         this.lang = lang
         this.metadataFormat = metadataFormat
         this.defStore = storeFromTurtles([...this.turtles.datafields, ...this.turtles.definitions, ...this.turtles.materialization])
