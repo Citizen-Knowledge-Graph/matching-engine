@@ -37,18 +37,22 @@ before(async function () {
     globalThis.profileManager = pm
 })
 
-export async function addRpsFromKnowledgeBase(rpUris) {
+export async function addAllRpsFromKnowledgeBase() {
+    await addRpsFromKnowledgeBase(null, true)
+}
+
+export async function addRpsFromKnowledgeBase(rpUris, addAll = false) {
     const pathsInDir = async (dir) => (await promises.readdir(dir)).map(f => path.join(dir, f))
     let allRpPaths = [...await pathsInDir(`${repoDir}/shacl`), ...await pathsInDir(`${repoDir}/beta`), ...await pathsInDir(`${repoDir}/bielefeld/shacl`)]
     for (let path of allRpPaths) {
         let turtle = await promises.readFile(path, "utf8")
         let rpUri = extractFirstIndividualUriFromTurtle(turtle, "ff:RequirementProfile")
-        if (rpUris.includes(rpUri)) globalThis.matchingEngine.addRequirementProfileTurtle(turtle)
+        if (addAll || rpUris.includes(rpUri)) globalThis.matchingEngine.addRequirementProfileTurtle(turtle)
     }
     let allInfoPagePaths = await pathsInDir(`${repoDir}/bielefeld/info`)
     for (let path of allInfoPagePaths) {
         let turtle = await promises.readFile(path, "utf8")
         let rpUri = extractSubjectForPredicate(turtle, "ff:hasInfoContent")
-        if (rpUris.includes(rpUri)) globalThis.matchingEngine.addInfoPageTurtle(turtle)
+        if (addAll || rpUris.includes(rpUri)) globalThis.matchingEngine.addInfoPageTurtle(turtle)
     }
 }

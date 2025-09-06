@@ -112,6 +112,23 @@ export const QUERY_NUMBER_OF_MISSING_DATAFIELDS = (reportUri) => { return `
 
 // metadata
 
+export const QUERY_MATERIALIZE_LANGUAGE_TAGS = `
+    PREFIX ff: <https://foerderfunke.org/default#>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    PREFIX schema: <http://schema.org/>
+    INSERT {
+        ?subj ?pred ?labelDeEs .
+    } WHERE {
+        ?subj ?pred ?labelDe .
+        FILTER(?pred IN (rdfs:label, schema:question, rdfs:comment, ff:title, ff:benefitInfo, ff:ineligibleGeneralExplanation))
+        FILTER(LANG(?labelDe) = "de")
+        FILTER NOT EXISTS {
+            ?subj ?pred ?any .
+            FILTER(LANG(?any) = "de-x-es")
+        }
+        BIND(STRLANG(STR(?labelDe), "de-x-es") AS ?labelDeEs)
+    }`
+
 export const QUERY_METADATA_RPS = (rootUri, lang) => { return `
     PREFIX ff: <https://foerderfunke.org/default#>
     CONSTRUCT {
@@ -153,7 +170,7 @@ export const QUERY_METADATA_RPS = (rootUri, lang) => { return `
     }`
 }
 
-export const QUERY_METADATA_DFS = (rootUri, lang, specialLang) => { return `
+export const QUERY_METADATA_DFS = (rootUri, lang) => { return `
     PREFIX ff: <https://foerderfunke.org/default#>
     PREFIX sh: <http://www.w3.org/ns/shacl#>
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -178,24 +195,12 @@ export const QUERY_METADATA_DFS = (rootUri, lang, specialLang) => { return `
             ?df schema:category ?category .
         }
         OPTIONAL {
-            {
-                ?df schema:question ?question .
-                FILTER(LANG(?question) = "${specialLang}")
-            } UNION { 
-                ?df schema:question ?question .
-                FILTER(LANG(?question) = "${lang}")
-                FILTER NOT EXISTS { ?df schema:question ?q . FILTER(LANG(?q) = "${specialLang}") }
-            }
+            ?df schema:question ?question .
+            FILTER(LANG(?question) = "${lang}")
         }
         OPTIONAL {
-            {
-                ?df rdfs:comment ?comment .
-                FILTER(LANG(?comment) = "${specialLang}")
-            } UNION { 
-                ?df rdfs:comment ?comment .
-                FILTER(LANG(?comment) = "${lang}")
-                FILTER NOT EXISTS { ?df rdfs:comment ?q . FILTER(LANG(?q) = "${specialLang}") }
-            }
+            ?df rdfs:comment ?comment .
+            FILTER(LANG(?comment) = "${lang}")
         }
         OPTIONAL { 
             ?df ff:hasShaclShape ?shape .
