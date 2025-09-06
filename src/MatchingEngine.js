@@ -2,6 +2,7 @@ import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, 
 import { FORMAT, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_HASVALUE_FIX, QUERY_METADATA_RPS, QUERY_METADATA_DFS, QUERY_METADATA_DEFINITIONS, QUERY_INSERT_VALIDATION_REPORT_URI } from "./queries.js"
 import { RawGraph } from "./rule-graph/RawGraph.js"
 import { cleanGraph, EvalGraph } from "./rule-graph/EvalGraph.js"
+import { extractSubjectForPredicate } from "./utils.js";
 // import util from "util" // --> don't commit uncommented, causes "Module not found: Error: Can't resolve util" in the frontend
 
 export class MatchingEngine {
@@ -9,7 +10,8 @@ export class MatchingEngine {
     constructor() {
         this.turtles = {
             datafields: [], definitions: [], materialization: [], consistency: [],
-            requirementProfilesArr: [], requirementProfiles: {}
+            requirementProfilesArr: [], requirementProfiles: {},
+            infoPages: {}
         }
     }
     addDatafieldsTurtle(turtle) { this.turtles.datafields.push(turtle) }
@@ -17,6 +19,7 @@ export class MatchingEngine {
     addMaterializationTurtle(turtle) { this.turtles.materialization.push(turtle) }
     addConsistencyTurtle(turtle) { this.turtles.consistency.push(turtle) }
     addRequirementProfileTurtle(turtle) { this.turtles.requirementProfilesArr.push(turtle) }
+    addInfoPageTurtle(turtle) { this.turtles.infoPages[extractSubjectForPredicate(turtle, "ff:hasInfoContent")] = turtle }
 
     // no more addValidator() after calling init()
     async init(lang = "en", metadataFormat = FORMAT.JSON_LD) {
@@ -240,5 +243,13 @@ export class MatchingEngine {
         let rawGraph = new RawGraph(rpStore.getQuads())
         let ruleGraph = rawGraph.toRuleGraph()
         return cleanGraph(ruleGraph)
+    }
+
+    async buildInfoPage(upTurtle, rpUri) {
+        let validator = buildValidator(this.turtles.infoPages[rpUri])
+        let upDataset = datasetFromTurtles([upTurtle])
+        let report = await validator.validate({ dataset: upDataset })
+        console.log(await storeToTurtle(storeFromDataset(report.dataset)))
+        // TODO
     }
 }

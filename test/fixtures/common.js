@@ -4,6 +4,7 @@ import simpleGit from "simple-git"
 import { MatchingEngine } from "../../src/MatchingEngine.js"
 import { extractFirstIndividualUriFromTurtle } from "@foerderfunke/sem-ops-utils"
 import { ProfileManager } from "../../src/ProfileManager.js"
+import { extractSubjectForPredicate } from "../../src/utils.js"
 
 const repoDir = "test/fixtures/knowledge-base"
 
@@ -40,8 +41,14 @@ export async function addRpsFromKnowledgeBase(rpUris) {
     const pathsInDir = async (dir) => (await promises.readdir(dir)).map(f => path.join(dir, f))
     let allRpPaths = [...await pathsInDir(`${repoDir}/shacl`), ...await pathsInDir(`${repoDir}/beta`), ...await pathsInDir(`${repoDir}/bielefeld/shacl`)]
     for (let path of allRpPaths) {
-        let rpTurtle = await promises.readFile(path, "utf8")
-        let rpUri = extractFirstIndividualUriFromTurtle(rpTurtle, "ff:RequirementProfile")
-        if (rpUris.includes(rpUri)) globalThis.matchingEngine.addRequirementProfileTurtle(rpTurtle)
+        let turtle = await promises.readFile(path, "utf8")
+        let rpUri = extractFirstIndividualUriFromTurtle(turtle, "ff:RequirementProfile")
+        if (rpUris.includes(rpUri)) globalThis.matchingEngine.addRequirementProfileTurtle(turtle)
+    }
+    let allInfoPagePaths = await pathsInDir(`${repoDir}/bielefeld/info`)
+    for (let path of allInfoPagePaths) {
+        let turtle = await promises.readFile(path, "utf8")
+        let rpUri = extractSubjectForPredicate(turtle, "ff:hasInfoContent")
+        if (rpUris.includes(rpUri)) globalThis.matchingEngine.addInfoPageTurtle(turtle)
     }
 }
