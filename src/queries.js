@@ -112,23 +112,6 @@ export const QUERY_NUMBER_OF_MISSING_DATAFIELDS = (reportUri) => { return `
 
 // metadata
 
-export const QUERY_MATERIALIZE_LANGUAGE_TAGS = `
-    PREFIX ff: <https://foerderfunke.org/default#>
-    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-    PREFIX schema: <http://schema.org/>
-    INSERT {
-        ?subj ?pred ?labelDeEs .
-    } WHERE {
-        ?subj ?pred ?labelDe .
-        FILTER(?pred IN (rdfs:label, schema:question, rdfs:comment, ff:title, ff:benefitInfo, ff:ineligibleGeneralExplanation))
-        FILTER(LANG(?labelDe) = "de")
-        FILTER NOT EXISTS {
-            ?subj ?pred ?any .
-            FILTER(LANG(?any) = "de-x-es")
-        }
-        BIND(STRLANG(STR(?labelDe), "de-x-es") AS ?labelDeEs)
-    }`
-
 export const QUERY_METADATA_RPS = (rootUri, lang) => { return `
     PREFIX ff: <https://foerderfunke.org/default#>
     CONSTRUCT {

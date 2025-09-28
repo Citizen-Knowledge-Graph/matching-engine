@@ -1,5 +1,5 @@
 import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, newStore, addTurtleToStore, storeFromDataset, sparqlConstruct, storeToTurtle, sparqlSelect, addTriple, expand, a, datasetFromStore, storeToJsonLdObj, sparqlInsertDelete, formatTimestamp, addStoreToStore, sparqlAsk, buildValidatorFromDataset, datasetFromTurtles } from "@foerderfunke/sem-ops-utils"
-import { FORMAT, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_HASVALUE_FIX, QUERY_METADATA_RPS, QUERY_METADATA_DFS, QUERY_METADATA_DEFINITIONS, QUERY_INSERT_VALIDATION_REPORT_URI, QUERY_MATERIALIZE_LANGUAGE_TAGS } from "./queries.js"
+import { FORMAT, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_HASVALUE_FIX, QUERY_METADATA_RPS, QUERY_METADATA_DFS, QUERY_METADATA_DEFINITIONS, QUERY_INSERT_VALIDATION_REPORT_URI } from "./queries.js"
 import { RawGraph } from "./rule-graph/RawGraph.js"
 import { cleanGraph, EvalGraph } from "./rule-graph/EvalGraph.js"
 import { extractSubjectForPredicate } from "./utils.js";
@@ -27,7 +27,7 @@ export class MatchingEngine {
         this.lang = lang
         this.metadataFormat = metadataFormat
         this.defStore = storeFromTurtles([...this.turtles.datafields, ...this.turtles.definitions, ...this.turtles.materialization])
-        if (lang === "de-x-es") await sparqlInsertDelete(QUERY_MATERIALIZE_LANGUAGE_TAGS, this.defStore)
+        // if (lang === "de-x-es") await sparqlInsertDelete(QUERY_MATERIALIZE_LANGUAGE_TAGS, this.defStore)
         this.defDataset = datasetFromStore(this.defStore) // for grapoi
         this.datafieldsValidator = buildValidatorFromDataset(datasetFromTurtles(this.turtles.datafields))
         this.consistencyValidator = buildValidatorFromDataset(datasetFromTurtles(this.turtles.consistency))
@@ -49,7 +49,7 @@ export class MatchingEngine {
         let rootUri = expand("ff:metadata")
         addTriple(metadataStore, rootUri, a, expand("ff:MetadataExtraction"))
         addTriple(metadataStore, rootUri, expand("ff:hasLanguage"), this.lang)
-        if (lang === "de-x-es") await sparqlInsertDelete(QUERY_MATERIALIZE_LANGUAGE_TAGS, requirementProfilesStore)
+        // if (lang === "de-x-es") await sparqlInsertDelete(QUERY_MATERIALIZE_LANGUAGE_TAGS, requirementProfilesStore)
         await sparqlConstruct(QUERY_METADATA_RPS(rootUri, this.lang), [requirementProfilesStore], metadataStore)
         await sparqlConstruct(QUERY_METADATA_DFS(rootUri, this.lang), [this.defStore], metadataStore)
         await sparqlConstruct(QUERY_METADATA_DEFINITIONS(rootUri, this.lang), [this.defStore], metadataStore)
