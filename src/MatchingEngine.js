@@ -29,8 +29,8 @@ export class MatchingEngine {
         this.defStore = storeFromTurtles([...this.turtles.datafields, ...this.turtles.definitions, ...this.turtles.materialization])
         // if (lang === "de-x-es") await sparqlInsertDelete(QUERY_MATERIALIZE_LANGUAGE_TAGS, this.defStore)
         this.defDataset = datasetFromStore(this.defStore) // for grapoi
-        this.datafieldsValidator = buildValidatorFromDataset(datasetFromTurtles(this.turtles.datafields))
-        this.consistencyValidator = buildValidatorFromDataset(datasetFromTurtles(this.turtles.consistency))
+        // this.datafieldsValidator = buildValidatorFromDataset(datasetFromTurtles(this.turtles.datafields))
+        // this.consistencyValidator = buildValidatorFromDataset(datasetFromTurtles(this.turtles.consistency))
         let requirementProfilesStore = newStore()
         this.requirementProfileValidators = {}
         for (let rpTurtle of this.turtles.requirementProfilesArr) this.addValidator(rpTurtle, requirementProfilesStore)
@@ -117,9 +117,8 @@ export class MatchingEngine {
         if (materializedTriples > 0) {
             addTriple(reportStore, reportUri, expand("ff:materializedTriples"), materializedTriples)
         }
-        let upDataset = datasetFromStore(upStore)
-
-        // plausibility validation
+        return datasetFromStore(upStore)
+        /*// plausibility validation
         let dfReport = await this.datafieldsValidator.validate({ dataset: upDataset })
         addTriple(reportStore, reportUri, expand("ff:upPassesPlausibilityCheck"), dfReport.conforms)
         if (!dfReport.conforms) {
@@ -140,7 +139,7 @@ export class MatchingEngine {
             await sparqlInsertDelete(QUERY_INSERT_VALIDATION_REPORT_URI(reportName), lcReportStore)
             addStoreToStore(lcReportStore, reportStore)
         }
-        return upDataset
+        return upDataset*/
     }
 
     async matching(upTurtleOrDataset, rpUris, format, testMode = false, continueMissingDataDespiteConforming = false) {
