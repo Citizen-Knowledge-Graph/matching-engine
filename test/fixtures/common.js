@@ -21,20 +21,16 @@ before(async function () {
     }
 
     let me = await new MatchingEngine()
-    me.addDatafieldsTurtle(await promises.readFile(`${repoDir}/datafields.ttl`, "utf8"))
-    me.addDatafieldsTurtle(await promises.readFile(`${repoDir}/bielefeld/datafields-bielefeld.ttl`, "utf8"))
-    me.addDefinitionsTurtle(await promises.readFile(`${repoDir}/definitions.ttl`, "utf8"))
-    me.addMaterializationTurtle(await promises.readFile(`${repoDir}/materialization.ttl`, "utf8"))
-    me.addConsistencyTurtle(await promises.readFile(`${repoDir}/consistency.ttl`, "utf8"))
+    me.addDef(await promises.readFile(`${repoDir}/build/def.built.ttl`, "utf8"))
     globalThis.matchingEngine = me
 
-    let pm = new ProfileManager()
+    /*let pm = new ProfileManager()
     pm.addDatafieldsTurtle(await promises.readFile(`${repoDir}/datafields.ttl`, "utf8"))
     pm.addDatafieldsTurtle(await promises.readFile(`${repoDir}/bielefeld/datafields-bielefeld.ttl`, "utf8"))
     pm.addDefinitionsTurtle(await promises.readFile(`${repoDir}/definitions.ttl`, "utf8"))
     pm.addMaterializationTurtle(await promises.readFile(`${repoDir}/materialization.ttl`, "utf8"))
     pm.addConsistencyTurtle(await promises.readFile(`${repoDir}/consistency.ttl`, "utf8"))
-    globalThis.profileManager = pm
+    globalThis.profileManager = pm*/
 })
 
 export async function addAllRpsFromKnowledgeBase() {
@@ -42,17 +38,27 @@ export async function addAllRpsFromKnowledgeBase() {
 }
 
 export async function addRpsFromKnowledgeBase(rpUris, addAll = false) {
-    const pathsInDir = async (dir) => (await promises.readdir(dir)).map(f => path.join(dir, f))
-    let allRpPaths = [...await pathsInDir(`${repoDir}/shacl`), ...await pathsInDir(`${repoDir}/beta`), ...await pathsInDir(`${repoDir}/bielefeld/shacl`)]
+    const shaclDir1 = `${repoDir}/shacl`
+    const shaclDir2 = `${shaclDir1}/beta`
+    const shaclDir3 = `${shaclDir1}/bielefeld`
+    let allRpPaths = [
+        ...(await promises.readdir(shaclDir1)).filter(f => f.endsWith(".ttl")).map(f => path.join(shaclDir1, f)),
+        ...(await promises.readdir(shaclDir2)).filter(f => f.endsWith(".ttl")).map(f => path.join(shaclDir2, f)),
+        ...(await promises.readdir(shaclDir3)).filter(f => f.endsWith(".ttl")).map(f => path.join(shaclDir3, f))
+    ]
     for (let path of allRpPaths) {
         let turtle = await promises.readFile(path, "utf8")
+        if (addAll) {
+            globalThis.matchingEngine.addRequirementProfileTurtle(turtle)
+            continue
+        }
         let rpUri = extractFirstIndividualUriFromTurtle(turtle, "ff:RequirementProfile")
-        if (addAll || rpUris.includes(rpUri)) globalThis.matchingEngine.addRequirementProfileTurtle(turtle)
+        if (rpUris.includes(rpUri)) globalThis.matchingEngine.addRequirementProfileTurtle(turtle)
     }
-    let allInfoPagePaths = await pathsInDir(`${repoDir}/bielefeld/info`)
+    /*let allInfoPagePaths = await pathsInDir(`${repoDir}/bielefeld/info`)
     for (let path of allInfoPagePaths) {
         let turtle = await promises.readFile(path, "utf8")
         let rpUri = extractSubjectForPredicate(turtle, "ff:hasInfoContent")
         if (addAll || rpUris.includes(rpUri)) globalThis.matchingEngine.addInfoPageTurtle(turtle)
-    }
+    }*/
 }

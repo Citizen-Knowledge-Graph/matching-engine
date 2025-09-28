@@ -11,7 +11,7 @@ export class MatchingEngine {
         this.turtles = {
             datafields: [], definitions: [], materialization: [], consistency: [],
             requirementProfilesArr: [], requirementProfiles: {},
-            infoPages: {}
+            infoPages: {}, def: null
         }
     }
     addDatafieldsTurtle(turtle) { this.turtles.datafields.push(turtle) }
@@ -20,14 +20,14 @@ export class MatchingEngine {
     addConsistencyTurtle(turtle) { this.turtles.consistency.push(turtle) }
     addRequirementProfileTurtle(turtle) { this.turtles.requirementProfilesArr.push(turtle) }
     addInfoPageTurtle(turtle) { this.turtles.infoPages[extractSubjectForPredicate(turtle, "ff:hasInfoContent")] = turtle }
+    addDef(turtle) { this.turtles.def = turtle }
 
     // no more addValidator() after calling init()
     async init(lang = "en", metadataFormat = FORMAT.JSON_LD) {
         if (lang === "de_es") lang = "de-x-es"
         this.lang = lang
         this.metadataFormat = metadataFormat
-        this.defStore = storeFromTurtles([...this.turtles.datafields, ...this.turtles.definitions, ...this.turtles.materialization])
-        // if (lang === "de-x-es") await sparqlInsertDelete(QUERY_MATERIALIZE_LANGUAGE_TAGS, this.defStore)
+        this.defStore = storeFromTurtles([this.turtles.def])
         this.defDataset = datasetFromStore(this.defStore) // for grapoi
         // this.datafieldsValidator = buildValidatorFromDataset(datasetFromTurtles(this.turtles.datafields))
         // this.consistencyValidator = buildValidatorFromDataset(datasetFromTurtles(this.turtles.consistency))
@@ -49,7 +49,6 @@ export class MatchingEngine {
         let rootUri = expand("ff:metadata")
         addTriple(metadataStore, rootUri, a, expand("ff:MetadataExtraction"))
         addTriple(metadataStore, rootUri, expand("ff:hasLanguage"), this.lang)
-        // if (lang === "de-x-es") await sparqlInsertDelete(QUERY_MATERIALIZE_LANGUAGE_TAGS, requirementProfilesStore)
         await sparqlConstruct(QUERY_METADATA_RPS(rootUri, this.lang), [requirementProfilesStore], metadataStore)
         await sparqlConstruct(QUERY_METADATA_DFS(rootUri, this.lang), [this.defStore], metadataStore)
         await sparqlConstruct(QUERY_METADATA_DEFINITIONS(rootUri, this.lang), [this.defStore], metadataStore)

@@ -18,6 +18,6 @@ describe("testing metadata functionality", function () {
         // console.log(util.inspect(matchingEngine.metadata, false, null, true))
         //const json  = JSON.stringify(matchingEngine.metadata, null, 2)
         writeFileSync("./output.ttl", matchingEngine.metadata, "utf8")
-        console.log("Wrote output")
+        console.log("Wrote output.ttl")
     })
 })
