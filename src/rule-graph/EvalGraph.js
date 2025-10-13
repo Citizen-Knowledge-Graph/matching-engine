@@ -168,7 +168,7 @@ export const graphToMermaid = (graph, matchingEngine = null, printLabels = false
                     if (node.rule.values.length <= 1) {
                         label = `(${print("shInOne", lang)} ${datafieldToLabel(node.rule.values[0], matchingEngine, lang)}`
                     } else {
-                        label = `("${print("shInMultiple", lang)} [${node.rule.values.map(val => datafieldToLabel(val, matchingEngine, lang)).join(", ")}]"`
+                        label = `("${print("shInMultiple", lang)} ${node.rule.values.map(val => datafieldToLabel(val, matchingEngine, lang)).join(", ")}"`
                     }
                 } else {
                     label = `(${print(node.rule.type, lang)} ${node.rule.value}`
