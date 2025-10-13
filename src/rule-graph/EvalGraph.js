@@ -113,10 +113,28 @@ const datafieldToLabel = (shortenedDf, matchingEngine) => {
     return label
 }
 
+const dict = {
+    AND: { en: "AND", de: "UND" },
+    OR: { en: "OR", de: "ODER" },
+    NOT: { en: "NOT", de: "NICHT" },
+    shInMultiple: { en: "has to be one of", de: "muss eines davon sein" },
+    shInSingle: { en: "has to be", de: "muss sein" },
+    "sh:minExclusive": { en: "greater than", de: "größer als" },
+    "sh:maxExclusive": { en: "less than", de: "kleiner als" },
+    "sh:minInclusive": { en: "greater than or equal to", de: "größer gleich" },
+    "sh:maxInclusive": { en: "less than or equal to", de: "kleiner gleich" }
+}
+
+const print = (key, lang) => {
+    if (dict[key]) return dict[key][lang]
+    return key
+}
+
 // usable for RuleGraph and EvalGraph
 // to be called after cleanGraph(): rootNodes is expected to be an array
 // feature wish list: dotted lines around sh:deactivated shapes
 export const graphToMermaid = (graph, matchingEngine = null, printLabels = false, orientationVertical = true) => {
+    let lang = !matchingEngine ? "en" : (matchingEngine.lang === "en" ? "en" : "de")
     let lines = ["flowchart " + (orientationVertical ? "TD" : "LR")]
     const toLabel = (node) => {
         switch (node.type) {
@@ -126,11 +144,11 @@ export const graphToMermaid = (graph, matchingEngine = null, printLabels = false
                 if (graph.isEvalGraph) return `("${node.individual} (${classLabel})")`
                 return `(${classLabel})`
             case TYPE.AND:
-                return `(AND)`
+                return `(${print("AND", lang)})`
             case TYPE.OR:
-                return `(OR)`
+                return `(${print("OR", lang)})`
             case TYPE.NOT:
-                return `(NOT)`
+                return `(${print("NOT", lang)})`
             case TYPE.DATAFIELD:
                 if (printLabels) {
                     let label = datafieldToLabel(node.path, matchingEngine)
@@ -142,7 +160,7 @@ export const graphToMermaid = (graph, matchingEngine = null, printLabels = false
                 if (node.rule.type === "sh:in") {
                     label = `("${node.rule.type} [${node.rule.values.map(val => datafieldToLabel(val, matchingEngine)).join(", ")}]"`
                 } else {
-                    label = `(${node.rule.type} ${node.rule.value}`
+                    label = `(${print(node.rule.type, lang)} ${node.rule.value}`
                 }
                 if (!node.eval) return label + ")"
                 if (node.eval.message) {
