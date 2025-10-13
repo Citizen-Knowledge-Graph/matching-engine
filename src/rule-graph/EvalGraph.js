@@ -104,15 +104,15 @@ export const cleanGraph = (graph) => {
 }
 
 const dict = {
-    AND: { en: "AND", de: "UND" },
-    OR: { en: "OR", de: "ODER" },
-    NOT: { en: "NOT", de: "NICHT" },
+    AND: { en: "and", de: "und" },
+    OR: { en: "or", de: "entweder" },
+    NOT: { en: "can't be", de: "darf nicht sein" },
     shInMultiple: { en: "has to be one of:", de: "muss eines davon sein:" },
-    shInOne: { en: "has to be:", de: "muss sein:" },
+    shInOne: { en: "has to be:", de: "benötigt:" },
     "sh:minExclusive": { en: "greater than:", de: "größer als:" },
     "sh:maxExclusive": { en: "less than:", de: "kleiner als:" },
-    "sh:minInclusive": { en: "greater than or equal to:", de: "größer gleich:" },
-    "sh:maxInclusive": { en: "less than or equal to:", de: "kleiner gleich:" },
+    "sh:minInclusive": { en: "at least:", de: "mindestens:" },
+    "sh:maxInclusive": { en: "maximally:", de: "maximal:" },
     "sh:lessThan": { en: "less than the value of:", de: "kleiner als der Wert von:" },
     true: { en: "yes", de: "ja" },
     false: { en: "no", de: "nein" },
