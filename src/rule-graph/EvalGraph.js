@@ -1,4 +1,4 @@
-import { shrink, getRdf, expand } from "@foerderfunke/sem-ops-utils"
+import { getRdf, shrink } from "@foerderfunke/sem-ops-utils"
 import { TYPE } from "./RuleGraph.js"
 import grapoi from "grapoi"
 
@@ -103,26 +103,20 @@ export const cleanGraph = (graph) => {
     return graph
 }
 
-const datafieldToLabel = (shortenedDf, matchingEngine) => {
-    if (!matchingEngine) return shortenedDf
-    if (!shortenedDf.startsWith("ff:")) return shortenedDf // then it's a literal and not a datafield
-    let localName = shortenedDf.split(":").pop()
-    let label = grapoi({ dataset: matchingEngine.defDataset, term: ns.ff[localName] })
-        .out(ns.rdfs.label)
-        .best(getRdf().score.language([matchingEngine.lang]))?.value
-    return label
-}
-
 const dict = {
     AND: { en: "AND", de: "UND" },
     OR: { en: "OR", de: "ODER" },
     NOT: { en: "NOT", de: "NICHT" },
-    shInMultiple: { en: "has to be one of", de: "muss eines davon sein" },
-    shInSingle: { en: "has to be", de: "muss sein" },
-    "sh:minExclusive": { en: "greater than", de: "größer als" },
-    "sh:maxExclusive": { en: "less than", de: "kleiner als" },
-    "sh:minInclusive": { en: "greater than or equal to", de: "größer gleich" },
-    "sh:maxInclusive": { en: "less than or equal to", de: "kleiner gleich" }
+    shInMultiple: { en: "has to be one of:", de: "muss eines davon sein:" },
+    shInOne: { en: "has to be:", de: "muss sein:" },
+    "sh:minExclusive": { en: "greater than:", de: "größer als:" },
+    "sh:maxExclusive": { en: "less than:", de: "kleiner als:" },
+    "sh:minInclusive": { en: "greater than or equal to:", de: "größer gleich:" },
+    "sh:maxInclusive": { en: "less than or equal to:", de: "kleiner gleich:" },
+    "sh:lessThan": { en: "less than the value of:", de: "kleiner als der Wert von:" },
+    true: { en: "yes", de: "ja" },
+    false: { en: "no", de: "nein" },
+    "ff:Citizen": { en: "Citizen", de: "Bürger*in" }
 }
 
 const print = (key, lang) => {
@@ -130,11 +124,24 @@ const print = (key, lang) => {
     return key
 }
 
+const datafieldToLabel = (shortenedDf, matchingEngine, lang) => {
+    if (!matchingEngine) return shortenedDf
+    if (!shortenedDf.startsWith("ff:")) {
+        let key = shortenedDf.toLowerCase()
+        if (["true", "false"].includes(key)) return print(key, lang)
+        return shortenedDf
+    } // then it's a literal and not a datafield
+    let localName = shortenedDf.split(":").pop()
+    return grapoi({dataset: matchingEngine.defDataset, term: ns.ff[localName]})
+        .out(ns.rdfs.label)
+        .best(getRdf().score.language([lang]))?.value
+}
+
 // usable for RuleGraph and EvalGraph
 // to be called after cleanGraph(): rootNodes is expected to be an array
 // feature wish list: dotted lines around sh:deactivated shapes
 export const graphToMermaid = (graph, matchingEngine = null, printLabels = false, orientationVertical = true) => {
-    let lang = !matchingEngine ? "en" : (matchingEngine.lang === "en" ? "en" : "de")
+    let lang = !matchingEngine ? "en" : matchingEngine.lang
     let lines = ["flowchart " + (orientationVertical ? "TD" : "LR")]
     const toLabel = (node) => {
         switch (node.type) {
@@ -142,7 +149,7 @@ export const graphToMermaid = (graph, matchingEngine = null, printLabels = false
                 let classLabel = `${node.class}`
                 if (graph.containsPointersToTheseShapes.includes(node.nodeShapeUri)) classLabel += ` | ${shrink(node.nodeShapeUri)}`
                 if (graph.isEvalGraph) return `("${node.individual} (${classLabel})")`
-                return `(${classLabel})`
+                return `(${print(classLabel, lang)})`
             case TYPE.AND:
                 return `(${print("AND", lang)})`
             case TYPE.OR:
@@ -151,14 +158,18 @@ export const graphToMermaid = (graph, matchingEngine = null, printLabels = false
                 return `(${print("NOT", lang)})`
             case TYPE.DATAFIELD:
                 if (printLabels) {
-                    let label = datafieldToLabel(node.path, matchingEngine)
+                    let label = datafieldToLabel(node.path, matchingEngine, lang)
                     if (label) return `(${label})`
                 }
                 return `(${node.path})`
             case TYPE.RULE:
                 let label
                 if (node.rule.type === "sh:in") {
-                    label = `("${node.rule.type} [${node.rule.values.map(val => datafieldToLabel(val, matchingEngine)).join(", ")}]"`
+                    if (node.rule.values.length <= 1) {
+                        label = `(${print("shInOne", lang)} ${datafieldToLabel(node.rule.values[0], matchingEngine, lang)}`
+                    } else {
+                        label = `("${print("shInMultiple", lang)} [${node.rule.values.map(val => datafieldToLabel(val, matchingEngine, lang)).join(", ")}]"`
+                    }
                 } else {
                     label = `(${print(node.rule.type, lang)} ${node.rule.value}`
                 }
