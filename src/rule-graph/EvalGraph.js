@@ -148,7 +148,7 @@ export const graphToMermaid = (graph, matchingEngine = null, printLabels = false
             case TYPE.ROOT:
                 let classLabel = `${node.class}`
                 if (graph.containsPointersToTheseShapes.includes(node.nodeShapeUri)) classLabel += ` | ${shrink(node.nodeShapeUri)}`
-                if (graph.isEvalGraph) return `("${node.individual} (${classLabel})")`
+                if (graph.isEvalGraph) return `("${node.individual} (${print(classLabel, lang)})")`
                 return `(${print(classLabel, lang)})`
             case TYPE.AND:
                 return `(${print("AND", lang)})`
@@ -175,8 +175,8 @@ export const graphToMermaid = (graph, matchingEngine = null, printLabels = false
                 }
                 if (!node.eval) return label + ")"
                 if (node.eval.message) {
-                    label += `</br><span style="font-size:0.8em">${cleanMsg(node.eval.message)}`
-                    if (node.eval.value) label += `: ${node.eval.value}`
+                    label += `</br><span style="font-size:0.8em">value is`// ${cleanMsg(node.eval.message)}`
+                    if (node.eval.value) label += `: ${datafieldToLabel(node.eval.value, matchingEngine, lang)}`
                     label += "</span>"
                 }
                 return label + ")"
