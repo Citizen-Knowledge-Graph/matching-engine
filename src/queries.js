@@ -16,7 +16,7 @@ export const QUERY_HASVALUE_FIX = `
         ?result2 ?p ?o .
     } WHERE {
         # parentNode can be the blank root node of sh:ValidationReport or sh:detail
-        ?parentNode (sh:result | sh:detail) ?result1, ?result2 .
+        ?parentNode (sh:result | sh:detail)+ ?result1, ?result2 .
       
         ?result1 
             sh:focusNode ?focusNode ;
@@ -29,7 +29,7 @@ export const QUERY_HASVALUE_FIX = `
             sh:resultPath ?path ;
             sh:sourceConstraintComponent sh:HasValueConstraintComponent ;
             ?p ?o .
-}`
+    }`
 
 export const QUERY_ELIGIBILITY_STATUS = (rpEvalUri) => { return `
     PREFIX ff: <https://foerderfunke.org/default#>

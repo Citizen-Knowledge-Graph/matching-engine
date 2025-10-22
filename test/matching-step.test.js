@@ -129,6 +129,26 @@ describe("testing matching functionality via single calls", function () {
                     )
                 ] .`
         matchingEngine.addRequirementProfileTurtle(shacl)
+        shacl = `
+            @prefix sh: <http://www.w3.org/ns/shacl#> .
+            @prefix ff: <https://foerderfunke.org/default#> .
+
+            ff:hasValueTest a ff:RequirementProfile .
+
+            ff:hasValueTest_logic a sh:NodeShape ;
+                sh:targetClass ff:Citizen ;
+                sh:property [
+                    sh:or (
+                        [ sh:path ff:associationActivity ; sh:hasValue ff:associationActivity-youthWork ]
+                        [ sh:path ff:associationActivity ; sh:hasValue ff:associationActivity-womenSupport ]
+                    ) ;
+                ] .
+
+            ff:hasValueTest_flow a sh:NodeShape ;
+                sh:targetClass ff:Citizen ;
+                sh:property [ sh:path ff:associationActivity ; sh:minCount 1 ] .`
+        matchingEngine.addRequirementProfileTurtle(shacl)
+        // await addRpsFromKnowledgeBase([expand("ff:wolfenbuettel-stiftung")])
         await matchingEngine.init()
     })
 
@@ -256,6 +276,16 @@ describe("testing matching functionality via single calls", function () {
             SELECT * WHERE { ?matchingReport ff:hasNumberOfMissingDatafields ?numb . } `
         let rows = await sparqlSelect(query, [reportStore])
         strictEqual(rows[0].numb, "0", "The number of missing datafields is not 0 as expected")
+    })
+
+    it("should behave correctly with sh:hasValue", async function () {
+        let up = `
+            @prefix ff: <https://foerderfunke.org/default#> .
+            ff:mainPerson a ff:Citizen ;
+                ff:associationActivity ff:associationActivity-sports , ff:associationActivity-youthWork .`
+        let report = await matchingEngine.matching(up, [expand("ff:hasValueTest")], FORMAT.TURTLE, true)
+        console.log(report) // has to be eligible
+        // if commenting out everything but "ff:mainPerson a ff:Citizen" it has to be missing data, thanks to QUERY_HASVALUE_FIX
     })
 
     // test sh:alternativePath TODO
