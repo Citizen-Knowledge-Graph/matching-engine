@@ -114,6 +114,7 @@ const dict = {
     "sh:minInclusive": { en: "at least:", de: "mindestens:" },
     "sh:maxInclusive": { en: "maximally:", de: "maximal:" },
     "sh:lessThan": { en: "less than the value of:", de: "kleiner als der Wert von:" },
+    "sh:hasValue": { en: "must have this value:", de: "muss diesen Wert haben:" },
     true: { en: "yes", de: "ja" },
     false: { en: "no", de: "nein" },
     "ff:Citizen": { en: "Citizen", de: "Bürger*in" }
