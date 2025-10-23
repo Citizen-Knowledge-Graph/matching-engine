@@ -128,6 +128,7 @@ export const QUERY_METADATA_RPS = (rootUri, lang) => { return `
             ff:providingAgency ?providingAgency ;
             ff:legalBasis ?legalBasis ;
             ff:tag ?tag ;
+            ff:targetClass ?targetClass ;
             ff:hasHowBpmn ?howBpmn .
     } WHERE {
         ?rpUri a ff:RequirementProfile .
@@ -151,6 +152,7 @@ export const QUERY_METADATA_RPS = (rootUri, lang) => { return `
         OPTIONAL { ?rpUri ff:providingAgency ?providingAgency } .
         OPTIONAL { ?rpUri ff:legalBasis ?legalBasis } .
         OPTIONAL { ?rpUri ff:tag ?tag } .
+        OPTIONAL { ?rpUri ff:targetClass ?targetClass } .
         OPTIONAL { ?rpUri ff:hasHowBpmn ?howBpmn } .
     }`
 }
