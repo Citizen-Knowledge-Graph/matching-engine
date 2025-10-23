@@ -2,7 +2,7 @@ import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, 
 import { FORMAT, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_HASVALUE_FIX, QUERY_METADATA_RPS, QUERY_METADATA_DFS, QUERY_METADATA_DEFINITIONS, QUERY_INSERT_VALIDATION_REPORT_URI } from "./queries.js"
 import { RawGraph } from "./rule-graph/RawGraph.js"
 import { cleanGraph, EvalGraph } from "./rule-graph/EvalGraph.js"
-import { extractSubjectForPredicate } from "./utils.js";
+import { extractSubjectForPredicate, logPerf } from "./utils.js";
 // import util from "util" // --> don't commit uncommented, causes "Module not found: Error: Can't resolve util" in the frontend
 
 export class MatchingEngine {
@@ -13,6 +13,7 @@ export class MatchingEngine {
             requirementProfilesArr: [], requirementProfiles: {},
             infoPages: {}, def: null
         }
+        this.logPerf = false
     }
     addDatafieldsTurtle(turtle) { this.turtles.datafields.push(turtle) }
     addDefinitionsTurtle(turtle) { this.turtles.definitions.push(turtle) }
@@ -21,38 +22,60 @@ export class MatchingEngine {
     addRequirementProfileTurtle(turtle) { this.turtles.requirementProfilesArr.push(turtle) }
     addInfoPageTurtle(turtle) { this.turtles.infoPages[extractSubjectForPredicate(turtle, "ff:hasInfoContent")] = turtle }
     addDef(turtle) { this.turtles.def = turtle }
+    turnOnPerformanceLogging() { this.logPerf = true }
 
     // no more addValidator() after calling init()
     async init(lang = "en", metadataFormat = FORMAT.JSON_LD) {
+        const initStart = performance.now()
         if (lang === "de_es") lang = "de-x-es"
         this.lang = lang
         this.metadataFormat = metadataFormat
+        const buildDefStoreStart = performance.now()
         this.defStore = storeFromTurtles([this.turtles.def])
+        if (this.logPerf) logPerf("init.buildDefStore", buildDefStoreStart)
+        const dsFromDefStoreStart = performance.now()
         this.defDataset = datasetFromStore(this.defStore) // for grapoi
+        if (this.logPerf) logPerf("init.datasetFromDefStore", dsFromDefStoreStart)
         // this.datafieldsValidator = buildValidatorFromDataset(datasetFromTurtles(this.turtles.datafields))
         // this.consistencyValidator = buildValidatorFromDataset(datasetFromTurtles(this.turtles.consistency))
         let requirementProfilesStore = newStore()
         this.requirementProfileValidators = {}
+        const addValidatorsStart = performance.now()
         for (let rpTurtle of this.turtles.requirementProfilesArr) this.addValidator(rpTurtle, requirementProfilesStore)
+        if (this.logPerf) logPerf("init.addValidators", addValidatorsStart)
         // materialization queries
         this.matQueries = {}
         let query = `
             PREFIX ff: <https://foerderfunke.org/default#>
             SELECT * WHERE { ?uri ff:sparqlConstructQuery ?query . }`
+        const extractMatQueriesStart = performance.now()
         let rows = await sparqlSelect(query, [this.defStore])
-        for (let row of rows) {
-            this.matQueries[row.uri] = row.query
-        }
+        for (let row of rows) this.matQueries[row.uri] = row.query
+        if (this.logPerf) logPerf("init.extractMaterializationQueries", extractMatQueriesStart)
         // metadata
         this.metadata = {}
         let metadataStore = newStore()
         let rootUri = expand("ff:metadata")
         addTriple(metadataStore, rootUri, a, expand("ff:MetadataExtraction"))
         addTriple(metadataStore, rootUri, expand("ff:hasLanguage"), this.lang)
+        const constructMetadataStart = performance.now()
         await sparqlConstruct(QUERY_METADATA_RPS(rootUri, this.lang === "de-x-es" ? "de" : this.lang), [requirementProfilesStore], metadataStore)
+        if (this.logPerf) logPerf("init.constructMetadataRPs", constructMetadataStart)
+        const constructMetadataDFsStart = performance.now()
         await sparqlConstruct(QUERY_METADATA_DFS(rootUri, this.lang), [this.defStore], metadataStore)
+        if (this.logPerf) logPerf("init.constructMetadataDFs", constructMetadataDFsStart)
+        const constructMetadataDefStart = performance.now()
         await sparqlConstruct(QUERY_METADATA_DEFINITIONS(rootUri, this.lang), [this.defStore], metadataStore)
+        if (this.logPerf) {
+            logPerf("init.constructMetadataDef", constructMetadataDefStart)
+            logPerf("init.constructMetadata sum", constructMetadataStart)
+        }
+        const metadataFormatStart = performance.now()
         this.metadata = this.metadataFormat === FORMAT.JSON_LD ? await storeToJsonLdObj(metadataStore, ["ff:MetadataExtraction"]) : await storeToTurtle(metadataStore)
+        if (this.logPerf) {
+            logPerf("init.metadataFormatting", metadataFormatStart)
+            logPerf("init sum", initStart)
+        }
         return this
     }
 

@@ -7,3 +7,7 @@ export function extractSubjectForPredicate(turtle, predicate) {
     console.error(`Could not extract subject for predicate ${predicate} from turtle string`)
     return ""
 }
+
+export function logPerf(label, start) {
+    console.log(`${label} took: ${Math.round(performance.now() - start)} ms`)
+}

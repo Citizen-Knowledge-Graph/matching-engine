@@ -1,16 +1,19 @@
 import "./fixtures/common.js"
 import { describe } from "mocha"
 import { deepStrictEqual } from "node:assert"
+import { addAllRpsFromKnowledgeBase } from "./fixtures/common.js"
 
-describe.skip("basic tests", function () {
+describe("basic tests", function () {
     let matchingEngine
 
     before(async function () {
         matchingEngine = globalThis.matchingEngine
+        await addAllRpsFromKnowledgeBase()
+        matchingEngine.turnOnPerformanceLogging()
         await matchingEngine.init()
     })
 
-    it("matchingEngine object should have correct keys", function () {
+    it.skip("matchingEngine object should have correct keys", function () {
         const expectedKeys = [
             "defStore",
             "datafieldsValidator",
@@ -25,5 +28,9 @@ describe.skip("basic tests", function () {
         ]
         deepStrictEqual(
             Object.keys(matchingEngine), expectedKeys, "The matchingEngine object does not have the expected keys")
+    })
+
+    it("performance logging should work", async function () {
+        console.log("^ already done in before()")
     })
 })
