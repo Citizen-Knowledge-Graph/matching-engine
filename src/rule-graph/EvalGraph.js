@@ -203,8 +203,8 @@ export const graphToMermaid = (graph, matchingEngine = null, printLabels = false
         char = incrementChar(char)
     }
     if (graph.isEvalGraph) {
-        lines.push("classDef ok fill:#2ecc71,stroke:#0e8046,stroke-width:2px")
-        lines.push("classDef violation fill:#ff4136,stroke:#ad0e05,stroke-width:2px")
+        lines.push("classDef ok fill:#0BAF12, fill-opacity:0.2,stroke:#0BAF12,stroke-width:2px")
+        lines.push("classDef violation fill:#FF0000,fill-opacity:0.2,stroke:#FF0000,stroke-width:2px")
         lines.push("classDef missing fill:#d9d9d9,stroke:#6e6e6e,stroke-width:2px")
     }
     return lines.join("\n")
