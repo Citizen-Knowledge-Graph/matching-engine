@@ -117,7 +117,8 @@ const dict = {
     "sh:hasValue": { en: "must have this value:", de: "muss diesen Wert haben:" },
     true: { en: "yes", de: "ja" },
     false: { en: "no", de: "nein" },
-    "ff:Citizen": { en: "Citizen", de: "Bürger*in" }
+    "ff:Citizen": { en: "Citizen", de: "Bürger*in" },
+    valueIs: { en: "value is", de: "Wert ist" }
 }
 
 const print = (key, lang) => {
@@ -176,7 +177,7 @@ export const graphToMermaid = (graph, matchingEngine = null, printLabels = false
                 }
                 if (!node.eval) return label + ")"
                 if (node.eval.message) {
-                    label += `</br><span style="font-size:0.8em">value is`// ${cleanMsg(node.eval.message)}`
+                    label += `</br><span style="font-size:0.8em">${print("valueIs", lang)}`// ${cleanMsg(node.eval.message)}`
                     if (node.eval.value) label += `: ${datafieldToLabel(node.eval.value, matchingEngine, lang)}`
                     label += "</span>"
                 }
