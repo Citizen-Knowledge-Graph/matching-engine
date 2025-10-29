@@ -1,5 +1,5 @@
-import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, newStore, addTurtleToStore, storeFromDataset, sparqlConstruct, storeToTurtle, sparqlSelect, addTriple, expand, a, datasetFromStore, storeToJsonLdObj, sparqlInsertDelete, formatTimestamp, addStoreToStore, sparqlAsk, buildValidatorFromDataset, datasetFromTurtles } from "@foerderfunke/sem-ops-utils"
-import { FORMAT, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_HASVALUE_FIX, QUERY_METADATA_RPS, QUERY_METADATA_DFS, QUERY_METADATA_DEFINITIONS, QUERY_GET_ALL_DFS } from "./queries.js"
+import { buildValidator, extractFirstIndividualUriFromTurtle, storeFromTurtles, turtleToDataset, newStore, addTurtleToStore, storeFromDataset, sparqlConstruct, storeToTurtle, sparqlSelect, addTriple, expand, a, datasetFromStore, storeToJsonLdObj, sparqlInsertDelete, formatTimestamp, sparqlAsk, buildValidatorFromDataset, datasetFromTurtles } from "@foerderfunke/sem-ops-utils"
+import { FORMAT, QUERY_ELIGIBILITY_STATUS, QUERY_MISSING_DATAFIELDS, QUERY_NUMBER_OF_MISSING_DATAFIELDS, QUERY_TOP_MISSING_DATAFIELD, QUERY_HASVALUE_FIX, QUERY_METADATA_RPS, QUERY_METADATA_DFS, QUERY_METADATA_DEFINITIONS, QUERY_GET_ALL_DFS, QUERY_GET_DF_DETAILS, QUERY_GET_DF_ANSWER_OPTIONS } from "./queries.js"
 import { RawGraph } from "./rule-graph/RawGraph.js"
 import { cleanGraph, EvalGraph } from "./rule-graph/EvalGraph.js"
 import { extractSubjectForPredicate, logPerf } from "./utils.js";
@@ -98,6 +98,15 @@ export class MatchingEngine {
     async getAllDatafieldUris() {
         let rows = await sparqlSelect(QUERY_GET_ALL_DFS(this.lang), [this.defStore])
         return rows.map(row => ({ datafield: row.df, label: row.label }))
+    }
+
+    async getDetailsForDatafield(dfUri) {
+        let details = await sparqlSelect(QUERY_GET_DF_DETAILS(dfUri, this.lang), [this.defStore])
+        details = details[0] || {}
+        let options = await sparqlSelect(QUERY_GET_DF_ANSWER_OPTIONS(dfUri, this.lang), [this.defStore])
+        details.answerOptions = options || {}
+        details.datafield = dfUri
+        return details
     }
 
     async basicValidation(upTurtle, rpUri) {

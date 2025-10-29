@@ -270,3 +270,62 @@ export const QUERY_GET_ALL_DFS = (lang) => { return `
         FILTER NOT EXISTS { ?df a ff:MaterializableDataField . }
     }`
 }
+
+export const QUERY_GET_DF_DETAILS = (dfUri, lang) => { return `
+    PREFIX ff: <https://foerderfunke.org/default#>
+    PREFIX sh: <http://www.w3.org/ns/shacl#>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    PREFIX schema: <http://schema.org/>
+    SELECT 
+        ?label
+        ?category
+        ?question
+        ?comment
+        ?datatype
+    WHERE {
+        VALUES ?df { <${dfUri}> } .
+        ?df a ff:DataField .
+        ?df rdfs:label ?label .
+        FILTER (lang(?label) = "${lang}")
+        OPTIONAL {
+            ?df schema:category ?category .
+        }
+        OPTIONAL {
+            ?df schema:question ?question .
+            FILTER(LANG(?question) = "${lang}")
+        }
+        OPTIONAL {
+            ?df rdfs:comment ?comment .
+            FILTER(LANG(?comment) = "${lang}")
+        }
+        OPTIONAL { 
+            ?df ff:hasShaclShape ?shape .
+            ?shape sh:property ?ps .
+            OPTIONAL { ?ps sh:datatype ?dt }
+            OPTIONAL { ?ps sh:maxCount ?maxCount }
+            BIND(COALESCE(?dt, IF(BOUND(?maxCount), ff:selection, ff:selection_multiple)) AS ?datatype)
+        }
+    }`
+}
+
+export const QUERY_GET_DF_ANSWER_OPTIONS = (dfUri, lang) => { return `
+    PREFIX ff: <https://foerderfunke.org/default#>
+    PREFIX sh: <http://www.w3.org/ns/shacl#>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    SELECT 
+        ?option
+        ?optionLabel
+    WHERE {
+        VALUES ?df { <${dfUri}> } .
+        ?df a ff:DataField .
+        OPTIONAL { 
+            ?df ff:hasShaclShape ?shape .
+            ?shape sh:property ?ps .
+            ?ps sh:in/rdf:rest*/rdf:first ?option .
+            ?option rdfs:label ?optionLabel .
+            FILTER(lang(?optionLabel) = "${lang}")
+        }
+    }`
+}
