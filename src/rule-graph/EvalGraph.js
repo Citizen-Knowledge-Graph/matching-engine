@@ -103,7 +103,7 @@ export const cleanGraph = (graph) => {
     return graph
 }
 
-const dict = {
+export const dict = {
     AND: { en: "and", de: "und" },
     OR: { en: "or", de: "entweder" },
     NOT: { en: "can't be", de: "darf nicht sein" },
@@ -118,15 +118,19 @@ const dict = {
     true: { en: "yes", de: "ja" },
     false: { en: "no", de: "nein" },
     "ff:Citizen": { en: "Citizen", de: "Bürger*in" },
-    valueIs: { en: "value is", de: "Wert ist" }
+    valueIs: { en: "value is", de: "Wert ist" },
+    actualValueKnown: { en: "but it is:", de: "aber es ist:" },
+    actualValueUnknown: { en: "but it is not", de: "aber er ist es nicht" }
 }
 
-const print = (key, lang) => {
-    if (dict[key]) return dict[key][lang]
-    return key
+export const print = (key, lang, includeColon = true) => {
+    if (!dict[key]) return key
+    let val = dict[key][lang]
+    if (!includeColon && val.endsWith(":")) val = val.slice(0, -1)
+    return val
 }
 
-const datafieldToLabel = (shortenedDf, matchingEngine, lang) => {
+export const datafieldToLabel = (shortenedDf, matchingEngine, lang) => {
     if (!matchingEngine) return shortenedDf
     if (!shortenedDf.startsWith("ff:")) {
         let key = shortenedDf.toLowerCase()
