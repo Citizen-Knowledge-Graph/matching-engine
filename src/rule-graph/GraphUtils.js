@@ -21,7 +21,7 @@ export const violationsToText = (evalGraph, matchingEngine) => {
                 str += `${print(node.rule.type, lang, false)} ${node.rule.value}`
             }
             if (node.eval.value) {
-                str += ` ${print("actualValueKnown", lang, false)} "${datafieldToLabel(node.eval.value)}".`
+                str += ` ${print("actualValueKnown", lang, false)} "${datafieldToLabel(node.eval.value, matchingEngine, lang)}".`
             } else {
                 str += ` ${print("actualValueUnknown", lang)}.`
             }
