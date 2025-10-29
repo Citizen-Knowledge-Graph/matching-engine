@@ -148,7 +148,8 @@ describe.skip("rule graph", function () {
             expand("ff:wohngeld"),
             expand("ff:uebergangsgeld"),
             expand("ff:bafoeg"),
-            expand("ff:schwerbehindertenausweis")
+            expand("ff:schwerbehindertenausweis"),
+            expand("ff:wolfenbuettel-stiftung-organisation"),
         ])
         await matchingEngine.init()
     })
@@ -265,6 +266,15 @@ describe.skip("rule graph", function () {
             ff:mainPerson a ff:Citizen .`
         let evalGraph = await matchingEngine.buildEvaluationGraph(up, expand("ff:schwerbehindertenausweis"))
         console.log(graphToMermaid(evalGraph))
+        // TODO
+    })
+
+    it("should build correct eval-graph for ff:wolfenbuettel-stiftung-organisation", async function () {
+        const up = `
+            @prefix ff: <https://foerderfunke.org/default#> .
+            ff:mainPerson a ff:Citizen .`
+        let evalGraph = await matchingEngine.buildEvaluationGraph(up, expand("ff:wolfenbuettel-stiftung-organisation"))
+        console.log(graphToMermaid(evalGraph, matchingEngine, true))
         // TODO
     })
 })
