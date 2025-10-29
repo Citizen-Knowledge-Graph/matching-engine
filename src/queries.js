@@ -259,3 +259,14 @@ export const QUERY_INSERT_VALIDATION_REPORT_URI = (validationReportUri) => { ret
             ?p ?o .
     }`
 }
+
+export const QUERY_GET_ALL_DFS = (lang) => { return `
+    PREFIX ff: <https://foerderfunke.org/default#>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    SELECT ?df ?label WHERE {
+        ?df a ff:DataField ;
+            rdfs:label ?label .
+        FILTER (lang(?label) = "${lang}")
+        FILTER NOT EXISTS { ?df a ff:MaterializableDataField . }
+    }`
+}

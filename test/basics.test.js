@@ -33,4 +33,9 @@ describe("basic tests", function () {
     it("performance logging should work", async function () {
         console.log("^ already done in before()")
     })
+
+    it("should get all datafields", async function () {
+        let dfUris = await matchingEngine.getAllDatafieldUris()
+        console.log(dfUris, dfUris.length)
+    })
 })
