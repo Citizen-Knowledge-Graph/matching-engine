@@ -15,7 +15,7 @@ export const violationsToText = (evalGraph, matchingEngine) => {
                 if (node.rule.values.length <= 1) {
                     str += `${print("shInOne", lang, false)} "${datafieldToLabel(node.rule.values[0], matchingEngine, lang)}"`
                 } else {
-                    str += `${print("shInMultiple", lang, false)} "${node.rule.values.map(val => datafieldToLabel(val, matchingEngine, lang)).join(", ")}"`
+                    str += `${print("shInMultiple", lang, true)} "${node.rule.values.map(val => datafieldToLabel(val, matchingEngine, lang)).join(", ")}"`
                 }
             } else {
                 str += `${print(node.rule.type, lang, false)} ${node.rule.value}`
