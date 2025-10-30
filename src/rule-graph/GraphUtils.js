@@ -10,7 +10,7 @@ export const violationsToText = (evalGraph, matchingEngine) => {
     const descend = (node, parent) => {
         if (node.type === TYPE.RULE && node.eval.status === STATUS.VIOLATION) {
             let datafield = parent.path
-            let str = `The value of "${datafieldToLabel(datafield, matchingEngine, lang)}" `
+            let str = `${print("theValueOf", lang)} "${datafieldToLabel(datafield, matchingEngine, lang)}" `
             if (node.rule.type === "sh:in") { // reuse same method as in graphToMermaid for deduplicating code?
                 if (node.rule.values.length <= 1) {
                     str += `${print("shInOne", lang, false)} "${datafieldToLabel(node.rule.values[0], matchingEngine, lang)}"`

@@ -120,7 +120,8 @@ export const dict = {
     "ff:Citizen": { en: "Citizen", de: "Bürger*in" },
     valueIs: { en: "value is", de: "Wert ist" },
     actualValueKnown: { en: "but it is:", de: "aber es ist:" },
-    actualValueUnknown: { en: "but it is not", de: "aber er ist es nicht" }
+    actualValueUnknown: { en: "but it is not", de: "aber er ist es nicht" },
+    theValueOf: { en: "The value of", de: "Der Wert von" }
 }
 
 export const print = (key, lang, includeColon = true) => {
