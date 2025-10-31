@@ -191,13 +191,19 @@ export const graphToMermaid = (graph, matchingEngine = null, printLabels = false
                 throw new Error(`Unknown node type: ${node.type}`)
         }
     }
-    const walk = (node, char) => {
+    const walk = (node, parent, char) => {
         let nodeId = `${char}${node.id}`
         lines.push(`${nodeId}${toLabel(node)}`)
-        if (graph.isEvalGraph && node.eval) lines.push(`class ${nodeId} ${node.eval.status}`)
+        if (graph.isEvalGraph && node.eval) {
+            let colorClass = node.eval.status
+            if (node.eval.status === STATUS.VIOLATION && parent && parent.type === TYPE.NOT) {
+                colorClass = "invertedViolation"
+            }
+            lines.push(`class ${nodeId} ${colorClass}`)
+        }
         for (let child of node.children || []) {
             lines.push(`${nodeId} --> ${char}${child.id}`)
-            walk(child, char)
+            walk(child, node, char)
         }
     }
     const incrementChar = (char) => {
@@ -205,12 +211,13 @@ export const graphToMermaid = (graph, matchingEngine = null, printLabels = false
     }
     let char = "A"
     for (let rootNode of graph.rootNodes) {
-        walk(rootNode, char)
+        walk(rootNode, null, char)
         char = incrementChar(char)
     }
     if (graph.isEvalGraph) {
         lines.push("classDef ok fill:#0BAF12, fill-opacity:0.2,stroke:#0BAF12,stroke-width:2px")
         lines.push("classDef violation fill:#FF0000,fill-opacity:0.2,stroke:#FF0000,stroke-width:2px")
+        lines.push("classDef invertedViolation fill:#FFFF00,fill-opacity:0.2,stroke:#CCAA00,stroke-width:2px")
         lines.push("classDef missing fill:#d9d9d9,stroke:#6e6e6e,stroke-width:2px")
     }
     return lines.join("\n")

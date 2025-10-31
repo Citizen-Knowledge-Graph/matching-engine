@@ -150,6 +150,7 @@ describe.skip("rule graph", function () {
             expand("ff:bafoeg"),
             expand("ff:schwerbehindertenausweis"),
             expand("ff:wolfenbuettel-stiftung-organisation"),
+            expand("ff:arbeitslosengeld"),
         ])
         await matchingEngine.init()
     })
@@ -276,5 +277,14 @@ describe.skip("rule graph", function () {
         let evalGraph = await matchingEngine.buildEvaluationGraph(up, expand("ff:wolfenbuettel-stiftung-organisation"))
         console.log(graphToMermaid(evalGraph, matchingEngine, true))
         // TODO
+    })
+
+    it("should render yellow for violation that gets inverted", async function () {
+        const up = `
+            @prefix ff: <https://foerderfunke.org/default#> .
+            ff:mainPerson a ff:Citizen ;
+                ff:workAbility ff:workAbility-limited .`
+        let evalGraph = await matchingEngine.buildEvaluationGraph(up, expand("ff:arbeitslosengeld"))
+        console.log(graphToMermaid(evalGraph, matchingEngine, true))
     })
 })
