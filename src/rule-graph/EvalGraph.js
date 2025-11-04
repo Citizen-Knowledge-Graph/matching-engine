@@ -121,7 +121,9 @@ export const dict = {
     valueIs: { en: "value is", de: "Wert ist" },
     actualValueKnown: { en: "but it is:", de: "aber es ist:" },
     actualValueUnknown: { en: "but it is not", de: "aber er ist es nicht" },
-    theValueOf: { en: "The value of", de: "Der Wert von" }
+    theValueOf: { en: "The value of", de: "Der Wert von" },
+    rootNodeRuleGraph: { en: "Citizen" , de: "Bürger*in" },
+    rootNodeEvalGraph: { en: "Your profile", de: "Ihr Profil" }
 }
 
 export const print = (key, lang, includeColon = true) => {
@@ -153,10 +155,9 @@ export const graphToMermaid = (graph, matchingEngine = null, printLabels = false
     const toLabel = (node) => {
         switch (node.type) {
             case TYPE.ROOT:
-                let classLabel = `${node.class}`
-                if (graph.containsPointersToTheseShapes.includes(node.nodeShapeUri)) classLabel += ` | ${shrink(node.nodeShapeUri)}`
-                if (graph.isEvalGraph) return `("${node.individual} (${print(classLabel, lang)})")`
-                return `(${print(classLabel, lang)})`
+                // let classLabel = `${node.class}`
+                // if (graph.containsPointersToTheseShapes.includes(node.nodeShapeUri)) classLabel += ` | ${shrink(node.nodeShapeUri)}`
+                return `(${print(graph.isEvalGraph ? "rootNodeEvalGraph" : "rootNodeRuleGraph", lang)})`
             case TYPE.AND:
                 return `(${print("AND", lang)})`
             case TYPE.OR:
