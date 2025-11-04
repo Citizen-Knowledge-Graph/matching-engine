@@ -17,8 +17,8 @@ export const violationsToText = (evalGraph, matchingEngine) => {
 
     const descend = (node, parent) => {
         if (node.type === TYPE.RULE && node.eval.status === STATUS.VIOLATION) {
-            let datafield = parent ? parent.path : ""
-            let label = datafieldToLabel(datafield, matchingEngine, lang)
+            const datafield = parent ? parent.path : ""
+            const label = datafieldToLabel(datafield, matchingEngine, lang)
             let str = ""
 
             if (node.rule.type === "sh:in") {
@@ -33,40 +33,41 @@ export const violationsToText = (evalGraph, matchingEngine) => {
                     if (expectedLabels.length === 1) {
                         const expected = expectedLabels[0]
                         if (actualLabel) {
-                            str = `„${label}“ ist mit „${actualLabel}“ angegeben, erwartet wird jedoch „${expected}“.`
+                            str = `<strong>${label}</strong> ist mit <strong>${actualLabel}</strong> angegeben, erwartet wird jedoch <strong>${expected}</strong>.`
                         } else {
-                            str = `Für „${label}“ wird „${expected}“ erwartet, ein Wert ist jedoch nicht angegeben.`
+                            str = `Für <strong>${label}</strong> wird <strong>${expected}</strong> erwartet, ein Wert ist jedoch nicht angegeben.`
                         }
                     } else {
                         const expectedJoined = joinList(expectedLabels, lang)
                         if (actualLabel) {
-                            str = `„${label}“ ist mit „${actualLabel}“ angegeben, erwartet wird jedoch einer der Werte: ${expectedJoined}.`
+                            str = `<strong>${label}</strong> ist mit <strong>${actualLabel}</strong> angegeben, erwartet wird jedoch einer der Werte: <strong>${expectedJoined}</strong>.`
                         } else {
-                            str = `Für „${label}“ wird einer der folgenden Werte erwartet: ${expectedJoined}, ein Wert ist jedoch nicht angegeben.`
+                            str = `Für <strong>${label}</strong> wird einer der folgenden Werte erwartet: <strong>${expectedJoined}</strong>, ein Wert ist jedoch nicht angegeben.`
                         }
                     }
                 } else {
                     if (expectedLabels.length === 1) {
                         const expected = expectedLabels[0]
                         if (actualLabel) {
-                            str = `“${label}” is given as “${actualLabel}”, but “${expected}” is required.`
+                            str = `<strong>${label}</strong> is given as <strong>${actualLabel}</strong>, but <strong>${expected}</strong> is required.`
                         } else {
-                            str = `A value of “${expected}” is required for “${label}”, but none is given.`
+                            str = `A value of <strong>${expected}</strong> is required for <strong>${label}</strong>, but none is given.`
                         }
                     } else {
                         const expectedJoined = joinList(expectedLabels, lang)
                         if (actualLabel) {
-                            str = `“${label}” is given as “${actualLabel}”, but one of the following is required: ${expectedJoined}.`
+                            str = `<strong>${label}</strong> is given as <strong>${actualLabel}</strong>, but one of the following is required: <strong>${expectedJoined}</strong>.`
                         } else {
-                            str = `One of the following is required for “${label}”: ${expectedJoined}, but no value is given.`
+                            str = `One of the following is required for <strong>${label}</strong>: <strong>${expectedJoined}</strong>, but no value is given.`
                         }
                     }
                 }
             } else {
-                str = `${print("theValueOf", lang)} "${label}" `
+                // fallback for non-sh:in rules, keep style consistent
+                str = `${print("theValueOf", lang)} <strong>${label}</strong> `
                 str += `${print(node.rule.type, lang, false)} ${node.rule.value}`
                 if (node.eval.value) {
-                    str += `, ${print("actualValueKnown", lang, false)} "${datafieldToLabel(node.eval.value, matchingEngine, lang)}".`
+                    str += `, ${print("actualValueKnown", lang, false)} <strong>${datafieldToLabel(node.eval.value, matchingEngine, lang)}</strong>.`
                 } else {
                     str += `, ${print("actualValueUnknown", lang)}.`
                 }
@@ -76,10 +77,13 @@ export const violationsToText = (evalGraph, matchingEngine) => {
         }
 
         if (node.children && node.eval.status === STATUS.VIOLATION) {
-            for (let child of node.children) descend(child, node)
+            for (const child of node.children) descend(child, node)
         }
     }
 
-    for (let rootNode of Object.values(evalGraph.rootNodes || {})) descend(rootNode, null)
+    for (const rootNode of Object.values(evalGraph.rootNodes || {})) {
+        descend(rootNode, null)
+    }
+
     return violations
 }
