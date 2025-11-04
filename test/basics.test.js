@@ -41,7 +41,7 @@ describe("basic tests", function () {
     })
 
     it("should get datafield details", async function () {
-        let details = await matchingEngine.getDetailsForDatafield(expand("ff:renovationType"))
+        let details = await matchingEngine.getDetailsForDatafield("ff:renovationType")
         console.log(details)
     })
 })
