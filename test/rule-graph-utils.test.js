@@ -183,7 +183,7 @@ describe("rule graph utils", function () {
 
     it("should render DE multi-value violation for gender with wrong answer", function () {
         matchingEngine.lang = "de"
-    
+
         const evalGraph = {
             rootNodes: {
                 gender: {
@@ -209,10 +209,176 @@ describe("rule graph utils", function () {
                 },
             },
         }
-    
+
         const texts = violationsToText(evalGraph, matchingEngine)
         console.log(texts)
         // expected output (approx):
         // „Geschlecht“ ist mit „Unbekannt“ angegeben, erwartet wird jedoch einer der Werte: Männlich oder Weiblich oder Divers oder Anderes.
     })
+
+    it("should render EN hasValue violation for longTermStay", function () {
+        matchingEngine.lang = "en"
+
+        const evalGraph = {
+            rootNodes: {
+                longTermStay: {
+                    path: "ff:longTermStay",
+                    eval: { status: STATUS.VIOLATION },
+                    children: [
+                        {
+                            type: TYPE.RULE,
+                            rule: {
+                                type: "sh:hasValue",
+                                value: true, // expected value
+                            },
+                            eval: {
+                                status: STATUS.VIOLATION,
+                                value: false, // actual value
+                            },
+                        },
+                    ],
+                },
+            },
+        }
+
+        const texts = violationsToText(evalGraph, matchingEngine)
+        console.log(texts)
+        // expected shape (depends on your print() translations), something like:
+        // The value of <strong>Long-term stay in Germany</strong> hasValue true, actual value is <strong>false</strong>.
+    })
+    // 5) EN - minInclusive (actual < required)
+    it("should render EN minInclusive violation with actual value", function () {
+        matchingEngine.lang = "en"
+
+        const evalGraph = {
+            rootNodes: {
+                age: {
+                    path: "ff:assets",
+                    eval: { status: STATUS.VIOLATION },
+                    children: [
+                        {
+                            type: TYPE.RULE,
+                            rule: { type: "sh:minInclusive", value: 18 },
+                            eval: { status: STATUS.VIOLATION, value: 16 },
+                        },
+                    ],
+                },
+            },
+        }
+
+        const texts = violationsToText(evalGraph, matchingEngine)
+        console.log(texts)
+        // Expected:
+        // <strong>Age</strong> must be at least <strong>18</strong>, but it is <strong>16</strong>.
+    })
+
+    // 6) DE - maxInclusive (no actual)
+    it("should render DE maxInclusive violation with no actual value", function () {
+        matchingEngine.lang = "de"
+
+        const evalGraph = {
+            rootNodes: {
+                einkommen: {
+                    path: "ff:assets",
+                    eval: { status: STATUS.VIOLATION },
+                    children: [
+                        {
+                            type: TYPE.RULE,
+                            rule: { type: "sh:maxInclusive", value: 2000 },
+                            eval: { status: STATUS.VIOLATION }, // no actual value
+                        },
+                    ],
+                },
+            },
+        }
+
+        const texts = violationsToText(evalGraph, matchingEngine)
+        console.log(texts)
+        // Expected:
+        // <strong>Einkommen</strong> darf höchstens <strong>2000</strong> sein, ein Wert ist jedoch nicht angegeben.
+    })
+
+    // 7) EN - maxExclusive (actual == value)
+    it("should render EN maxExclusive violation with equal value", function () {
+        matchingEngine.lang = "en"
+
+        const evalGraph = {
+            rootNodes: {
+                temperature: {
+                    path: "ff:hasAge",
+                    eval: { status: STATUS.VIOLATION },
+                    children: [
+                        {
+                            type: TYPE.RULE,
+                            rule: { type: "sh:maxExclusive", value: 100 },
+                            eval: { status: STATUS.VIOLATION, value: 100 },
+                        },
+                    ],
+                },
+            },
+        }
+
+        const texts = violationsToText(evalGraph, matchingEngine)
+        console.log(texts)
+        // Expected:
+        // <strong>Temperature</strong> must be less than <strong>100</strong>, but it is <strong>100</strong>.
+    })
+
+    // 8) DE - minExclusive (actual below)
+    it("should render DE minExclusive violation with actual value", function () {
+        matchingEngine.lang = "de"
+
+        const evalGraph = {
+            rootNodes: {
+                laufzeit: {
+                    path: "ff:hasAge",
+                    eval: { status: STATUS.VIOLATION },
+                    children: [
+                        {
+                            type: TYPE.RULE,
+                            rule: { type: "sh:minExclusive", value: 10 },
+                            eval: { status: STATUS.VIOLATION, value: 9 },
+                        },
+                    ],
+                },
+            },
+        }
+
+        const texts = violationsToText(evalGraph, matchingEngine)
+        console.log(texts)
+        // Expected:
+        // <strong>Laufzeit</strong> muss größer als <strong>10</strong> sein, tatsächlich ist es <strong>9</strong>.
+    })
+
+    // 9) EN - combined minInclusive and maxExclusive range violation
+    it("should render EN range violation (minInclusive + maxExclusive) as single sentence", function () {
+        matchingEngine.lang = "en"
+
+        const evalGraph = {
+            rootNodes: {
+                hasAge: {
+                    path: "ff:hasAge",
+                    eval: { status: STATUS.VIOLATION },
+                    children: [
+                        {
+                            type: TYPE.RULE,
+                            rule: { type: "sh:maxExclusive", value: 36 },
+                            eval: { status: STATUS.VIOLATION, value: 40 }, // same actual
+                        },
+                        {
+                            type: TYPE.RULE,
+                            rule: { type: "sh:minInclusive", value: 15 },
+                            eval: { status: STATUS.VIOLATION, value: 40 }, // same actual
+                        }
+                    ],
+                },
+            },
+        }
+
+        const texts = violationsToText(evalGraph, matchingEngine)
+        console.log(texts)
+        // Expected output (one string):
+        // <strong>Age</strong> must be between <strong>15</strong> and <strong>36</strong>, but it is <strong>40</strong>.
+    })
+
 })
