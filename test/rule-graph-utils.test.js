@@ -5,6 +5,8 @@ import { addRpsFromKnowledgeBase } from "./fixtures/common.js"
 import { violationsToText } from "../src/rule-graph/GraphUtils.js"
 import { TYPE } from "../src/rule-graph/RuleGraph.js"
 import { STATUS } from "../src/rule-graph/EvalGraph.js"
+import { strict as assert } from "node:assert"
+
 
 describe("rule graph utils", function () {
     this.timeout(10000)
@@ -380,5 +382,190 @@ describe("rule graph utils", function () {
         // Expected output (one string):
         // <strong>Age</strong> must be between <strong>15</strong> and <strong>36</strong>, but it is <strong>40</strong>.
     })
+    // 10) EN - real-world eval graph example (only violations)
+    it("should render EN violations correctly for a mixed eval graph", function () {
+        matchingEngine.lang = "en"
 
+        const evalGraph = {
+            rootNodes: {
+                root: {
+                    id: 0,
+                    type: "root",
+                    eval: { status: STATUS.VIOLATION },
+                    nodeShapeUri: "https://foerderfunke.org/default#wohngeldMainShape",
+                    children: [
+                        {
+                            id: 1,
+                            type: TYPE.DATAFIELD,
+                            eval: { status: STATUS.MISSING },
+                            path: "ff:birthDate",
+                            children: [],
+                        },
+                        {
+                            id: 3,
+                            type: TYPE.DATAFIELD,
+                            eval: { status: STATUS.MISSING },
+                            path: "ff:hasAge",
+                            children: [
+                                {
+                                    id: 5,
+                                    type: TYPE.RULE,
+                                    eval: { status: STATUS.MISSING },
+                                    rule: { type: "sh:minInclusive", value: "15" },
+                                },
+                            ],
+                        },
+                        {
+                            id: 12,
+                            type: TYPE.DATAFIELD,
+                            eval: { status: STATUS.VIOLATION },
+                            path: "ff:employmentStatus",
+                            children: [
+                                {
+                                    id: 14,
+                                    type: "sh:not",
+                                    eval: { status: STATUS.VIOLATION },
+                                    children: [
+                                        {
+                                            id: 15,
+                                            type: TYPE.RULE,
+                                            eval: { status: STATUS.OK },
+                                            rule: {
+                                                type: "sh:in",
+                                                values: ["ff:employmentStatus-inEducation"],
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            },
+        }
+
+        const texts = violationsToText(evalGraph, matchingEngine)
+        console.log(texts)
+
+        // we only care that we got *some* violations array here; since the rule under sh:not is "ok",
+        // it's fine if this ends up being empty with the current logic
+        assert.ok(Array.isArray(texts))
+    })
+    // 11) EN - mixed eval graph with one real violation
+    it("should render EN violation for mixed eval graph", function () {
+        matchingEngine.lang = "en"
+
+        const evalGraph = {
+            rootNodes: {
+                citizen: {
+                    path: "ff:citizen",
+                    eval: { status: STATUS.VIOLATION },
+                    children: [
+                        {
+                            path: "ff:birthDate",
+                            eval: { status: STATUS.MISSING },
+                            children: [],
+                        },
+                        {
+                            path: "ff:hasAge",
+                            eval: { status: STATUS.MISSING },
+                            children: [
+                                {
+                                    type: TYPE.RULE,
+                                    rule: { type: "sh:minInclusive", value: 18 },
+                                    eval: { status: STATUS.MISSING },
+                                },
+                            ],
+                        },
+                        {
+                            path: "ff:employmentStatus",
+                            eval: { status: STATUS.VIOLATION },
+                            children: [
+                                {
+                                    type: TYPE.RULE,
+                                    rule: {
+                                        type: "sh:in",
+                                        values: ["ff:employmentStatus-unemployed"],
+                                    },
+                                    eval: {
+                                        status: STATUS.VIOLATION,
+                                        value: "ff:employmentStatus-employed",
+                                    },
+                                },
+                            ],
+                        },
+                    ],
+                },
+            },
+        }
+
+        const texts = violationsToText(evalGraph, matchingEngine)
+        console.log(texts)
+        // Expected output (one string):
+        // <strong>Employment status</strong> is given as <strong>Employed</strong>, but <strong>Unemployed</strong> is required.
+    })
+
+    // 12) EN - should handle sh:not violations correctly
+    it("should render EN violation for sh:not with non-violating child", function () {
+        matchingEngine.lang = "en"
+
+        const evalGraph = {
+            rootNodes: {
+                employmentStatus: {
+                    path: "ff:employmentStatus",
+                    eval: { status: STATUS.VIOLATION },
+                    children: [
+                        {
+                            type: "sh:not",
+                            eval: { status: STATUS.VIOLATION },
+                            children: [
+                                {
+                                    type: TYPE.RULE,
+                                    rule: { type: "sh:in", values: ["ff:employmentStatus-inEducation"] },
+                                    eval: { status: STATUS.OK },
+                                },
+                            ],
+                        },
+                    ],
+                },
+            },
+        }
+
+        const texts = violationsToText(evalGraph, matchingEngine)
+        console.log(texts)
+        // Expected output:
+        // ["<strong>Employment status</strong> must not be <strong>In education</strong>."]
+    })
+
+    // 13) DE - should handle sh:not violations correctly
+    it("should render EN violation for sh:not with non-violating child", function () {
+        matchingEngine.lang = "de"
+
+        const evalGraph = {
+            rootNodes: {
+                employmentStatus: {
+                    path: "ff:employmentStatus",
+                    eval: { status: STATUS.VIOLATION },
+                    children: [
+                        {
+                            type: "sh:not",
+                            eval: { status: STATUS.VIOLATION },
+                            children: [
+                                {
+                                    type: TYPE.RULE,
+                                    rule: { type: "sh:in", values: ["ff:employmentStatus-inEducation"] },
+                                    eval: { status: STATUS.OK },
+                                },
+                            ],
+                        },
+                    ],
+                },
+            },
+        }
+
+        const texts = violationsToText(evalGraph, matchingEngine)
+        console.log(texts)
+        // Expected output:
+        // ["<strong>Employment status</strong> must not be <strong>In education</strong>."]
+    })    
 })

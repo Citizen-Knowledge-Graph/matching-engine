@@ -25,12 +25,40 @@ export const violationsToText = (evalGraph, matchingEngine) => {
     }
 
     const descend = (node, parent) => {
+        // 0) handle sh:not FIRST (because it's not TYPE.RULE)
+        if (node.type === "sh:not" && node.eval.status === STATUS.VIOLATION) {
+            const datafield = parent ? parent.path : ""
+            const label = datafieldToLabel(datafield, matchingEngine, lang)
+            const childRules = node.children?.filter(c => c.type === TYPE.RULE) || []
+            const childRule = childRules[0]
+            let str = ""
+
+            if (childRule && childRule.rule.type === "sh:in") {
+                const expectedLabels = childRule.rule.values.map(val =>
+                    datafieldToLabel(val, matchingEngine, lang)
+                )
+                const expectedJoined = joinList(expectedLabels, lang)
+                str =
+                    lang === "de"
+                        ? `<strong>${label}</strong> darf nicht <strong>${expectedJoined}</strong> sein.`
+                        : `<strong>${label}</strong> must not be <strong>${expectedJoined}</strong>.`
+            } else {
+                str =
+                    lang === "de"
+                        ? `<strong>${label}</strong> erfüllt eine Bedingung, die nicht erfüllt sein darf.`
+                        : `<strong>${label}</strong> satisfies a condition that must not be true.`
+            }
+
+            violations.push(str)
+        }
+
+        // 1) strict: only real rule violations
         if (node.type === TYPE.RULE && node.eval.status === STATUS.VIOLATION) {
             const datafield = parent ? parent.path : ""
             const label = datafieldToLabel(datafield, matchingEngine, lang)
             let str = ""
 
-            // 0) range merge detection
+            // range merge
             if (
                 parent &&
                 parent.children &&
@@ -47,7 +75,6 @@ export const violationsToText = (evalGraph, matchingEngine) => {
                     c.rule && (c.rule.type === "sh:maxInclusive" || c.rule.type === "sh:maxExclusive")
                 )
 
-                // if we're on the MIN rule and both have the SAME actual value -> emit combined and return
                 if (
                     minRule &&
                     maxRule &&
@@ -61,25 +88,21 @@ export const violationsToText = (evalGraph, matchingEngine) => {
                     const actualVal = formatValue(minRule.eval.value)
 
                     if (lang === "de") {
-                        if (actualVal) {
-                            str = `<strong>${label}</strong> muss zwischen <strong>${minVal}</strong> und <strong>${maxVal}</strong> liegen, angegeben ist <strong>${actualVal}</strong>.`
-                        } else {
-                            str = `<strong>${label}</strong> muss zwischen <strong>${minVal}</strong> und <strong>${maxVal}</strong> liegen, ein Wert ist jedoch nicht angegeben.`
-                        }
+                        str = actualVal
+                            ? `<strong>${label}</strong> muss zwischen <strong>${minVal}</strong> und <strong>${maxVal}</strong> liegen, angegeben ist <strong>${actualVal}</strong>.`
+                            : `<strong>${label}</strong> muss zwischen <strong>${minVal}</strong> und <strong>${maxVal}</strong> liegen, ein Wert ist jedoch nicht angegeben.`
                     } else {
-                        if (actualVal) {
-                            str = `<strong>${label}</strong> must be between <strong>${minVal}</strong> and <strong>${maxVal}</strong>, but it is <strong>${actualVal}</strong>.`
-                        } else {
-                            str = `<strong>${label}</strong> must be between <strong>${minVal}</strong> and <strong>${maxVal}</strong>, but no value is given.`
-                        }
+                        str = actualVal
+                            ? `<strong>${label}</strong> must be between <strong>${minVal}</strong> and <strong>${maxVal}</strong>, but it is <strong>${actualVal}</strong>.`
+                            : `<strong>${label}</strong> must be between <strong>${minVal}</strong> and <strong>${maxVal}</strong>, but no value is given.`
                     }
 
                     violations.push(str)
+                    // we handled both min+max, so stop here
                     return
                 }
 
-                // if we're on the MAX rule and there is a matching MIN with same actual -> skip,
-                // because the min branch already emitted the combined message
+                // skip max if min printed
                 if (
                     minRule &&
                     maxRule &&
@@ -92,7 +115,7 @@ export const violationsToText = (evalGraph, matchingEngine) => {
                 }
             }
 
-            // 1) sh:in
+            // sh:in
             if (node.rule.type === "sh:in") {
                 const expectedLabels = node.rule.values.map(val =>
                     datafieldToLabel(val, matchingEngine, lang)
@@ -134,27 +157,21 @@ export const violationsToText = (evalGraph, matchingEngine) => {
                         }
                     }
                 }
-
-                // 2) sh:hasValue
+            // sh:hasValue
             } else if (node.rule.type === "sh:hasValue") {
                 const expected = formatValue(node.rule.value)
                 const actual = formatValue(node.eval.value)
 
                 if (lang === "de") {
-                    if (actual) {
-                        str = `<strong>${label}</strong> ist mit <strong>${actual}</strong> angegeben, erwartet wird jedoch <strong>${expected}</strong>.`
-                    } else {
-                        str = `Für <strong>${label}</strong> wird <strong>${expected}</strong> erwartet, ein Wert ist jedoch nicht angegeben.`
-                    }
+                    str = actual
+                        ? `<strong>${label}</strong> ist mit <strong>${actual}</strong> angegeben, erwartet wird jedoch <strong>${expected}</strong>.`
+                        : `Für <strong>${label}</strong> wird <strong>${expected}</strong> erwartet, ein Wert ist jedoch nicht angegeben.`
                 } else {
-                    if (actual) {
-                        str = `<strong>${label}</strong> is given as <strong>${actual}</strong>, but <strong>${expected}</strong> is required.`
-                    } else {
-                        str = `A value of <strong>${expected}</strong> is required for <strong>${label}</strong>, but none is given.`
-                    }
+                    str = actual
+                        ? `<strong>${label}</strong> is given as <strong>${actual}</strong>, but <strong>${expected}</strong> is required.`
+                        : `A value of <strong>${expected}</strong> is required for <strong>${label}</strong>, but none is given.`
                 }
-
-                // 3) numeric constraints (single)
+            // numeric single
             } else if (
                 node.rule.type === "sh:maxInclusive" ||
                 node.rule.type === "sh:minInclusive" ||
@@ -166,59 +183,42 @@ export const violationsToText = (evalGraph, matchingEngine) => {
 
                 if (lang === "de") {
                     if (node.rule.type === "sh:maxInclusive") {
-                        if (actual) {
-                            str = `<strong>${label}</strong> darf höchstens <strong>${expected}</strong> sein, angegeben ist <strong>${actual}</strong>.`
-                        } else {
-                            str = `<strong>${label}</strong> darf höchstens <strong>${expected}</strong> sein, ein Wert ist jedoch nicht angegeben.`
-                        }
+                        str = actual
+                            ? `<strong>${label}</strong> darf höchstens <strong>${expected}</strong> sein, angegeben ist <strong>${actual}</strong>.`
+                            : `<strong>${label}</strong> darf höchstens <strong>${expected}</strong> sein, ein Wert ist jedoch nicht angegeben.`
                     } else if (node.rule.type === "sh:minInclusive") {
-                        if (actual) {
-                            str = `<strong>${label}</strong> muss mindestens <strong>${expected}</strong> sein, angegeben ist <strong>${actual}</strong>.`
-                        } else {
-                            str = `<strong>${label}</strong> muss mindestens <strong>${expected}</strong> sein, ein Wert ist jedoch nicht angegeben.`
-                        }
+                        str = actual
+                            ? `<strong>${label}</strong> muss mindestens <strong>${expected}</strong> sein, angegeben ist <strong>${actual}</strong>.`
+                            : `<strong>${label}</strong> muss mindestens <strong>${expected}</strong> sein, ein Wert ist jedoch nicht angegeben.`
                     } else if (node.rule.type === "sh:maxExclusive") {
-                        if (actual) {
-                            str = `<strong>${label}</strong> muss kleiner als <strong>${expected}</strong> sein, angegeben ist <strong>${actual}</strong>.`
-                        } else {
-                            str = `<strong>${label}</strong> muss kleiner als <strong>${expected}</strong> sein, ein Wert ist jedoch nicht angegeben.`
-                        }
+                        str = actual
+                            ? `<strong>${label}</strong> muss kleiner als <strong>${expected}</strong> sein, angegeben ist <strong>${actual}</strong>.`
+                            : `<strong>${label}</strong> muss kleiner als <strong>${expected}</strong> sein, ein Wert ist jedoch nicht angegeben.`
                     } else if (node.rule.type === "sh:minExclusive") {
-                        if (actual) {
-                            str = `<strong>${label}</strong> muss größer als <strong>${expected}</strong> sein, angegeben ist <strong>${actual}</strong>.`
-                        } else {
-                            str = `<strong>${label}</strong> muss größer als <strong>${expected}</strong> sein, ein Wert ist jedoch nicht angegeben.`
-                        }
+                        str = actual
+                            ? `<strong>${label}</strong> muss größer als <strong>${expected}</strong> sein, angegeben ist <strong>${actual}</strong>.`
+                            : `<strong>${label}</strong> muss größer als <strong>${expected}</strong> sein, ein Wert ist jedoch nicht angegeben.`
                     }
                 } else {
                     if (node.rule.type === "sh:maxInclusive") {
-                        if (actual) {
-                            str = `<strong>${label}</strong> must be at most <strong>${expected}</strong>, but it is <strong>${actual}</strong>.`
-                        } else {
-                            str = `<strong>${label}</strong> must be at most <strong>${expected}</strong>, but no value is given.`
-                        }
+                        str = actual
+                            ? `<strong>${label}</strong> must be at most <strong>${expected}</strong>, but it is <strong>${actual}</strong>.`
+                            : `<strong>${label}</strong> must be at most <strong>${expected}</strong>, but no value is given.`
                     } else if (node.rule.type === "sh:minInclusive") {
-                        if (actual) {
-                            str = `<strong>${label}</strong> must be at least <strong>${expected}</strong>, but it is <strong>${actual}</strong>.`
-                        } else {
-                            str = `<strong>${label}</strong> must be at least <strong>${expected}</strong>, but no value is given.`
-                        }
+                        str = actual
+                            ? `<strong>${label}</strong> must be at least <strong>${expected}</strong>, but it is <strong>${actual}</strong>.`
+                            : `<strong>${label}</strong> must be at least <strong>${expected}</strong>, but no value is given.`
                     } else if (node.rule.type === "sh:maxExclusive") {
-                        if (actual) {
-                            str = `<strong>${label}</strong> must be less than <strong>${expected}</strong>, but it is <strong>${actual}</strong>.`
-                        } else {
-                            str = `<strong>${label}</strong> must be less than <strong>${expected}</strong>, but no value is given.`
-                        }
+                        str = actual
+                            ? `<strong>${label}</strong> must be less than <strong>${expected}</strong>, but it is <strong>${actual}</strong>.`
+                            : `<strong>${label}</strong> must be less than <strong>${expected}</strong>, but no value is given.`
                     } else if (node.rule.type === "sh:minExclusive") {
-                        if (actual) {
-                            str = `<strong>${label}</strong> must be greater than <strong>${expected}</strong>, but it is <strong>${actual}</strong>.`
-                        } else {
-                            str = `<strong>${label}</strong> must be greater than <strong>${expected}</strong>, but no value is given.`
-                        }
+                        str = actual
+                            ? `<strong>${label}</strong> must be greater than <strong>${expected}</strong>, but it is <strong>${actual}</strong>.`
+                            : `<strong>${label}</strong> must be greater than <strong>${expected}</strong>, but no value is given.`
                     }
                 }
-
-                // 4) fallback
+            // fallback
             } else {
                 str = `${print("theValueOf", lang)} <strong>${label}</strong> `
                 str += `${print(node.rule.type, lang, false)} ${node.rule.value}`
@@ -233,6 +233,7 @@ export const violationsToText = (evalGraph, matchingEngine) => {
             violations.push(str)
         }
 
+        // only descend further if this node is a violation
         if (node.children && node.eval.status === STATUS.VIOLATION) {
             for (const child of node.children) {
                 descend(child, node)
