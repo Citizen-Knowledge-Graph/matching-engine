@@ -74,13 +74,12 @@ const cleanMsg = (msg) => {
 // usable for RuleGraph and EvalGraph
 export const cleanGraph = (graph) => {
     const walk = (node) => {
-        // delete "sh:minCount 1" rule nodes
+        // delete "sh:minCount 1" and "sh:maxCount 0" rule nodes
         if (node.children && node.children.length) {
             for (let i = node.children.length - 1; i >= 0; i--) {
                 const child = node.children[i]
-                if (child.rule && child.rule.type === "sh:minCount" && child.rule.value.toString() === "1") {
-                    node.children.splice(i, 1)
-                }
+                if (child.rule && child.rule.type === "sh:minCount" && child.rule.value.toString() === "1") node.children.splice(i, 1)
+                if (child.rule && child.rule.type === "sh:maxCount" && child.rule.value.toString() === "0") node.children.splice(i, 1)
             }
         }
         // delete unnecessary properties
@@ -269,6 +268,11 @@ export class EvalGraph {
             let children = node.children || []
             let minCount1ChildIsOk = children.some(child => child.rule && child.rule.type === "sh:minCount" && child.rule.value.toString() === "1" && child.eval.status === OK)
             children = children.filter(child => !(child.rule && child.rule.type === "sh:minCount" && child.rule.value.toString() === "1"))
+            let maxCount0ChildIsOk = children.some(child => child.rule && child.rule.type === "sh:maxCount" && child.rule.value.toString() === "0" && child.eval.status === OK)
+            if (maxCount0ChildIsOk) { // is it ok to shortcut the switch like this?
+                node.eval = { status: MISSING }
+                return node.eval.status
+            }
             let hasChildren = children.length > 0
             switch(node.type) {
                 case TYPE.ROOT:

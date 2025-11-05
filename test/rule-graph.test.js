@@ -273,7 +273,8 @@ describe.skip("rule graph", function () {
     it("should build correct eval-graph for ff:wolfenbuettel-stiftung-organisation", async function () {
         const up = `
             @prefix ff: <https://foerderfunke.org/default#> .
-            ff:mainPerson a ff:Citizen .`
+            ff:mainPerson a ff:Citizen ;
+                ff:associationHeadquarters ff:associationHeadquarters-wolfenbuettel .`
         let evalGraph = await matchingEngine.buildEvaluationGraph(up, expand("ff:wolfenbuettel-stiftung-organisation"))
         console.log(graphToMermaid(evalGraph, matchingEngine, true))
         // TODO
