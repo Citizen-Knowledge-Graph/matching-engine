@@ -128,8 +128,6 @@ export class MatchingEngine {
         } else {
             details.answerOptions = [];
         }
-
-        console.log(details)
         return details
     }
 
