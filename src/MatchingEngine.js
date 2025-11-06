@@ -104,13 +104,32 @@ export class MatchingEngine {
         let dfUri = expand(shortenedDfUri)
         let details = await sparqlSelect(QUERY_GET_DF_DETAILS(dfUri, this.lang), [this.defStore])
         details = details[0] || {}
-        let options = await sparqlSelect(QUERY_GET_DF_ANSWER_OPTIONS(dfUri, this.lang), [this.defStore])
-        details.answerOptions = options || []
         details.datafield = shortenedDfUri
+
         // shrink URIs
         if (details.datatype) details.datatype = shrink(details.datatype)
         if (details.category) details.category = shrink(details.category)
-        details.answerOptions = details.answerOptions.map(opt => opt.option = shrink(opt.option))
+
+        const needsOptions =
+            details.datatype === "ff:selection" ||
+            details.datatype === "ff:selection_multiple";
+
+        if (needsOptions) {
+            const options = (await sparqlSelect(QUERY_GET_DF_ANSWER_OPTIONS(dfUri, this.lang), [this.defStore])) || [];
+            details.answerOptions = options.map(opt => {
+                const out = { ...opt };
+                if (out.option && typeof out.option === "string") {
+                    try {
+                        out.option = shrink(out.option);
+                    } catch (_) { }
+                }
+                return out;
+            });
+        } else {
+            details.answerOptions = [];
+        }
+
+        console.log(details)
         return details
     }
 
@@ -134,7 +153,7 @@ export class MatchingEngine {
         // materialization
         let count = 0
         let materializedTriples = 0
-        for (let [ matUri, query ] of Object.entries(this.matQueries)) {
+        for (let [matUri, query] of Object.entries(this.matQueries)) {
             // do we need an exhausting approach instead until nothing is materialized anymore instead of a one-time for loop?
             // also filling the upStore while also using it as source could create build-ups with side effects?
             let materializedQuads = await sparqlConstruct(query, [upStore, this.defStore], upStore)
@@ -244,7 +263,7 @@ export class MatchingEngine {
     async buildEvaluationGraph(upTurtle, rpUri) {
         const rpTurtle = this.turtles.requirementProfiles[rpUri]
         let upStore = storeFromTurtles([upTurtle])
-        for (let [, query ] of Object.entries(this.matQueries)) {
+        for (let [, query] of Object.entries(this.matQueries)) {
             await sparqlConstruct(query, [upStore, this.defStore], upStore)
         }
         let upDataset = datasetFromStore(upStore)

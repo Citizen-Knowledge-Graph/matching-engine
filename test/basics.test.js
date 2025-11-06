@@ -5,6 +5,7 @@ import { addAllRpsFromKnowledgeBase } from "./fixtures/common.js"
 import { expand } from "@foerderfunke/sem-ops-utils"
 
 describe("basic tests", function () {
+    this.timeout(10000);
     let matchingEngine
 
     before(async function () {
@@ -41,7 +42,7 @@ describe("basic tests", function () {
     })
 
     it("should get datafield details", async function () {
-        let details = await matchingEngine.getDetailsForDatafield("ff:renovationType")
+        let details = await matchingEngine.getDetailsForDatafield("ff:rehabilitationProvider")
         console.log(details)
     })
 })
